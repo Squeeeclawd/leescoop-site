@@ -25,7 +25,7 @@ audience: People looking for a quick Friday night arts stop downtown.
 cost: Check official event page.
 sourceName: "Sidney & Berne Davis Art Center"
 sourceUrl: https://www.sbdac.com/mc-events/art-walk-sketchy-live-lines-loyal-paws/?mc_id=290
-coverImage: /covers/art-walk-sketchy-live-lines-loyal-paws.svg
+coverImage: /covers/art-walk-sketchy-live-lines-loyal-paws.png
 ---
 
 ## What is it?
