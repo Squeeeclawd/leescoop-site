@@ -71,9 +71,13 @@ const categoryOrder = [
   'Captiva'
 ];
 
+function areaFor(article: typeof visible[number]) {
+  return article.data.city || article.data.category;
+}
+
 const categoryStats = categoryOrder.map((category) => ({
   category,
-  count: feed.filter((article) => article.data.category === category).length,
+  count: feed.filter((article) => areaFor(article) === category).length,
   accent: categoryAccentMap[category] ?? '#197894',
   textColor: categoryTextMap[category] ?? '#FFFFFF'
 }));
@@ -99,6 +103,7 @@ function categoryAccent(category: string) {
 function tileSearch(article: typeof visible[number]) {
   return [
     article.data.title,
+    areaFor(article),
     article.data.category,
     article.data.city ?? '',
     article.data.location ?? '',
@@ -145,10 +150,11 @@ function tileSearch(article: typeof visible[number]) {
                 type="button"
                 class="category-pill hero-category-pill"
                 style={`--category-accent: ${categoryAccent(lead.data.category)}`}
-                data-filter-category={lead.data.category}
+                data-filter-category={areaFor(lead)}
               >
-                {lead.data.category}
+                {areaFor(lead)}
               </button>
+              {lead.data.category !== areaFor(lead) && <span>{lead.data.category}</span>}
             </div>
             <p class="lede small-note">{lead.data.excerpt}</p>
             <a class="button primary homepage-cta" href={articlePath(lead)}>View details</a>
@@ -206,13 +212,13 @@ function tileSearch(article: typeof visible[number]) {
           const cardDate = displayDate(article);
           const cardDateParts = formatDate(cardDate).split(' ');
           return (
-            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={article.data.category} data-search={tileSearch(article)}>
+            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
 
               {hasCover && (
                 <div class="home-tile-media">
                   <img class="home-tile-image" src={article.data.coverImage!} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />
-                  <button type="button" class="tile-category-pill" data-filter-category={article.data.category}>{article.data.category}</button>
+                  <button type="button" class="tile-category-pill" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
                 </div>
               )}
 
@@ -222,7 +228,7 @@ function tileSearch(article: typeof visible[number]) {
                     <span>{cardDateParts[0]}</span>
                     <strong>{cardDateParts[1] ?? ''}</strong>
                   </div>
-                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={article.data.category}>{article.data.category}</button>
+                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
                 </div>
                 <h2 class="home-tile-title" title={article.data.title}>{article.data.title}</h2>
                 <p class="home-tile-deck">{article.data.excerpt}</p>
@@ -230,6 +236,7 @@ function tileSearch(article: typeof visible[number]) {
                   <time datetime={cardDate?.toISOString()}>{formatLongDate(cardDate)}</time>
                   {article.data.eventTime && <span>{article.data.eventTime}</span>}
                   {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
+                  {article.data.category !== areaFor(article) && <span>{article.data.category}</span>}
                   <span>{article.data.contentKind === 'news' ? 'Local news' : 'Event'}</span>
                 </div>
               </div>

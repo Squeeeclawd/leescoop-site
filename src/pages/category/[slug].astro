@@ -12,7 +12,7 @@ export async function getStaticPaths() {
 }
 
 const { category } = Astro.props;
-const articles = visibleArticles(await getCollection('articles')).filter((article) => article.data.category === category);
+const articles = visibleArticles(await getCollection('articles')).filter((article) => (article.data.city || article.data.category) === category);
 ---
 <BaseLayout title={`${category} | LeeScoop`}>
   <Header />
