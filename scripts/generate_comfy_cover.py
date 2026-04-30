@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-LEE_STYLE = "cel shaded, thick outlines, cute, expressive cartoon face, sharp silhouette, graphic shadows, true black, clean simple shapes, high contrast, bold readable design, polished mascot/logo illustration style, modern vector-like finish, tropical coastal energy, playful but clean, Florida-inspired color palette, using #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1"
+LEE_STYLE = "cel shaded, thick outlines, cute, cartoon, sharp silhouette, graphic shadows, true black, clean simple shapes, high contrast, bold readable design, polished mascot/logo illustration style, modern vector-like finish, tropical coastal energy, playful but clean, Florida-inspired color palette, using #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1"
 NEGATIVE = "nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurry, text, watermark, dull palette, overly realistic rendering"
 
 
