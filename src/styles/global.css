@@ -848,6 +848,51 @@ img { max-width: 100%; display: block; }
   color: var(--text-muted);
 }
 
+.article-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.share-button,
+.share-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  border-radius: 999px;
+  padding: 0.58rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.share-button {
+  border: 0;
+  background: var(--color-hot-magenta);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(217, 75, 50, 0.22);
+}
+
+.share-button:hover {
+  background: #f15f47;
+}
+
+.share-link {
+  border: 1px solid rgba(139, 210, 222, 0.24);
+  background: rgba(7, 80, 111, 0.42);
+  color: var(--text-soft);
+}
+
+.share-link:hover {
+  border-color: rgba(255, 255, 255, 0.38);
+  color: white;
+}
+
 .article-body :global(p),
 .article-body :global(li) {
   color: var(--text-soft);

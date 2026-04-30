@@ -7,12 +7,39 @@ export function isPublished(article: Article) {
   return !article.data.draft && article.data.date <= now;
 }
 
-export function sortArticles(articles: Article[]) {
+export function articleDisplayDate(article: Article) {
+  return article.data.contentKind === 'event' ? article.data.eventDate ?? article.data.date : article.data.date;
+}
+
+export function sortArticlesForFeed(articles: Article[]) {
+  const now = new Date();
+  const nowTime = now.getTime();
+
   return [...articles].sort((a, b) => {
+    const aDisplayDate = articleDisplayDate(a);
+    const bDisplayDate = articleDisplayDate(b);
+    const aDisplayTime = aDisplayDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const bDisplayTime = bDisplayDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    const aUpcomingEvent = a.data.contentKind === 'event' && aDisplayTime >= nowTime;
+    const bUpcomingEvent = b.data.contentKind === 'event' && bDisplayTime >= nowTime;
+
+    // Upcoming dated events are the primary LeeScoop feed: closest first, later dates as you scroll.
+    if (aUpcomingEvent !== bUpcomingEvent) return aUpcomingEvent ? -1 : 1;
+    if (aUpcomingEvent && bUpcomingEvent) return aDisplayTime - bDisplayTime;
+
+    // News/evergreen items follow events, newest first.
+    if (a.data.contentKind !== b.data.contentKind) return a.data.contentKind === 'news' ? -1 : 1;
+
     const pinnedDelta = Number(b.data.pinned) - Number(a.data.pinned);
     if (pinnedDelta !== 0) return pinnedDelta;
+
+    // Past/undated events fall back to most recently published so stale events don't sit at the top.
     return b.data.date.getTime() - a.data.date.getTime();
   });
+}
+
+export function sortArticles(articles: Article[]) {
+  return sortArticlesForFeed(articles);
 }
 
 export function visibleArticles(articles: Article[]) {

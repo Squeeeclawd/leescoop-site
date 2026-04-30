@@ -3,29 +3,11 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import { articlePath, tagCounts, visibleArticles } from '@/lib/content';
+import { articlePath, sortArticlesForFeed, tagCounts, visibleArticles } from '@/lib/content';
 
 const allArticles = await getCollection('articles');
 const visible = visibleArticles(allArticles);
-const now = new Date();
-
-function sortForFeed(items: typeof visible) {
-  return [...items].sort((a, b) => {
-    const aKind = a.data.contentKind ?? 'event';
-    const bKind = b.data.contentKind ?? 'event';
-    const aEventDate = a.data.eventDate?.getTime();
-    const bEventDate = b.data.eventDate?.getTime();
-    const aUpcoming = aKind === 'event' && aEventDate !== undefined && aEventDate >= now.getTime();
-    const bUpcoming = bKind === 'event' && bEventDate !== undefined && bEventDate >= now.getTime();
-
-    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
-    if (aUpcoming && bUpcoming) return (aEventDate ?? 0) - (bEventDate ?? 0);
-    if (aKind !== bKind) return aKind === 'event' ? -1 : 1;
-    return b.data.date.getTime() - a.data.date.getTime();
-  });
-}
-
-const feed = sortForFeed(visible);
+const feed = sortArticlesForFeed(visible);
 const lead = feed[0];
 const topTags = tagCounts(allArticles).slice(0, 10);
 
