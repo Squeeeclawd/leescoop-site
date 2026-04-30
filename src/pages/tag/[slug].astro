@@ -4,10 +4,10 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ArticleCard from '@/components/ArticleCard.astro';
-import { visibleArticles } from '@/lib/content';
+import { activeArticles } from '@/lib/content';
 
 export async function getStaticPaths() {
-  const articles = visibleArticles(await getCollection('articles'));
+  const articles = activeArticles(await getCollection('articles'));
   const tags = new Map<string, string>();
   for (const article of articles) {
     for (const tag of article.data.tags) {
@@ -18,7 +18,7 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.props;
-const articles = visibleArticles(await getCollection('articles')).filter((article) => article.data.tags.includes(tag));
+const articles = activeArticles(await getCollection('articles')).filter((article) => article.data.tags.includes(tag));
 ---
 <BaseLayout title={`${tag} | LeeScoop`}>
   <Header />

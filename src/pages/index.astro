@@ -3,10 +3,10 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import { articlePath, sortArticlesForFeed, tagCounts, visibleArticles } from '@/lib/content';
+import { activeArticles, articlePath, sortArticlesForFeed, tagCounts } from '@/lib/content';
 
 const allArticles = await getCollection('articles');
-const visible = visibleArticles(allArticles);
+const visible = activeArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
 const lead = feed[0];
 const cardFeed = lead ? feed.filter((article) => article.slug !== lead.slug) : feed;

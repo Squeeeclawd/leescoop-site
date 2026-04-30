@@ -5,14 +5,14 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ArticleCard from '@/components/ArticleCard.astro';
 import { site } from '@/data/site';
-import { slugifyLabel, visibleArticles } from '@/lib/content';
+import { activeArticles, slugifyLabel } from '@/lib/content';
 
 export async function getStaticPaths() {
   return site.categories.map((category) => ({ params: { slug: slugifyLabel(category) }, props: { category } }));
 }
 
 const { category } = Astro.props;
-const articles = visibleArticles(await getCollection('articles')).filter((article) => (article.data.city || article.data.category) === category);
+const articles = activeArticles(await getCollection('articles')).filter((article) => (article.data.city || article.data.category) === category);
 ---
 <BaseLayout title={`${category} | LeeScoop`}>
   <Header />

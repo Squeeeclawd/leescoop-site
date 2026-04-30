@@ -11,6 +11,17 @@ export function articleDisplayDate(article: Article) {
   return article.data.contentKind === 'event' ? article.data.eventDate ?? article.data.date : article.data.date;
 }
 
+export function isArchivedEvent(article: Article) {
+  if (article.data.contentKind !== 'event') return false;
+  const eventCutoff = article.data.eventEndDate ?? article.data.eventDate;
+  if (!eventCutoff) return false;
+  return eventCutoff.getTime() < Date.now();
+}
+
+export function isActiveArticle(article: Article) {
+  return isPublished(article) && !isArchivedEvent(article);
+}
+
 export function sortArticlesForFeed(articles: Article[]) {
   const now = new Date();
   const nowTime = now.getTime();
@@ -46,16 +57,21 @@ export function visibleArticles(articles: Article[]) {
   return sortArticles(articles.filter(isPublished));
 }
 
+export function activeArticles(articles: Article[]) {
+  return sortArticles(articles.filter(isActiveArticle));
+}
+
 export function featuredArticle(articles: Article[]) {
-  return visibleArticles(articles).find((article) => article.data.featured) ?? visibleArticles(articles)[0];
+  const active = activeArticles(articles);
+  return active.find((article) => article.data.featured) ?? active[0];
 }
 
 export function latestArticles(articles: Article[], count = 6) {
-  return visibleArticles(articles).slice(0, count);
+  return activeArticles(articles).slice(0, count);
 }
 
 export function tickerArticles(articles: Article[]) {
-  const visible = visibleArticles(articles);
+  const visible = activeArticles(articles);
   const manual = visible
     .filter((article) => article.data.ticker)
     .sort((a, b) => (a.data.tickerRank ?? 999) - (b.data.tickerRank ?? 999))
@@ -69,7 +85,7 @@ export function tickerArticles(articles: Article[]) {
 
 export function categoryMap(articles: Article[]) {
   const map = new Map<string, Article[]>();
-  for (const article of visibleArticles(articles)) {
+  for (const article of activeArticles(articles)) {
     const bucket = map.get(article.data.category) ?? [];
     bucket.push(article);
     map.set(article.data.category, bucket);
@@ -79,7 +95,7 @@ export function categoryMap(articles: Article[]) {
 
 export function tagCounts(articles: Article[]) {
   const counts = new Map<string, number>();
-  for (const article of visibleArticles(articles)) {
+  for (const article of activeArticles(articles)) {
     for (const tag of article.data.tags) {
       counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
