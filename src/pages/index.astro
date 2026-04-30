@@ -126,12 +126,14 @@ function tileSearch(article: typeof visible[number]) {
     {lead && (
       <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
         <div class="hero-home-grid hero-home-grid-patch">
-          <div class="event-date-badge hero-date-badge">
-            <span>{formatDate(displayDate(lead)).split(' ')[0]}</span>
-            <strong>{formatDate(displayDate(lead)).split(' ')[1] ?? ''}</strong>
-          </div>
           <div class="hero-home-copy hero-home-copy-patch">
-            <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Local news' : 'Upcoming'}</p>
+            <div class="hero-label-row">
+              <div class="event-date-badge hero-date-badge">
+                <span>{formatDate(displayDate(lead)).split(' ')[0]}</span>
+                <strong>{formatDate(displayDate(lead)).split(' ')[1] ?? ''}</strong>
+              </div>
+              <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Local news' : 'Upcoming'}</p>
+            </div>
             <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
               <a href={articlePath(lead)}>{lead.data.title}</a>
             </h1>

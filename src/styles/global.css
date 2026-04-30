@@ -2196,3 +2196,44 @@ img { max-width: 100%; display: block; }
     gap: 0.25rem;
   }
 }
+
+/* Fix featured event hero layout: date badge belongs inside the copy column. */
+.hero-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.hero-label-row .eyebrow {
+  margin: 0;
+}
+
+.hero-home-grid-patch {
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.9fr);
+}
+
+.lead-headline-patch {
+  max-width: 13ch;
+  font-size: clamp(2.25rem, 4.8vw, 4.1rem);
+}
+
+.lead-headline-patch a {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.hero-date-badge {
+  min-width: 4.3rem;
+  padding: 0.45rem 0.6rem 0.52rem;
+}
+
+.hero-date-badge strong {
+  font-size: 1.45rem;
+}
+
+@media (max-width: 960px) {
+  .hero-home-grid-patch {
+    grid-template-columns: 1fr;
+  }
+}
