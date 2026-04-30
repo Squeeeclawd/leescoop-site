@@ -9,6 +9,7 @@ const allArticles = await getCollection('articles');
 const visible = visibleArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
 const lead = feed[0];
+const cardFeed = lead ? feed.filter((article) => article.slug !== lead.slug) : feed;
 const topTags = tagCounts(allArticles).slice(0, 10);
 
 const categoryAccentMap: Record<string, string> = {
@@ -59,14 +60,14 @@ function areaFor(article: typeof visible[number]) {
 
 const categoryStats = categoryOrder.map((category) => ({
   category,
-  count: feed.filter((article) => areaFor(article) === category).length,
+  count: cardFeed.filter((article) => areaFor(article) === category).length,
   accent: categoryAccentMap[category] ?? '#197894',
   textColor: categoryTextMap[category] ?? '#FFFFFF'
 }));
 
 const contentKindStats = [
-  { kind: 'event', label: 'Events', count: feed.filter((article) => article.data.contentKind !== 'news').length },
-  { kind: 'news', label: 'Local News', count: feed.filter((article) => article.data.contentKind === 'news').length }
+  { kind: 'event', label: 'Events', count: cardFeed.filter((article) => article.data.contentKind !== 'news').length },
+  { kind: 'news', label: 'Local News', count: cardFeed.filter((article) => article.data.contentKind === 'news').length }
 ];
 
 function formatDate(value?: Date) {
@@ -156,6 +157,15 @@ function tileSearch(article: typeof visible[number]) {
     )}
 
     <section class="wrap homepage-section filter-tile panel-glow" id="home-filter-tile" aria-label="Homepage filters">
+      <div class="content-kind-filter-row" aria-label="Filter by update type">
+        {contentKindStats.map((item) => (
+          <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false" disabled={item.count === 0}>
+            <span>{item.label}</span>
+            <strong data-count-kind={item.kind}>{item.count}</strong>
+          </button>
+        ))}
+      </div>
+
       <div class="filter-tile-pill-row">
         {categoryStats.map((item) => (
           <button
@@ -186,15 +196,6 @@ function tileSearch(article: typeof visible[number]) {
       </div>
     </section>
 
-    <section class="wrap homepage-section content-kind-filter-row" aria-label="Filter by update type">
-      {contentKindStats.map((item) => (
-        <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false">
-          <span>{item.label}</span>
-          <strong data-count-kind={item.kind}>{item.count}</strong>
-        </button>
-      ))}
-    </section>
-
     <section class="wrap homepage-section tile-section" aria-label="Upcoming events and local updates">
       <div class="section-heading feed-heading">
         <div>
@@ -203,7 +204,7 @@ function tileSearch(article: typeof visible[number]) {
         </div>
       </div>
       <div class="home-tile-grid" id="home-tile-grid">
-        {feed.map((article) => {
+        {cardFeed.map((article) => {
           const hasCover = Boolean(article.data.coverImage);
           const cardDate = displayDate(article);
           const cardDateParts = formatDate(cardDate).split(' ');
