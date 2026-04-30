@@ -4,7 +4,7 @@ const articles = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    hero_title: z.string().optional(),
+    slug: z.string().optional(),
     date: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     draft: z.boolean().default(false),
@@ -17,8 +17,26 @@ const articles = defineCollection({
     excerpt: z.string(),
     coverImage: z.string().optional().nullable(),
     author: z.string().default('LeeScoop'),
-    sourceType: z.enum(['local', 'notice', 'event', 'update']).default('local'),
-    contentType: z.enum(['brief', 'standard', 'guide']).default('brief')
+
+    // LeeScoop keeps one collection for now. `contentKind` controls display.
+    contentKind: z.enum(['event', 'news']).default('event'),
+    sourceType: z.enum(['official', 'community', 'news', 'local']).default('official'),
+    contentType: z.enum(['brief', 'standard', 'guide']).default('brief'),
+
+    // Event fields.
+    eventDate: z.coerce.date().optional(),
+    eventEndDate: z.coerce.date().optional(),
+    eventTime: z.string().optional(),
+    city: z.string().optional(),
+    location: z.string().optional(),
+    venue: z.string().optional(),
+    address: z.string().optional(),
+    audience: z.string().optional(),
+    cost: z.string().optional(),
+
+    // Source fields.
+    sourceName: z.string().optional(),
+    sourceUrl: z.string().url().optional()
   })
 });
 

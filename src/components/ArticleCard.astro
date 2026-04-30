@@ -7,21 +7,25 @@ interface Props {
 }
 
 const { article } = Astro.props;
+const displayDate = article.data.contentKind === 'event' ? article.data.eventDate : article.data.date;
+const dateParts = displayDate
+  ? displayDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).split(' ')
+  : ['TBA', ''];
 ---
 <article class="article-card panel">
   <a class="card-link" href={articlePath(article)} aria-label={article.data.title}>
     {article.data.coverImage && <img class="cover-image card-cover" src={article.data.coverImage} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />}
     <div class="card-topline">
+      <span class="event-date-badge compact"><span>{dateParts[0]}</span><strong>{dateParts[1] ?? ''}</strong></span>
       <span class="meta-pill">{article.data.category}</span>
-      <span class={`meta-pill tone-${article.data.sourceType}`}>{article.data.sourceType}</span>
+      <span class={`meta-pill tone-${article.data.sourceType}`}>{article.data.contentKind === 'news' ? 'news' : 'event'}</span>
     </div>
     <h3>{article.data.title}</h3>
     <p>{article.data.excerpt}</p>
     <div class="card-footer">
-      <time datetime={article.data.date.toISOString()}>
-        {article.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-      </time>
-      <span class="read-link">Read scoop</span>
+      {article.data.eventTime && <span>{article.data.eventTime}</span>}
+      {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
+      <span class="read-link">View details</span>
     </div>
   </a>
 </article>

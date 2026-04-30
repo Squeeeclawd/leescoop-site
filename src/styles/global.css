@@ -2090,3 +2090,109 @@ img { max-width: 100%; display: block; }
     max-height: 4.2rem;
   }
 }
+
+/* LeeScoop short-post/event feed additions */
+.feed-heading h2 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: clamp(1.4rem, 2vw, 2rem);
+}
+
+.tile-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.event-date-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 4.35rem;
+  padding: 0.5rem 0.62rem 0.58rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(139, 210, 222, 0.28);
+  background: linear-gradient(180deg, var(--warm-sand), var(--pale-mist));
+  color: var(--ink-blue);
+  box-shadow: 0 10px 24px rgba(3, 26, 37, 0.22);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.event-date-badge span {
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.event-date-badge strong {
+  margin-top: 0.18rem;
+  font-size: 1.45rem;
+  letter-spacing: -0.04em;
+}
+
+.event-date-badge.compact {
+  min-width: 3.55rem;
+  padding: 0.34rem 0.48rem;
+  border-radius: 0.72rem;
+}
+
+.event-date-badge.compact strong {
+  font-size: 1.08rem;
+}
+
+.hero-date-badge {
+  align-self: start;
+  min-width: 5.2rem;
+}
+
+.hero-date-badge strong {
+  font-size: 2rem;
+}
+
+.post-fact-grid {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1.35rem 0 0;
+  padding: 1rem;
+  border: 1px solid rgba(139, 210, 222, 0.22);
+  border-radius: 1rem;
+  background: rgba(6, 58, 82, 0.45);
+}
+
+.post-fact-grid div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.post-fact-grid dt {
+  color: var(--sea-glass);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.post-fact-grid dd {
+  margin: 0;
+  color: var(--warm-sand);
+  line-height: 1.45;
+}
+
+.post-fact-grid a {
+  color: var(--citrus-yellow);
+}
+
+.local-post-body :global(h2) {
+  color: var(--sea-glass);
+  margin-top: 1.8rem;
+}
+
+@media (max-width: 720px) {
+  .post-fact-grid div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}

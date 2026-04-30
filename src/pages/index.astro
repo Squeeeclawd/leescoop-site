@@ -7,10 +7,28 @@ import { articlePath, tagCounts, visibleArticles } from '@/lib/content';
 
 const allArticles = await getCollection('articles');
 const visible = visibleArticles(allArticles);
-const chronological = [...visible].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-const lead = chronological[0];
-const feed = chronological;
+const now = new Date();
+
+function sortForFeed(items: typeof visible) {
+  return [...items].sort((a, b) => {
+    const aKind = a.data.contentKind ?? 'event';
+    const bKind = b.data.contentKind ?? 'event';
+    const aEventDate = a.data.eventDate?.getTime();
+    const bEventDate = b.data.eventDate?.getTime();
+    const aUpcoming = aKind === 'event' && aEventDate !== undefined && aEventDate >= now.getTime();
+    const bUpcoming = bKind === 'event' && bEventDate !== undefined && bEventDate >= now.getTime();
+
+    if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
+    if (aUpcoming && bUpcoming) return (aEventDate ?? 0) - (bEventDate ?? 0);
+    if (aKind !== bKind) return aKind === 'event' ? -1 : 1;
+    return b.data.date.getTime() - a.data.date.getTime();
+  });
+}
+
+const feed = sortForFeed(visible);
+const lead = feed[0];
 const topTags = tagCounts(allArticles).slice(0, 10);
+
 const categoryAccentMap: Record<string, string> = {
   'Cape Coral': '#07506F',
   'Fort Myers': '#197894',
@@ -53,87 +71,41 @@ const categoryOrder = [
   'Captiva'
 ];
 
-const categoryStats = categoryOrder
-  .map((category) => ({
-    category,
-    count: feed.filter((article) => article.data.category === category).length,
-    accent: categoryAccentMap[category] ?? '#197894',
-    textColor: categoryTextMap[category] ?? '#FFFFFF'
-  }));
+const categoryStats = categoryOrder.map((category) => ({
+  category,
+  count: feed.filter((article) => article.data.category === category).length,
+  accent: categoryAccentMap[category] ?? '#197894',
+  textColor: categoryTextMap[category] ?? '#FFFFFF'
+}));
 
-function formatDate(value: Date) {
-  return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function formatDate(value?: Date) {
+  if (!value) return 'Date TBA';
+  return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function readTime(article: typeof visible[number]) {
-  const words = article.body.split(/\s+/).filter(Boolean).length;
-  return `${Math.max(1, Math.round(words / 220))} min read`;
+function formatLongDate(value?: Date) {
+  if (!value) return 'Date TBA';
+  return value.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-function normalizeHomeTitle(text: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return trimmed;
-
-  let normalized = trimmed.toLowerCase();
-  normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-  normalized = normalized.replace(/([.!?]\s+)([a-z])/g, (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
-
-  const tokenFixes: Array<[RegExp, string]> = [
-    [/\bai\b/g, 'AI'],
-    [/\bcia\b/g, 'CIA'],
-    [/\bjfk\b/g, 'JFK'],
-    [/\bfbi\b/g, 'FBI'],
-    [/\bnasa\b/g, 'NASA'],
-    [/\beo\b/g, 'EO'],
-    [/\bufo\b/g, 'UFO'],
-    [/\bidf\b/g, 'IDF'],
-    [/\bunifil\b/g, 'UNIFIL'],
-    [/\blg&e\b/g, 'LG&E'],
-    [/\bku\b/g, 'KU'],
-    [/\bmeta\b/g, 'Meta'],
-    [/\bisrael\b/g, 'Israel'],
-    [/\bjesus\b/g, 'Jesus'],
-    [/\bitaly\b/g, 'Italy'],
-    [/\blockheed\b/g, 'Lockheed'],
-    [/\bpentagon\b/g, 'Pentagon'],
-    [/\bschumer\b/g, 'Schumer'],
-    [/\bgrusch\b/g, 'Grusch'],
-    [/\bdiddy\b/g, 'Diddy'],
-    [/\bla\b/g, 'LA'],
-    [/\bvatican\b/g, 'Vatican'],
-    [/\bmaronites\b/g, 'Maronites'],
-    [/\bdebel\b/g, 'Debel'],
-    [/\bspacex\b/g, 'SpaceX'],
-    [/\bearth\b/g, 'Earth']
-  ];
-
-  for (const [pattern, replacement] of tokenFixes) {
-    normalized = normalized.replace(pattern, replacement);
-  }
-
-  return normalized;
-}
-
-function homeTitle(article: typeof visible[number]) {
-  return normalizeHomeTitle(article.data.title);
-}
-
-function heroTitle(article: typeof visible[number]) {
-  return normalizeHomeTitle(article.data.hero_title ?? article.data.title);
+function displayDate(article: typeof visible[number]) {
+  return article.data.contentKind === 'event' ? article.data.eventDate : article.data.date;
 }
 
 function categoryAccent(category: string) {
-  return categoryAccentMap[category] ?? '#6D7495';
+  return categoryAccentMap[category] ?? '#197894';
 }
 
 function tileSearch(article: typeof visible[number]) {
   return [
     article.data.title,
-    article.data.hero_title ?? '',
-    homeTitle(article),
     article.data.category,
+    article.data.city ?? '',
+    article.data.location ?? '',
+    article.data.venue ?? '',
     article.data.excerpt,
-    article.data.sourceType,
+    article.data.contentKind ?? '',
+    article.data.sourceName ?? '',
     ...article.data.tags
   ].join(' ').toLowerCase();
 }
@@ -154,12 +126,19 @@ function tileSearch(article: typeof visible[number]) {
     {lead && (
       <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
         <div class="hero-home-grid hero-home-grid-patch">
+          <div class="event-date-badge hero-date-badge">
+            <span>{formatDate(displayDate(lead)).split(' ')[0]}</span>
+            <strong>{formatDate(displayDate(lead)).split(' ')[1] ?? ''}</strong>
+          </div>
           <div class="hero-home-copy hero-home-copy-patch">
+            <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Local news' : 'Upcoming'}</p>
             <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
-              <a href={articlePath(lead)}>{heroTitle(lead)}</a>
+              <a href={articlePath(lead)}>{lead.data.title}</a>
             </h1>
             <div class="homepage-meta-row hero-meta-row">
-              <time datetime={lead.data.date.toISOString()}>{formatDate(lead.data.date)}</time>
+              <time datetime={displayDate(lead)?.toISOString()}>{formatLongDate(displayDate(lead))}</time>
+              {lead.data.eventTime && <span>{lead.data.eventTime}</span>}
+              {(lead.data.venue || lead.data.location || lead.data.city) && <span>{lead.data.venue ?? lead.data.location ?? lead.data.city}</span>}
               <button
                 type="button"
                 class="category-pill hero-category-pill"
@@ -168,9 +147,9 @@ function tileSearch(article: typeof visible[number]) {
               >
                 {lead.data.category}
               </button>
-              <span>{readTime(lead)}</span>
             </div>
-            <a class="button primary homepage-cta" href={articlePath(lead)}>Read</a>
+            <p class="lede small-note">{lead.data.excerpt}</p>
+            <a class="button primary homepage-cta" href={articlePath(lead)}>View details</a>
           </div>
           {lead.data.coverImage && (
             <a class="hero-home-image-wrap" href={articlePath(lead)} aria-label={lead.data.title}>
@@ -203,13 +182,7 @@ function tileSearch(article: typeof visible[number]) {
         <label class="sr-only" for="home-filter-input">Search Lee County updates</label>
         <div class="filter-search-shell">
           <span class="filter-search-icon" aria-hidden="true">⌕</span>
-          <input
-            id="home-filter-input"
-            name="q"
-            type="search"
-            autocomplete="off"
-            placeholder="Search Lee County updates"
-          />
+          <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, cities, venues" />
         </div>
       </form>
 
@@ -218,38 +191,44 @@ function tileSearch(article: typeof visible[number]) {
       </div>
     </section>
 
-    <section class="wrap homepage-section tile-section" aria-label="Latest updates">
+    <section class="wrap homepage-section tile-section" aria-label="Upcoming events and local updates">
+      <div class="section-heading feed-heading">
+        <div>
+          <p class="eyebrow">What’s happening</p>
+          <h2>Upcoming first. Local news second.</h2>
+        </div>
+      </div>
       <div class="home-tile-grid" id="home-tile-grid">
         {feed.map((article) => {
           const hasCover = Boolean(article.data.coverImage);
+          const cardDate = displayDate(article);
+          const cardDateParts = formatDate(cardDate).split(' ');
           return (
-            <article
-              class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`}
-              data-category={article.data.category}
-              data-search={tileSearch(article)}
-            >
+            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={article.data.category} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
 
               {hasCover && (
                 <div class="home-tile-media">
                   <img class="home-tile-image" src={article.data.coverImage!} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />
-                  <button type="button" class="tile-category-pill" data-filter-category={article.data.category}>
-                    {article.data.category}
-                  </button>
+                  <button type="button" class="tile-category-pill" data-filter-category={article.data.category}>{article.data.category}</button>
                 </div>
               )}
 
               <div class="home-tile-body">
-                {!hasCover && (
-                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={article.data.category}>
-                    {article.data.category}
-                  </button>
-                )}
-                <h2 class="home-tile-title" title={article.data.title}>{homeTitle(article)}</h2>
+                <div class="tile-top-row">
+                  <div class="event-date-badge">
+                    <span>{cardDateParts[0]}</span>
+                    <strong>{cardDateParts[1] ?? ''}</strong>
+                  </div>
+                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={article.data.category}>{article.data.category}</button>
+                </div>
+                <h2 class="home-tile-title" title={article.data.title}>{article.data.title}</h2>
                 <p class="home-tile-deck">{article.data.excerpt}</p>
                 <div class="tile-meta-row">
-                  <time datetime={article.data.date.toISOString()}>{formatDate(article.data.date)}</time>
-                  <span>{readTime(article)}</span>
+                  <time datetime={cardDate?.toISOString()}>{formatLongDate(cardDate)}</time>
+                  {article.data.eventTime && <span>{article.data.eventTime}</span>}
+                  {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
+                  <span>{article.data.contentKind === 'news' ? 'Local news' : 'Event'}</span>
                 </div>
               </div>
             </article>
@@ -257,9 +236,7 @@ function tileSearch(article: typeof visible[number]) {
         })}
       </div>
 
-      <div class="home-empty-state" id="home-empty-state" hidden>
-        No updates match that filter right now.
-      </div>
+      <div class="home-empty-state" id="home-empty-state" hidden>No updates match that filter right now.</div>
     </section>
   </main>
   <Footer tags={topTags} />
@@ -279,7 +256,6 @@ function tileSearch(article: typeof visible[number]) {
 
       const updateCounts = () => {
         const query = state.query.trim().toLowerCase();
-
         filterPills.forEach((pill) => {
           if (!(pill instanceof HTMLElement)) return;
           const category = pill.getAttribute('data-filter-category') || '';
@@ -298,7 +274,6 @@ function tileSearch(article: typeof visible[number]) {
       const applyFilters = () => {
         const query = state.query.trim().toLowerCase();
         let visibleCount = 0;
-
         tiles.forEach((tile) => {
           const category = tile.getAttribute('data-category') || '';
           const haystack = tile.getAttribute('data-search') || '';
@@ -308,7 +283,6 @@ function tileSearch(article: typeof visible[number]) {
           tile.hidden = !shouldShow;
           if (shouldShow) visibleCount += 1;
         });
-
         updateCounts();
         clearAll.hidden = !(state.category || state.query.trim());
         emptyState.hidden = visibleCount > 0;
@@ -317,16 +291,13 @@ function tileSearch(article: typeof visible[number]) {
       document.addEventListener('click', (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
-
         const filterButton = target.closest('[data-filter-category]');
         if (filterButton instanceof HTMLElement) {
           event.preventDefault();
-          const nextCategory = filterButton.getAttribute('data-filter-category') || '';
-          state.category = nextCategory;
+          state.category = filterButton.getAttribute('data-filter-category') || '';
           applyFilters();
           return;
         }
-
         if (target === clearAll) {
           state.category = '';
           state.query = '';
