@@ -1,6 +1,5 @@
 ---
 title: "Forever Motown at Barbara B. Mann"
-slug: forever-motown-at-barbara-b-mann
 date: 2026-04-30T10:57:00-04:00
 draft: false
 featured: false

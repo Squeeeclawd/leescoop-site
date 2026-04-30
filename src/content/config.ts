@@ -4,7 +4,6 @@ const articles = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    slug: z.string().optional(),
     date: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     draft: z.boolean().default(false),

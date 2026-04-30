@@ -29,7 +29,6 @@ if [ "$kind" = "event" ]; then
   cat > "$out" <<POST
 ---
 title: "${title}"
-slug: ${slug}
 date: ${now}
 draft: true
 category: ${category}
@@ -69,7 +68,6 @@ else
   cat > "$out" <<POST
 ---
 title: "${title}"
-slug: ${slug}
 date: ${now}
 draft: true
 category: ${category}

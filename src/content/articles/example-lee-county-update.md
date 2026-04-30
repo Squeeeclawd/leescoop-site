@@ -1,6 +1,5 @@
 ---
 title: "Example Lee County update"
-slug: example-lee-county-update
 date: 2026-04-30T10:00:00-04:00
 draft: true
 featured: false
