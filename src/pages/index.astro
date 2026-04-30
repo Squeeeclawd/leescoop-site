@@ -64,6 +64,11 @@ const categoryStats = categoryOrder.map((category) => ({
   textColor: categoryTextMap[category] ?? '#FFFFFF'
 }));
 
+const contentKindStats = [
+  { kind: 'event', label: 'Events', count: feed.filter((article) => article.data.contentKind !== 'news').length },
+  { kind: 'news', label: 'Local News', count: feed.filter((article) => article.data.contentKind === 'news').length }
+];
+
 function formatDate(value?: Date) {
   if (!value) return 'Date TBA';
   return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -181,6 +186,15 @@ function tileSearch(article: typeof visible[number]) {
       </div>
     </section>
 
+    <section class="wrap homepage-section content-kind-filter-row" aria-label="Filter by update type">
+      {contentKindStats.map((item) => (
+        <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false">
+          <span>{item.label}</span>
+          <strong data-count-kind={item.kind}>{item.count}</strong>
+        </button>
+      ))}
+    </section>
+
     <section class="wrap homepage-section tile-section" aria-label="Upcoming events and local updates">
       <div class="section-heading feed-heading">
         <div>
@@ -194,7 +208,7 @@ function tileSearch(article: typeof visible[number]) {
           const cardDate = displayDate(article);
           const cardDateParts = formatDate(cardDate).split(' ');
           return (
-            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-search={tileSearch(article)}>
+            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
 
               {hasCover && (
@@ -236,12 +250,13 @@ function tileSearch(article: typeof visible[number]) {
     (() => {
       const tiles = Array.from(document.querySelectorAll('.home-tile'));
       const filterPills = Array.from(document.querySelectorAll('[data-filter-pill]'));
+      const kindButtons = Array.from(document.querySelectorAll('[data-filter-kind]'));
       const tileButtons = Array.from(document.querySelectorAll('.tile-category-pill, .hero-category-pill'));
       const searchInput = document.getElementById('home-filter-input');
       const searchForm = document.getElementById('filter-search-form');
       const clearAll = document.getElementById('filter-clear-all');
       const emptyState = document.getElementById('home-empty-state');
-      const state = { category: '', query: '' };
+      const state = { category: '', kind: '', query: '' };
 
       if (!(searchInput instanceof HTMLInputElement) || !(searchForm instanceof HTMLFormElement) || !(clearAll instanceof HTMLButtonElement) || !(emptyState instanceof HTMLElement) || !tiles.length) return;
 
@@ -253,12 +268,28 @@ function tileSearch(article: typeof visible[number]) {
           const countTarget = pill.querySelector('[data-count-for]');
           const count = tiles.filter((tile) => {
             const tileCategory = tile.getAttribute('data-category') || '';
+            const tileKind = tile.getAttribute('data-kind') || '';
             const haystack = tile.getAttribute('data-search') || '';
-            return tileCategory === category && (!query || haystack.includes(query));
+            return tileCategory === category && (!state.kind || tileKind === state.kind) && (!query || haystack.includes(query));
           }).length;
           if (countTarget) countTarget.textContent = String(count);
           pill.setAttribute('aria-pressed', String(state.category === category));
           pill.classList.toggle('is-active', state.category === category);
+        });
+
+        kindButtons.forEach((button) => {
+          if (!(button instanceof HTMLElement)) return;
+          const kind = button.getAttribute('data-filter-kind') || '';
+          const countTarget = button.querySelector('[data-count-kind]');
+          const count = tiles.filter((tile) => {
+            const tileCategory = tile.getAttribute('data-category') || '';
+            const tileKind = tile.getAttribute('data-kind') || '';
+            const haystack = tile.getAttribute('data-search') || '';
+            return tileKind === kind && (!state.category || tileCategory === state.category) && (!query || haystack.includes(query));
+          }).length;
+          if (countTarget) countTarget.textContent = String(count);
+          button.setAttribute('aria-pressed', String(state.kind === kind));
+          button.classList.toggle('is-active', state.kind === kind);
         });
       };
 
@@ -267,15 +298,17 @@ function tileSearch(article: typeof visible[number]) {
         let visibleCount = 0;
         tiles.forEach((tile) => {
           const category = tile.getAttribute('data-category') || '';
+          const kind = tile.getAttribute('data-kind') || '';
           const haystack = tile.getAttribute('data-search') || '';
           const matchesCategory = !state.category || category === state.category;
+          const matchesKind = !state.kind || kind === state.kind;
           const matchesQuery = !query || haystack.includes(query);
-          const shouldShow = matchesCategory && matchesQuery;
+          const shouldShow = matchesCategory && matchesKind && matchesQuery;
           tile.hidden = !shouldShow;
           if (shouldShow) visibleCount += 1;
         });
         updateCounts();
-        clearAll.hidden = !(state.category || state.query.trim());
+        clearAll.hidden = !(state.category || state.kind || state.query.trim());
         emptyState.hidden = visibleCount > 0;
       };
 
@@ -285,12 +318,22 @@ function tileSearch(article: typeof visible[number]) {
         const filterButton = target.closest('[data-filter-category]');
         if (filterButton instanceof HTMLElement) {
           event.preventDefault();
-          state.category = filterButton.getAttribute('data-filter-category') || '';
+          const category = filterButton.getAttribute('data-filter-category') || '';
+          state.category = state.category === category ? '' : category;
+          applyFilters();
+          return;
+        }
+        const kindButton = target.closest('[data-filter-kind]');
+        if (kindButton instanceof HTMLElement) {
+          event.preventDefault();
+          const kind = kindButton.getAttribute('data-filter-kind') || '';
+          state.kind = state.kind === kind ? '' : kind;
           applyFilters();
           return;
         }
         if (target === clearAll) {
           state.category = '';
+          state.kind = '';
           state.query = '';
           searchInput.value = '';
           applyFilters();
