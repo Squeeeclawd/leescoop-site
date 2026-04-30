@@ -26,7 +26,7 @@ audience: Fans of Motown, live music, and theater-style tribute shows.
 cost: Check official ticket page.
 sourceName: Barbara B. Mann Performing Arts Hall
 sourceUrl: https://www.bbmannpah.com/events/detail/forever-motown-2026-fort-myers
-coverImage:
+coverImage: /covers/forever-motown-at-barbara-b-mann.svg
 ---
 
 ## What is it?
