@@ -1,0 +1,12 @@
+---
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+---
+<form class={`search-bar ${compact ? 'compact' : ''}`} action="/search/" method="get">
+  <label class="sr-only" for="site-search">Search articles</label>
+  <input id="site-search" name="q" type="search" placeholder="Search the anomaly archive" />
+  <button type="submit">Search</button>
+</form>

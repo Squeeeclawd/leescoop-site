@@ -1,0 +1,359 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { articlePath, tagCounts, visibleArticles } from '@/lib/content';
+
+const allArticles = await getCollection('articles');
+const visible = visibleArticles(allArticles);
+const chronological = [...visible].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const lead = chronological[0];
+const feed = chronological;
+const topTags = tagCounts(allArticles).slice(0, 10);
+const categoryAccentMap: Record<string, string> = {
+  'Cape Coral': '#07506F',
+  'Fort Myers': '#197894',
+  'Bonita Springs': '#4FA7BC',
+  'Estero': '#8BD2DE',
+  'Fort Myers Beach': '#D94B32',
+  'Sanibel': '#F28B42',
+  'Lehigh Acres': '#F7DE69',
+  'North Fort Myers': '#063A52',
+  'Pine Island / Matlacha': '#8BD2DE',
+  'Boca Grande': '#197894',
+  'Captiva': '#4FA7BC'
+};
+
+const categoryTextMap: Record<string, string> = {
+  'Cape Coral': '#FFFFFF',
+  'Fort Myers': '#FFFFFF',
+  'Bonita Springs': '#063A52',
+  'Estero': '#063A52',
+  'Fort Myers Beach': '#FFFFFF',
+  'Sanibel': '#063A52',
+  'Lehigh Acres': '#063A52',
+  'North Fort Myers': '#FFFFFF',
+  'Pine Island / Matlacha': '#063A52',
+  'Boca Grande': '#FFFFFF',
+  'Captiva': '#063A52'
+};
+
+const categoryOrder = [
+  'Cape Coral',
+  'Fort Myers',
+  'Bonita Springs',
+  'Estero',
+  'Fort Myers Beach',
+  'Sanibel',
+  'Lehigh Acres',
+  'North Fort Myers',
+  'Pine Island / Matlacha',
+  'Boca Grande',
+  'Captiva'
+];
+
+const categoryStats = categoryOrder
+  .map((category) => ({
+    category,
+    count: feed.filter((article) => article.data.category === category).length,
+    accent: categoryAccentMap[category] ?? '#197894',
+    textColor: categoryTextMap[category] ?? '#FFFFFF'
+  }));
+
+function formatDate(value: Date) {
+  return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function readTime(article: typeof visible[number]) {
+  const words = article.body.split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.round(words / 220))} min read`;
+}
+
+function normalizeHomeTitle(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+
+  let normalized = trimmed.toLowerCase();
+  normalized = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  normalized = normalized.replace(/([.!?]\s+)([a-z])/g, (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
+
+  const tokenFixes: Array<[RegExp, string]> = [
+    [/\bai\b/g, 'AI'],
+    [/\bcia\b/g, 'CIA'],
+    [/\bjfk\b/g, 'JFK'],
+    [/\bfbi\b/g, 'FBI'],
+    [/\bnasa\b/g, 'NASA'],
+    [/\beo\b/g, 'EO'],
+    [/\bufo\b/g, 'UFO'],
+    [/\bidf\b/g, 'IDF'],
+    [/\bunifil\b/g, 'UNIFIL'],
+    [/\blg&e\b/g, 'LG&E'],
+    [/\bku\b/g, 'KU'],
+    [/\bmeta\b/g, 'Meta'],
+    [/\bisrael\b/g, 'Israel'],
+    [/\bjesus\b/g, 'Jesus'],
+    [/\bitaly\b/g, 'Italy'],
+    [/\blockheed\b/g, 'Lockheed'],
+    [/\bpentagon\b/g, 'Pentagon'],
+    [/\bschumer\b/g, 'Schumer'],
+    [/\bgrusch\b/g, 'Grusch'],
+    [/\bdiddy\b/g, 'Diddy'],
+    [/\bla\b/g, 'LA'],
+    [/\bvatican\b/g, 'Vatican'],
+    [/\bmaronites\b/g, 'Maronites'],
+    [/\bdebel\b/g, 'Debel'],
+    [/\bspacex\b/g, 'SpaceX'],
+    [/\bearth\b/g, 'Earth']
+  ];
+
+  for (const [pattern, replacement] of tokenFixes) {
+    normalized = normalized.replace(pattern, replacement);
+  }
+
+  return normalized;
+}
+
+function homeTitle(article: typeof visible[number]) {
+  return normalizeHomeTitle(article.data.title);
+}
+
+function heroTitle(article: typeof visible[number]) {
+  return normalizeHomeTitle(article.data.hero_title ?? article.data.title);
+}
+
+function categoryAccent(category: string) {
+  return categoryAccentMap[category] ?? '#6D7495';
+}
+
+function tileSearch(article: typeof visible[number]) {
+  return [
+    article.data.title,
+    article.data.hero_title ?? '',
+    homeTitle(article),
+    article.data.category,
+    article.data.excerpt,
+    article.data.sourceType,
+    ...article.data.tags
+  ].join(' ').toLowerCase();
+}
+---
+<BaseLayout title="LeeScoop" description="Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area.">
+  <Header enableSearchShortcut={true} searchTargetId="home-filter-input" />
+  <main class="homepage-main" data-homepage-root>
+    {!lead && (
+      <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
+        <div class="hero-home-copy hero-home-copy-patch">
+          <p class="eyebrow">Lee County, quickly</p>
+          <h1 class="lead-headline lead-headline-patch">Your scoop on Lee County.</h1>
+          <p class="lede">No ads. No promotion. Just what’s happening in your area.</p>
+        </div>
+      </section>
+    )}
+
+    {lead && (
+      <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
+        <div class="hero-home-grid hero-home-grid-patch">
+          <div class="hero-home-copy hero-home-copy-patch">
+            <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
+              <a href={articlePath(lead)}>{heroTitle(lead)}</a>
+            </h1>
+            <div class="homepage-meta-row hero-meta-row">
+              <time datetime={lead.data.date.toISOString()}>{formatDate(lead.data.date)}</time>
+              <button
+                type="button"
+                class="category-pill hero-category-pill"
+                style={`--category-accent: ${categoryAccent(lead.data.category)}`}
+                data-filter-category={lead.data.category}
+              >
+                {lead.data.category}
+              </button>
+              <span>{readTime(lead)}</span>
+            </div>
+            <a class="button primary homepage-cta" href={articlePath(lead)}>Read</a>
+          </div>
+          {lead.data.coverImage && (
+            <a class="hero-home-image-wrap" href={articlePath(lead)} aria-label={lead.data.title}>
+              <img class="hero-home-image" src={lead.data.coverImage} alt={`${lead.data.title} cover image`} loading="eager" decoding="async" />
+            </a>
+          )}
+        </div>
+      </section>
+    )}
+
+    <section class="wrap homepage-section filter-tile panel-glow" id="home-filter-tile" aria-label="Homepage filters">
+      <div class="filter-tile-pill-row">
+        {categoryStats.map((item) => (
+          <button
+            type="button"
+            class="filter-tile-pill"
+            data-filter-category={item.category}
+            data-filter-pill={item.category}
+            aria-pressed="false"
+            style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
+          >
+            <span>{item.category}</span>
+            <span class="filter-pill-separator">·</span>
+            <span data-count-for={item.category}>{item.count}</span>
+          </button>
+        ))}
+      </div>
+
+      <form class="filter-search-form" id="filter-search-form" action="/search/" method="get">
+        <label class="sr-only" for="home-filter-input">Search Lee County updates</label>
+        <div class="filter-search-shell">
+          <span class="filter-search-icon" aria-hidden="true">⌕</span>
+          <input
+            id="home-filter-input"
+            name="q"
+            type="search"
+            autocomplete="off"
+            placeholder="Search Lee County updates"
+          />
+        </div>
+      </form>
+
+      <div class="filter-tile-footer">
+        <button type="button" class="filter-clear-all" id="filter-clear-all" hidden>clear all filters ×</button>
+      </div>
+    </section>
+
+    <section class="wrap homepage-section tile-section" aria-label="Latest updates">
+      <div class="home-tile-grid" id="home-tile-grid">
+        {feed.map((article) => {
+          const hasCover = Boolean(article.data.coverImage);
+          return (
+            <article
+              class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`}
+              data-category={article.data.category}
+              data-search={tileSearch(article)}
+            >
+              <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
+
+              {hasCover && (
+                <div class="home-tile-media">
+                  <img class="home-tile-image" src={article.data.coverImage!} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />
+                  <button type="button" class="tile-category-pill" data-filter-category={article.data.category}>
+                    {article.data.category}
+                  </button>
+                </div>
+              )}
+
+              <div class="home-tile-body">
+                {!hasCover && (
+                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={article.data.category}>
+                    {article.data.category}
+                  </button>
+                )}
+                <h2 class="home-tile-title" title={article.data.title}>{homeTitle(article)}</h2>
+                <p class="home-tile-deck">{article.data.excerpt}</p>
+                <div class="tile-meta-row">
+                  <time datetime={article.data.date.toISOString()}>{formatDate(article.data.date)}</time>
+                  <span>{readTime(article)}</span>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div class="home-empty-state" id="home-empty-state" hidden>
+        No updates match that filter right now.
+      </div>
+    </section>
+  </main>
+  <Footer tags={topTags} />
+
+  <script is:inline>
+    (() => {
+      const tiles = Array.from(document.querySelectorAll('.home-tile'));
+      const filterPills = Array.from(document.querySelectorAll('[data-filter-pill]'));
+      const tileButtons = Array.from(document.querySelectorAll('.tile-category-pill, .hero-category-pill'));
+      const searchInput = document.getElementById('home-filter-input');
+      const searchForm = document.getElementById('filter-search-form');
+      const clearAll = document.getElementById('filter-clear-all');
+      const emptyState = document.getElementById('home-empty-state');
+      const state = { category: '', query: '' };
+
+      if (!(searchInput instanceof HTMLInputElement) || !(searchForm instanceof HTMLFormElement) || !(clearAll instanceof HTMLButtonElement) || !(emptyState instanceof HTMLElement) || !tiles.length) return;
+
+      const updateCounts = () => {
+        const query = state.query.trim().toLowerCase();
+
+        filterPills.forEach((pill) => {
+          if (!(pill instanceof HTMLElement)) return;
+          const category = pill.getAttribute('data-filter-category') || '';
+          const countTarget = pill.querySelector('[data-count-for]');
+          const count = tiles.filter((tile) => {
+            const tileCategory = tile.getAttribute('data-category') || '';
+            const haystack = tile.getAttribute('data-search') || '';
+            return tileCategory === category && (!query || haystack.includes(query));
+          }).length;
+          if (countTarget) countTarget.textContent = String(count);
+          pill.setAttribute('aria-pressed', String(state.category === category));
+          pill.classList.toggle('is-active', state.category === category);
+        });
+      };
+
+      const applyFilters = () => {
+        const query = state.query.trim().toLowerCase();
+        let visibleCount = 0;
+
+        tiles.forEach((tile) => {
+          const category = tile.getAttribute('data-category') || '';
+          const haystack = tile.getAttribute('data-search') || '';
+          const matchesCategory = !state.category || category === state.category;
+          const matchesQuery = !query || haystack.includes(query);
+          const shouldShow = matchesCategory && matchesQuery;
+          tile.hidden = !shouldShow;
+          if (shouldShow) visibleCount += 1;
+        });
+
+        updateCounts();
+        clearAll.hidden = !(state.category || state.query.trim());
+        emptyState.hidden = visibleCount > 0;
+      };
+
+      document.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+
+        const filterButton = target.closest('[data-filter-category]');
+        if (filterButton instanceof HTMLElement) {
+          event.preventDefault();
+          const nextCategory = filterButton.getAttribute('data-filter-category') || '';
+          state.category = nextCategory;
+          applyFilters();
+          return;
+        }
+
+        if (target === clearAll) {
+          state.category = '';
+          state.query = '';
+          searchInput.value = '';
+          applyFilters();
+          searchInput.focus();
+        }
+      });
+
+      searchInput.addEventListener('input', () => {
+        state.query = searchInput.value;
+        applyFilters();
+      });
+
+      searchForm.addEventListener('submit', () => {
+        state.query = searchInput.value;
+      });
+
+      tileButtons.forEach((button) => {
+        if (!(button instanceof HTMLElement)) return;
+        button.addEventListener('click', () => {
+          const filterTile = document.getElementById('home-filter-tile');
+          if (filterTile) filterTile.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      });
+
+      applyFilters();
+    })();
+  </script>
+</BaseLayout>

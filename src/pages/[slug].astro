@@ -1,0 +1,42 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { isPublished } from '@/lib/content';
+
+export async function getStaticPaths() {
+  const reservedSlugs = new Set(['archive', 'articles', 'category', 'search', 'tag', 'about']);
+  const articles = await getCollection('articles');
+  return articles
+    .filter(isPublished)
+    .filter((article) => !reservedSlugs.has(article.slug))
+    .map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+<BaseLayout title={`${article.data.title} | LeeScoop`} description={article.data.excerpt}>
+  <Header />
+  <main class="wrap article-shell">
+    <article class="article-body panel-glow">
+      {article.data.coverImage && <img class="cover-image article-cover" src={article.data.coverImage} alt={`${article.data.title} cover image`} loading="eager" decoding="async" />}
+      <header class="article-header">
+        <div class="article-kicker-row">
+          <p class="eyebrow">{article.data.category}</p>
+          <span class={`meta-pill tone-${article.data.sourceType}`}>{article.data.sourceType}</span>
+        </div>
+        <h1>{article.data.title}</h1>
+        <p class="lede">{article.data.excerpt}</p>
+        <div class="article-meta">
+          <span>By {article.data.author}</span>
+          <span>{article.data.date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+          {article.data.updatedDate && <span>Updated {article.data.updatedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>}
+        </div>
+      </header>
+      <Content />
+    </article>
+  </main>
+  <Footer />
+</BaseLayout>

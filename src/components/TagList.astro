@@ -1,0 +1,23 @@
+---
+interface Props {
+  tags: [string, number][];
+}
+
+const { tags } = Astro.props;
+---
+<section class="tag-cloud panel">
+  <div class="section-heading compact">
+    <div>
+      <p class="eyebrow">Trending tags</p>
+      <h2>Current obsessions</h2>
+    </div>
+  </div>
+  <div class="tag-list">
+    {tags.map(([tag, count]) => (
+      <a href={`/tag/${tag.toLowerCase().replaceAll(' ', '-')}/`} class="tag-pill">
+        <span>{tag}</span>
+        <small>{count}</small>
+      </a>
+    ))}
+  </div>
+</section>

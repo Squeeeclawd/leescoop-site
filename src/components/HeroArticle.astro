@@ -1,0 +1,36 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articlePath } from '@/lib/content';
+
+interface Props {
+  article: CollectionEntry<'articles'>;
+}
+
+const { article } = Astro.props;
+const cover = article.data.coverImage;
+---
+<section class="hero-section">
+  <div class="wrap hero-grid">
+    <article class="hero-copy panel-glow">
+      {cover && <img class="cover-image hero-cover" src={cover} alt={`${article.data.title} cover art`} loading="eager" decoding="async" />}
+      <p class="eyebrow">Featured transmission</p>
+      <h1>{article.data.title}</h1>
+      <p class="hero-excerpt">{article.data.excerpt}</p>
+      <div class="hero-meta">
+        <span>{article.data.category}</span>
+        <span>{article.data.sourceType}</span>
+        <span>{article.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      </div>
+      <a class="button primary" href={articlePath(article)}>Read the artifact</a>
+    </article>
+    <aside class="hero-sidebar panel">
+      <p class="eyebrow">Signal profile</p>
+      <ul class="signal-list">
+        <li><strong>Tone</strong><span>{article.data.tone}</span></li>
+        <li><strong>Type</strong><span>{article.data.sourceType}</span></li>
+        <li><strong>Status</strong><span>{article.data.featured ? 'featured' : 'published'}</span></li>
+      </ul>
+      <p class="small-note">The trick is simple: look unstable, remain navigable.</p>
+    </aside>
+  </div>
+</section>

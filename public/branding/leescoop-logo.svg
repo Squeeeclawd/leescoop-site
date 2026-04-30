@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 170" role="img" aria-labelledby="title desc">
+  <title id="title">LeeScoop</title>
+  <desc id="desc">Placeholder LeeScoop logo with coastal Lee County colors.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#07506F"/>
+      <stop offset="0.48" stop-color="#197894"/>
+      <stop offset="1" stop-color="#4FA7BC"/>
+    </linearGradient>
+  </defs>
+  <rect width="760" height="170" rx="34" fill="#F8F3E8"/>
+  <circle cx="84" cy="85" r="48" fill="url(#g)"/>
+  <path d="M50 92c24 11 47 11 69 0 16-8 31-9 46-3" fill="none" stroke="#8BD2DE" stroke-width="12" stroke-linecap="round"/>
+  <path d="M56 73c22 8 43 8 62 0 14-6 28-7 41-3" fill="none" stroke="#F7DE69" stroke-width="8" stroke-linecap="round" opacity="0.95"/>
+  <text x="158" y="89" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="900" fill="#063A52" letter-spacing="-2">LeeScoop</text>
+  <text x="162" y="124" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700" fill="#197894">Your scoop on Lee County.</text>
+  <circle cx="690" cy="54" r="13" fill="#F28B42"/>
+  <circle cx="718" cy="54" r="13" fill="#D94B32"/>
+</svg>

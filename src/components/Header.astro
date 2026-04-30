@@ -1,0 +1,55 @@
+---
+interface Props {
+  enableSearchShortcut?: boolean;
+  searchTargetId?: string;
+}
+
+const {
+  enableSearchShortcut = false,
+  searchTargetId = 'home-filter-input'
+} = Astro.props;
+---
+<header class="site-header home-header-strip">
+  <div class="wrap home-header-grid">
+    <div class="home-brand-block">
+      <div class="home-brand-row">
+        <a class="brand brand-logo-link" href="/" aria-label="LeeScoop home">
+          <img class="brand-logo" src="/branding/leescoop-logo.svg" alt="LeeScoop logo" loading="eager" decoding="async" />
+          <span class="sr-only">LeeScoop</span>
+        </a>
+        <nav class="main-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/archive/">Archive</a>
+          {enableSearchShortcut ? (
+            <button type="button" class="nav-search-trigger" data-search-shortcut data-search-target={searchTargetId}>
+              Search
+            </button>
+          ) : (
+            <a href="/search/">Search</a>
+          )}
+        </nav>
+      </div>
+      <p class="site-tagline">Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area.</p>
+    </div>
+  </div>
+</header>
+
+{enableSearchShortcut && (
+  <script is:inline>
+    (() => {
+      const trigger = document.querySelector('[data-search-shortcut]');
+      if (!(trigger instanceof HTMLElement)) return;
+
+      trigger.addEventListener('click', () => {
+        const targetId = trigger.getAttribute('data-search-target');
+        if (!targetId) return;
+        const input = document.getElementById(targetId);
+        if (!(input instanceof HTMLElement)) return;
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(() => {
+          if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.focus();
+        }, 220);
+      });
+    })();
+  </script>
+)}

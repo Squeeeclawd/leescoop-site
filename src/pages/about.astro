@@ -1,0 +1,45 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<BaseLayout title="About | LeeScoop" description="About LeeScoop, a simple local guide to what’s happening around Lee County.">
+  <Header />
+  <main class="wrap page-shell">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">About</p>
+        <h1>Your scoop on Lee County.</h1>
+      </div>
+    </div>
+
+    <section class="panel-glow homepage-section">
+      <p class="lede">
+        LeeScoop is a simple place to find short local updates around Lee County, organized by city and area.
+      </p>
+      <p class="lede small-note">
+        No ads. No promotion. Just what’s happening in your area.
+      </p>
+    </section>
+
+    <section class="content-sidebar-grid homepage-section">
+      <article class="panel-glow">
+        <p class="eyebrow">Operating rules</p>
+        <ul class="signal-list compact">
+          <li><strong>Local</strong><span>Organized around Lee County cities and locations.</span></li>
+          <li><strong>Brief</strong><span>Updates should be short enough to scan quickly.</span></li>
+          <li><strong>Kind</strong><span>The tone should be helpful, calm, and neighborly.</span></li>
+          <li><strong>Static</strong><span>The site stays simple, fast, and Cloudflare Pages friendly.</span></li>
+        </ul>
+      </article>
+
+      <article class="panel-glow">
+        <p class="eyebrow">Publishing style</p>
+        <p class="lede small-note">
+          Markdown stays the source of truth. Pagefind handles search. Cloudflare Pages handles hosting. No database or live app server is needed for v1.
+        </p>
+      </article>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>

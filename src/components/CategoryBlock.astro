@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import ArticleCard from '@/components/ArticleCard.astro';
+
+interface Props {
+  category: string;
+  articles: CollectionEntry<'articles'>[];
+}
+
+const { category, articles } = Astro.props;
+---
+<section class="category-block">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Category</p>
+      <h2>{category}</h2>
+    </div>
+    <a href={`/category/${category.toLowerCase().replaceAll(' ', '-')}/`}>View archive</a>
+  </div>
+  <div class="card-grid three compact-grid">
+    {articles.slice(0, 3).map((article) => <ArticleCard article={article} />)}
+  </div>
+</section>

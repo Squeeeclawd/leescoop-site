@@ -1,0 +1,33 @@
+---
+import { site } from '@/data/site';
+
+interface Props {
+  tags?: [string, number][];
+}
+
+const { tags = [] } = Astro.props;
+---
+<footer class="site-footer home-footer">
+  <div class="wrap home-footer-grid">
+    <div>
+      <p class="section-eyebrow">Coverage areas</p>
+      <div class="footer-tag-list" aria-label="Lee County coverage areas">
+        {site.categories.map((category) => <span class="footer-tag">{category}</span>)}
+      </div>
+      {tags.length > 0 && (
+        <>
+          <p class="section-eyebrow footer-topics-heading">Topics</p>
+          <div class="footer-tag-list">
+            {tags.map(([tag, count]) => <a class="footer-tag" href={`/tag/${tag.toLowerCase().replaceAll(' ', '-')}/`}>{tag} <span>{count}</span></a>)}
+          </div>
+        </>
+      )}
+    </div>
+    <div class="footer-status-block">
+      <a class="footer-logo-link" href="/" aria-label="LeeScoop home">
+        <img class="footer-logo" src="/branding/leescoop-logo.svg" alt="LeeScoop logo" loading="lazy" decoding="async" />
+      </a>
+      <p class="footer-signoff">No ads. No promotion. Just what’s happening in Lee County.</p>
+    </div>
+  </div>
+</footer>

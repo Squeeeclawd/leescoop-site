@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { articlePath } from '@/lib/content';
+
+interface Props {
+  article: CollectionEntry<'articles'>;
+}
+
+const { article } = Astro.props;
+---
+<article class="article-card panel">
+  <a class="card-link" href={articlePath(article)} aria-label={article.data.title}>
+    {article.data.coverImage && <img class="cover-image card-cover" src={article.data.coverImage} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />}
+    <div class="card-topline">
+      <span class="meta-pill">{article.data.category}</span>
+      <span class={`meta-pill tone-${article.data.sourceType}`}>{article.data.sourceType}</span>
+    </div>
+    <h3>{article.data.title}</h3>
+    <p>{article.data.excerpt}</p>
+    <div class="card-footer">
+      <time datetime={article.data.date.toISOString()}>
+        {article.data.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </time>
+      <span class="read-link">Read scoop</span>
+    </div>
+  </a>
+</article>

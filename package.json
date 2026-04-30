@@ -1,0 +1,21 @@
+{
+  "name": "leescoop-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build && npm run pagefind",
+    "preview": "astro preview",
+    "check": "astro check",
+    "pagefind": "pagefind --site dist"
+  },
+  "dependencies": {
+    "astro": "^5.7.0"
+  },
+  "devDependencies": {
+    "pagefind": "^1.3.0",
+    "typescript": "^5.8.3"
+  }
+}

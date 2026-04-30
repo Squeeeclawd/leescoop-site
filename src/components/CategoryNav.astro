@@ -1,0 +1,22 @@
+---
+interface Props {
+  categories: string[];
+}
+
+const { categories } = Astro.props;
+---
+<section class="category-nav wrap">
+  <div class="section-heading compact category-nav-head">
+    <div>
+      <p class="eyebrow">Primary categories</p>
+      <h2>Choose your preferred flavor of instability</h2>
+    </div>
+  </div>
+  <div class="category-chip-grid">
+    {categories.map((category) => (
+      <a class="category-chip" href={`/category/${category.toLowerCase().replaceAll(' ', '-')}/`}>
+        <span>{category}</span>
+      </a>
+    ))}
+  </div>
+</section>

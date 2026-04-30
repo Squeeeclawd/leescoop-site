@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#07506F"/>
+  <path d="M13 36c13 7 25 7 37 0" fill="none" stroke="#8BD2DE" stroke-width="7" stroke-linecap="round"/>
+  <path d="M16 27c11 5 22 5 32 0" fill="none" stroke="#F7DE69" stroke-width="5" stroke-linecap="round"/>
+  <text x="32" y="53" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="900" fill="#F8F3E8">LS</text>
+</svg>
