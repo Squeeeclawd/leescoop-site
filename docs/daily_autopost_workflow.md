@@ -207,15 +207,14 @@ nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurr
 
 ### Local news posts
 
-News posts should **not** use generated AI images by default.
+News posts should have a visual. Use this order:
 
-Use a real/source image when available:
-
-1. Prefer `og:image` or the primary article/public-record image.
+1. Prefer a real/source image when available.
 2. Only use/download the image if it clearly comes from the same official/news source domain as `sourceUrl` or `verificationUrl`.
-3. Save it into `public/covers/<slug>.<ext>`.
-4. Preserve source image URL in the run report or frontmatter note when available.
-5. If no usable same-source image exists, leave `coverImage` blank or ask Anthony before using generated art/placeholder.
+3. Save it into `public/covers/<slug>.<ext>` and preserve the source image URL in the run report or frontmatter note when available.
+4. If no usable same-source image exists, generate LeeScoop-style cover art using a generic visual concept based on the news item.
+
+Generated local-news images must follow the same no-text/no-logo rule as events: no exact business names unless visually necessary, no captions, no signs, no fake lettering, no official seals/logos.
 
 ## Build gate
 

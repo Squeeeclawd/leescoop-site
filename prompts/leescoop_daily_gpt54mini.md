@@ -58,7 +58,8 @@ Output schema:
       "sourceName": "string",
       "sourceUrl": "https://...",
       "verificationUrl": "https://... or empty",
-      "sourceImageUrl": "https://... or empty; must be from the same source/verification domain if used"
+      "sourceImageUrl": "https://... or empty; must be from the same source/verification domain if used",
+      "visualSubject": "generic image subject prompt with no exact names, no text/signage/logos; used if no valid source image exists"
     }
   ]
 }
@@ -68,4 +69,4 @@ Quality bar:
 - Do not use five events from one venue/source unless there are no other valid options.
 - News must be locally meaningful to Lee County / Fort Myers / Cape Coral / nearby barrier islands.
 - Prefer official/public-record verification for government, public safety, schools, roads, health, elections, or courts.
-- For news images, use only same-source images; if the image URL is from an unrelated CDN/news org/domain, leave sourceImageUrl empty.
+- For news images, use only same-source images; if the image URL is from an unrelated CDN/news org/domain, leave sourceImageUrl empty and provide a generic visualSubject for generated LeeScoop art.

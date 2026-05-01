@@ -21,7 +21,7 @@ location: Fort Myers
 verificationUrl: "https://www.fortmyers.gov/2362/Emergency-Debris-Removal-Right-of-Entry-"
 sourceName: City of Fort Myers
 sourceUrl: "https://www.fortmyers.gov/m/newsflash/Home/Detail/1841"
-coverImage: ""
+coverImage: /covers/fort-myers-storm-debris-roe-forms.png
 ---
 ## What happened?
 
