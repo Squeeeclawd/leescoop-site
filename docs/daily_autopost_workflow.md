@@ -9,9 +9,10 @@ The run must create local files only, run the build gate, and wait for Anthony b
 
 ## Model target
 
-- Intended cron model: GPT-5.4 mini through OAuth.
+- Preferred discovery model for full 10-post runs: GPT-5.4 through OAuth.
+- GPT-5.4 mini through OAuth is acceptable for narrower or follow-up formatting tasks, but it has shown weakness/timeouts on broader discovery passes.
 - Keep the model task narrow: collect candidates and return structured JSON. Do not ask the model to directly edit files freestyle.
-- If the OAuth mini route errors, stop and report the model/provider error instead of silently switching models.
+- If the chosen OAuth route errors or times out, stop and report the model/provider issue instead of silently switching models.
 
 ## High-level run order
 
@@ -34,6 +35,16 @@ The run must create local files only, run the build gate, and wait for Anthony b
 ## Event selection rules
 
 Use official event pages/calendars first. Pick the top 5 only.
+
+LeeScoop should prefer events that make a local reader say some version of: "oh shit, that's happening?"
+
+Prioritize in this order:
+- major recognizable concerts, comedy, touring acts, headline festivals, citywide happenings
+- visually unusual or highly shareable events
+- big family draws and seasonal happenings with obvious public appeal
+- only then smaller community/calendar fillers
+
+Avoid burning slots on low-stakes filler if stronger events exist.
 
 Do not select five events from the same source unless there are no other valid options. Prefer variety across:
 
@@ -75,6 +86,22 @@ Treat Facebook, Reddit, Meetup, and Eventbrite as leads unless the event source 
 ## News selection rules
 
 Pick the top 5 major local news items only. Avoid minor filler.
+
+LeeScoop is not trying to sound like a sleepy municipal bulletin. When available, prioritize stories with strong headline pull and real local stakes.
+
+Priority stack for news selection:
+- police / sheriff / major crime / arrests / public safety operations
+- fires, crashes, missing persons, manhunts, evacuations, boil notices, major outages
+- government decisions that hit money, traffic, housing, schools, utilities, beaches, recovery, or development
+- corruption, lawsuits, raids, fraud, scams, or political conflict with clear public impact
+- weird / surprising / highly talkable local stories with broad curiosity value
+- only after those, softer civic or feature-style updates
+
+Avoid these unless the day is unusually quiet:
+- bland process stories with weak public stakes
+- generic human-interest filler
+- minor committee/calendar items with no real consequence
+- stale deadline reminders or informational notices without urgency
 
 Freshness rules:
 
@@ -164,6 +191,20 @@ Required news fields:
 - category
 - tags if useful
 
+### Headline writing rule
+
+For both events and news:
+- keep titles factual, but do not flatten them into dull generic summaries
+- preserve the strongest truthful hook from the source when possible
+- prefer punchy, specific titles over bland institutional phrasing
+- do not add clickbait that the source cannot support
+
+Bad:
+- `Cape Coral council approves new mobility fee plan`
+
+Better:
+- `Cape Coral approves new mobility fees tied to long-term road and infrastructure funding`
+
 ## Image handling
 
 ### Event posts
@@ -210,9 +251,10 @@ nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurr
 News posts should have a visual. Use this order:
 
 1. Prefer a real/source image when available.
-2. Only use/download the image if it clearly comes from the same official/news source domain as `sourceUrl` or `verificationUrl`.
-3. Save it into `public/covers/<slug>.<ext>` and preserve the source image URL in the run report or frontmatter note when available.
-4. If no usable same-source image exists, generate LeeScoop-style cover art using a generic visual concept based on the news item.
+2. Actively look for the page's `og:image` or primary article image first.
+3. Only use/download the image if it clearly comes from the same official/news source domain as `sourceUrl` or `verificationUrl`, or from that publisher's obvious first-party image/CDN setup.
+4. Save it into `public/covers/<slug>.<ext>` and preserve the source image URL in the run report or frontmatter note when available.
+5. If no usable same-source image exists, use approved fallback art generation.
 
 Generated local-news images must follow the same no-text/no-logo rule as events: no exact business names unless visually necessary, no captions, no signs, no fake lettering, no official seals/logos.
 

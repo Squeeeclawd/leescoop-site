@@ -314,8 +314,14 @@ def maybe_download_source_image(item: dict[str, Any], slug: str) -> str:
     image_domain = registrable_domain(url)
     allowed_domains = {registrable_domain(str(item.get("sourceUrl", ""))), registrable_domain(str(item.get("verificationUrl", "")))}
     allowed_domains.discard("")
-    if allowed_domains and image_domain not in allowed_domains:
-        raise ValueError(f"sourceImageUrl domain {image_domain!r} does not match source/verification domain(s): {sorted(allowed_domains)}")
+    extra_allowed: set[str] = set()
+    source_url = str(item.get("sourceUrl", ""))
+    verification_url = str(item.get("verificationUrl", ""))
+    combined = f"{source_url} {verification_url}".lower()
+    if "winknews.com" in combined:
+        extra_allowed.update({"townnews.com", "chicago2.vip.townnews.com"})
+    if allowed_domains and image_domain not in allowed_domains and image_domain not in extra_allowed:
+        raise ValueError(f"sourceImageUrl domain {image_domain!r} does not match source/verification domain(s): {sorted(allowed_domains | extra_allowed)}")
     ext = Path(urlsplit(url).path).suffix.lower()
     if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
         ext = ".jpg"

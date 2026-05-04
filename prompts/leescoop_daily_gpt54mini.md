@@ -19,6 +19,7 @@ Hard rules:
 - Do not write long articles.
 - Do not create audio/narration.
 - Facebook, Reddit, Meetup, and Eventbrite are leads unless the actual source is clear.
+- Prefer strong, specific, reader-grabbing but truthful headlines over flattened bureaucratic summaries.
 
 Output schema:
 {
@@ -67,6 +68,12 @@ Output schema:
 Quality bar:
 - Events should vary by city, venue, date, event type, and source.
 - Do not use five events from one venue/source unless there are no other valid options.
+- Prefer events that feel big, surprising, visually striking, headline-worthy, or obviously worth texting a friend about.
+- Avoid wasting event slots on small filler items if stronger concerts, festivals, touring acts, citywide happenings, or unusual experiences exist.
 - News must be locally meaningful to Lee County / Fort Myers / Cape Coral / nearby barrier islands.
+- Prefer stories with strong local headline pull: police, sheriff, major crime, raids, arrests, fires, crashes, outages, major government decisions, beach/recovery/development issues, scams, corruption, or weird/highly talkable local stories.
+- Deprioritize bland process news, generic feature fluff, and low-stakes civic filler unless the day is unusually quiet.
 - Prefer official/public-record verification for government, public safety, schools, roads, health, elections, or courts.
-- For news images, use only same-source images; if the image URL is from an unrelated CDN/news org/domain, leave sourceImageUrl empty and provide a generic visualSubject for generated LeeScoop art.
+- For news images, use the source page's og:image or main article image when available.
+- For news images, use only same-source images or obvious first-party publisher/CDN images; if the image URL is from an unrelated domain, leave sourceImageUrl empty and provide a generic visualSubject for fallback LeeScoop art.
+- Titles should preserve the strongest truthful hook from the source rather than sanitizing it into bland institutional language.
