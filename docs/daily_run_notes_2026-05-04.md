@@ -6,8 +6,8 @@ Prepare 10 fresh LeeScoop posts using the GPT-5.4-mini OAuth workflow, then veri
 ## Outcome
 - Fresh 10-post batch created successfully.
 - Duplicate/safety check passed.
+- Local ComfyUI fallback was approved and used to generate covers for all 10 posts.
 - `npm run build` passed.
-- Image generation is blocked on internal provider auth/config, so covers are not complete yet.
 
 ## Fresh posts created
 ### Events
@@ -44,12 +44,17 @@ Improvement:
   2. JSON synthesis only
 - or reduce candidate search breadth per run to avoid timeout churn
 
-### 3) Internal image generation failed
+### 3) Internal image generation failed first, then ComfyUI saved the run
 Primary internal image generation failed:
 - `openai/gpt-image-2` → org verification required (403)
 
 Fallback internal image generation also failed:
 - `google/gemini-3.1-flash-image-preview` → no API key configured
+
+Action taken:
+- Anthony approved local ComfyUI fallback
+- generated all 10 covers through the local ComfyUI workflow
+- patched news article frontmatter to point at generated cover files
 
 Improvement:
 - add a preflight image-provider auth check before article generation starts
@@ -69,4 +74,5 @@ Improvement:
 - This note: `docs/daily_run_notes_2026-05-04.md`
 
 ## Recommended next step
-If Anthony approves, switch to the local ComfyUI fallback for cover generation, then patch `coverImage` for the 5 news posts and rebuild once more.
+- For article generation, consider moving the candidate-finding agent from GPT-5.4-mini OAuth to GPT-5.4 OAuth if mini keeps timing out on broad 10-item discovery runs.
+- Keep mini for narrower JSON formatting tasks if it stays reliable there.

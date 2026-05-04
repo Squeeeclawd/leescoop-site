@@ -19,7 +19,7 @@ city: Cape Coral
 location: Cape Coral
 sourceName: WINK News
 sourceUrl: "https://www.winknews.com/news/lee/cape-coral-council-passes-mobility-fees-impacting-local-traffic-flow/article_c5e249fa-8644-46f0-a928-6212a1d1b4c3.html"
-coverImage: ""
+coverImage: /covers/cape-coral-mobility-fees-approved-2026.png
 ---
 ## What happened?
 

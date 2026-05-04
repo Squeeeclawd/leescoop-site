@@ -19,7 +19,7 @@ city: Fort Myers Beach
 location: Times Square district
 sourceName: WINK News
 sourceUrl: "https://www.winknews.com/news/lee/fort-myers-beach-pier-rebuild-aims-for-completion-in-2027/article_c68f0595-1559-4f0f-8815-d55d65c339b1.html"
-coverImage: ""
+coverImage: /covers/fort-myers-beach-pier-rebuild-2027.png
 ---
 ## What happened?
 

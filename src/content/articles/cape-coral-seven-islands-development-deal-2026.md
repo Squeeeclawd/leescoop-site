@@ -19,7 +19,7 @@ city: Cape Coral
 location: Old Burnt Store Road
 sourceName: WINK News
 sourceUrl: "https://www.winknews.com/news/lee/cape-corals-seven-islands-project-may-soon-bring-new-businesses/article_db98caaf-92b5-4489-b14d-c470e10f6b7d.html"
-coverImage: ""
+coverImage: /covers/cape-coral-seven-islands-development-deal-2026.png
 ---
 ## What happened?
 

@@ -19,7 +19,7 @@ city: Cape Coral
 location: Cape Coral Parkway East between SE 15th Avenue/Cape Coral Street and Coronado Boulevard
 sourceName: City of Cape Coral
 sourceUrl: "https://www.capecoral.gov/news_detail_T4_R672.php"
-coverImage: ""
+coverImage: /covers/cape-coral-parkway-east-lane-closures-may-11-2026.png
 ---
 ## What happened?
 

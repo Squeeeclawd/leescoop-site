@@ -19,7 +19,7 @@ city: Lee County
 location: Lee County
 sourceName: WINK News
 sourceUrl: "https://www.winknews.com/news/lee/lee-county-commissioners-approve-funds-for-beach-and-shoreline-projects/article_ad44dec8-c678-4596-b8ae-90e516428a71.html"
-coverImage: ""
+coverImage: /covers/lee-county-beach-shoreline-project-funding-2026.png
 ---
 ## What happened?
 
