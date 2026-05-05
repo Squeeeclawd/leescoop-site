@@ -222,9 +222,18 @@ Better:
 
 ### Event posts
 
-Event posts get generated LeeScoop-style cover art.
+Event posts get generated LeeScoop-style cover art. Use the best available generator first, not the local fallback by habit.
 
-Current local generation path:
+Current preferred path:
+
+1. Try OpenClaw internal image generation with `openai/gpt-image-1.5`, `1536x1024`, high quality.
+   - `openai/gpt-image-2` is preferred when available, but this account currently returns an organization-verification block.
+   - Google image generation currently has no usable key in this agent.
+2. Crop/resize the accepted generated image to `1216x704`.
+3. Save it under `public/covers/<slug>.png`.
+4. Use local ComfyUI only as a fallback, or when Anthony explicitly asks for local ComfyUI.
+
+Local fallback path:
 
 ```bash
 python3 scripts/generate_comfy_cover.py --slug <slug> --subject "<generic visual concept>"
@@ -232,9 +241,10 @@ python3 scripts/generate_comfy_cover.py --slug <slug> --subject "<generic visual
 
 Rules:
 
-- Use generic visual concepts, not exact event titles/artist names/business names unless visually necessary.
+- Use concrete scene prompts, not exact event titles/artist names/business names unless visually necessary.
 - No text, words, signage, logos, captions, or fake lettering.
-- Default size: `1216x704`.
+- Avoid generic black mascot/blob compositions; make each cover article-specific and locally grounded.
+- Default final size: `1216x704`.
 - Save generated event covers as:
 
 ```text
@@ -250,13 +260,13 @@ coverImage: /covers/<slug>.png
 Current positive style block:
 
 ```text
-(short unique subject prompt:1.3), cel shaded, thick outlines, cute but weird cartoon, angular cartoon energy, exaggerated expressive, sharp jagged shapes, slightly chaotic sci-fi humor, spooky-cute proportions, sharp silhouette, graphic shadows, true black, clean simple shapes, high contrast, bold readable design, modern vector-like finish, #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1
+(short unique subject prompt:1.3), polished cel-shaded editorial illustration, thick confident outlines, cute but clean cartoon style, scene-specific composition, recognizable setting details, sharp silhouettes, graphic shadows, true black accents, clean simple shapes, high contrast, bold readable composition, modern vector-like finish, tropical Gulf Coast energy, playful but not childish, Florida-inspired color palette, #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1
 ```
 
 Negative prompt:
 
 ```text
-nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurry, text, words, letters, typography, captions, signage, logos, watermark, dull palette, overly realistic rendering
+nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurry, text, words, letters, typography, captions, signage, logos, watermark, dull palette, overly realistic rendering, generic black mascot, black blob character, empty arena, demon mascot, ghost mascot, oversized monster, featureless silhouette
 ```
 
 ### Local news posts

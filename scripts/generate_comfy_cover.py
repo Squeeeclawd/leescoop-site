@@ -12,8 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-LEE_STYLE = "cel shaded, thick outlines, cute but weird cartoon, angular cartoon energy, exaggerated expressive, sharp jagged shapes, slightly chaotic sci-fi humor, spooky-cute proportions, sharp silhouette, graphic shadows, true black, clean simple shapes, high contrast, bold readable design, modern vector-like finish, #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1"
-NEGATIVE = "nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurry, text, words, letters, typography, captions, signage, logos, watermark, dull palette, overly realistic rendering"
+LEE_STYLE = "polished cel-shaded editorial illustration, thick confident outlines, cute but clean cartoon style, scene-specific composition, recognizable setting details, sharp silhouettes, graphic shadows, true black accents, clean simple shapes, high contrast, bold readable composition, modern vector-like finish, tropical Gulf Coast energy, playful but not childish, Florida-inspired color palette, #07506F, #197894, #4FA7BC, #8BD2DE, #D94B32, #F28B42, #F7DE69, #F8F3E8, #063A52, #DDEEF1"
+NEGATIVE = "nsfw, muddy colors, low contrast, thin outlines, bad anatomy, extra limbs, blurry, text, words, letters, typography, captions, signage, logos, watermark, dull palette, overly realistic rendering, generic black mascot, black blob character, empty arena, demon mascot, ghost mascot, oversized monster, featureless silhouette"
 
 
 def request_json(base: str, path: str, payload: dict | None = None, timeout: int = 30):
