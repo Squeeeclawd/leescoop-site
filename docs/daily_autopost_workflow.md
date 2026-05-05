@@ -5,7 +5,18 @@ Goal: one daily assisted run that prepares **10 total LeeScoop posts** for Antho
 - 5 event posts
 - 5 major local news posts
 
-The run must create local files only, run the build gate, and wait for Anthony before commit/push.
+## Canonical trigger
+
+If Anthony says any of these (or close variants), treat it as the full LeeScoop batch command and run this workflow automatically:
+
+- `post 10 articles`
+- `post ten new articles`
+- `run the LeeScoop batch`
+- `make the daily LeeScoop batch`
+
+Do not ask for permission again unless a hard blocker appears.
+
+The run must create local files, run the build gate, then commit/push after the build passes.
 
 ## Model target
 
@@ -30,7 +41,7 @@ The run must create local files only, run the build gate, and wait for Anthony b
    - skipped duplicates with reason
    - image results
    - build result
-9. Wait for Anthony approval before any commit/push.
+9. Commit and push the batch after the build passes, then report the result.
 
 ## Event selection rules
 
@@ -149,6 +160,8 @@ If a duplicate is found:
 - choose another item if the run still needs quota
 - never overwrite existing posts
 
+If the batch comes up short after duplicate rejection, keep filling from the next-best verified candidates until the target count is met or the source pool is exhausted.
+
 Use:
 
 ```bash
@@ -266,8 +279,8 @@ Always run:
 npm run build
 ```
 
-If the build fails, stop and report the error. Do not commit/push.
+If the build fails, stop and report the error.
 
-## Approval gate
+## Publish gate
 
-The daily run must not commit or push. It reports local changes and waits for Anthony.
+If the build passes, commit and push the batch.
