@@ -8,7 +8,31 @@ import { activeArticles, articlePath, sortArticlesForFeed, tagCounts } from '@/l
 const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
-const lead = feed[0];
+
+const hardNewsPattern = /\b(arrest|arrests|brothel|crash|crime|death|fatal|hit-and-run|immigration|jury|killing|murder|offender|sex offender|shooting|trial)\b/i;
+
+function isHardNews(article: typeof visible[number]) {
+  if (article.data.contentKind !== 'news') return false;
+  return hardNewsPattern.test([
+    article.data.title,
+    article.data.excerpt,
+    article.data.category,
+    article.data.sourceName ?? '',
+    ...article.data.tags
+  ].join(' '));
+}
+
+function selectLeadArticle(articles: typeof visible) {
+  const featured = articles.find((article) => article.data.featured);
+  if (featured) return featured;
+
+  // The hero should feel useful and inviting, not like the site is yelling the worst headline by default.
+  return articles.find((article) => article.data.contentKind === 'event')
+    ?? articles.find((article) => !isHardNews(article))
+    ?? articles[0];
+}
+
+const lead = selectLeadArticle(feed);
 const cardFeed = lead ? feed.filter((article) => article.slug !== lead.slug) : feed;
 const topTags = tagCounts(allArticles).slice(0, 10);
 
@@ -63,7 +87,7 @@ const categoryStats = categoryOrder.map((category) => ({
   count: cardFeed.filter((article) => areaFor(article) === category).length,
   accent: categoryAccentMap[category] ?? '#197894',
   textColor: categoryTextMap[category] ?? '#FFFFFF'
-}));
+})).filter((item) => item.count > 0);
 
 const contentKindStats = [
   { kind: 'event', label: 'Events', count: cardFeed.filter((article) => article.data.contentKind !== 'news').length },
@@ -78,6 +102,10 @@ function formatDate(value?: Date) {
 function formatLongDate(value?: Date) {
   if (!value) return 'Date TBA';
   return value.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function timelineDateLabel(article: typeof visible[number]) {
+  return article.data.contentKind === 'news' ? 'Posted' : 'Happens';
 }
 
 function displayDate(article: typeof visible[number]) {
@@ -125,13 +153,14 @@ function tileSearch(article: typeof visible[number]) {
                 <span>{formatDate(displayDate(lead)).split(' ')[0]}</span>
                 <strong>{formatDate(displayDate(lead)).split(' ')[1] ?? ''}</strong>
               </div>
-              <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Local news' : 'Upcoming'}</p>
+              <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Featured update' : 'Featured event'}</p>
             </div>
             <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
               <a href={articlePath(lead)}>{lead.data.title}</a>
             </h1>
             <div class="homepage-meta-row hero-meta-row">
-              <time datetime={displayDate(lead)?.toISOString()}>{formatLongDate(displayDate(lead))}</time>
+              <span class={`timeline-kind-pill ${lead.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{lead.data.contentKind === 'news' ? 'News' : 'Event'}</span>
+              <time datetime={displayDate(lead)?.toISOString()}>{timelineDateLabel(lead)} {formatLongDate(displayDate(lead))}</time>
               {lead.data.eventTime && <span>{lead.data.eventTime}</span>}
               {(lead.data.venue || lead.data.location || lead.data.city) && <span>{lead.data.venue ?? lead.data.location ?? lead.data.city}</span>}
               <button
@@ -199,8 +228,9 @@ function tileSearch(article: typeof visible[number]) {
     <section class="wrap homepage-section tile-section" aria-label="Upcoming events and local updates">
       <div class="section-heading feed-heading">
         <div>
-          <p class="eyebrow">What’s happening</p>
-          <h2>One timeline. News and events by date.</h2>
+          <p class="eyebrow">Latest</p>
+          <h2>Latest around Lee County</h2>
+          <p class="section-deck">News and events in one dated feed, sorted by when they matter.</p>
         </div>
       </div>
       <div class="home-tile-grid" id="home-tile-grid">
@@ -225,16 +255,17 @@ function tileSearch(article: typeof visible[number]) {
                     <span>{cardDateParts[0]}</span>
                     <strong>{cardDateParts[1] ?? ''}</strong>
                   </div>
-                  <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
+                  <div class="tile-label-stack">
+                    <span class={`timeline-kind-pill ${article.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{article.data.contentKind === 'news' ? 'News' : 'Event'}</span>
+                    <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
+                  </div>
                 </div>
                 <h2 class="home-tile-title" title={article.data.title}>{article.data.title}</h2>
                 <p class="home-tile-deck">{article.data.excerpt}</p>
                 <div class="tile-meta-row">
-                  <time datetime={cardDate?.toISOString()}>{formatLongDate(cardDate)}</time>
+                  <time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {formatLongDate(cardDate)}</time>
                   {article.data.eventTime && <span>{article.data.eventTime}</span>}
                   {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
-                  {article.data.category !== areaFor(article) && <span>{article.data.category}</span>}
-                  <span>{article.data.contentKind === 'news' ? 'Local news' : 'Event'}</span>
                 </div>
               </div>
             </article>
@@ -274,6 +305,7 @@ function tileSearch(article: typeof visible[number]) {
             return tileCategory === category && (!state.kind || tileKind === state.kind) && (!query || haystack.includes(query));
           }).length;
           if (countTarget) countTarget.textContent = String(count);
+          pill.hidden = count === 0 && state.category !== category;
           pill.setAttribute('aria-pressed', String(state.category === category));
           pill.classList.toggle('is-active', state.category === category);
         });
@@ -289,6 +321,7 @@ function tileSearch(article: typeof visible[number]) {
             return tileKind === kind && (!state.category || tileCategory === state.category) && (!query || haystack.includes(query));
           }).length;
           if (countTarget) countTarget.textContent = String(count);
+          if (button instanceof HTMLButtonElement) button.disabled = count === 0 && state.kind !== kind;
           button.setAttribute('aria-pressed', String(state.kind === kind));
           button.classList.toggle('is-active', state.kind === kind);
         });
