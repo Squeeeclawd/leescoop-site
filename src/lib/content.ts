@@ -11,11 +11,17 @@ export function articleDisplayDate(article: Article) {
   return article.data.contentKind === 'event' ? article.data.eventDate ?? article.data.date : article.data.date;
 }
 
+function endOfLocalDay(value: Date) {
+  const end = new Date(value);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
 export function isArchivedEvent(article: Article) {
   if (article.data.contentKind !== 'event') return false;
   const eventCutoff = article.data.eventEndDate ?? article.data.eventDate;
   if (!eventCutoff) return false;
-  return eventCutoff.getTime() < Date.now();
+  return endOfLocalDay(eventCutoff).getTime() < Date.now();
 }
 
 export function isActiveArticle(article: Article) {
@@ -23,29 +29,28 @@ export function isActiveArticle(article: Article) {
 }
 
 export function sortArticlesForFeed(articles: Article[]) {
-  const now = new Date();
-  const nowTime = now.getTime();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTime = today.getTime();
 
   return [...articles].sort((a, b) => {
+    const pinnedDelta = Number(b.data.pinned) - Number(a.data.pinned);
+    if (pinnedDelta !== 0) return pinnedDelta;
+
     const aDisplayDate = articleDisplayDate(a);
     const bDisplayDate = articleDisplayDate(b);
     const aDisplayTime = aDisplayDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
     const bDisplayTime = bDisplayDate?.getTime() ?? Number.MAX_SAFE_INTEGER;
-    const aUpcomingEvent = a.data.contentKind === 'event' && aDisplayTime >= nowTime;
-    const bUpcomingEvent = b.data.contentKind === 'event' && bDisplayTime >= nowTime;
+    const aCurrentOrFuture = aDisplayTime >= todayTime;
+    const bCurrentOrFuture = bDisplayTime >= todayTime;
 
-    // Upcoming dated events are the primary LeeScoop feed: closest first, later dates as you scroll.
-    if (aUpcomingEvent !== bUpcomingEvent) return aUpcomingEvent ? -1 : 1;
-    if (aUpcomingEvent && bUpcomingEvent) return aDisplayTime - bDisplayTime;
+    // One live timeline: current/future news + events first, chronological by display date.
+    // News uses publish date; events use event date. Older news remains visible, but falls below current items.
+    if (aCurrentOrFuture !== bCurrentOrFuture) return aCurrentOrFuture ? -1 : 1;
+    if (aCurrentOrFuture && bCurrentOrFuture) return aDisplayTime - bDisplayTime;
 
-    // News/evergreen items follow events, newest first.
-    if (a.data.contentKind !== b.data.contentKind) return a.data.contentKind === 'news' ? -1 : 1;
-
-    const pinnedDelta = Number(b.data.pinned) - Number(a.data.pinned);
-    if (pinnedDelta !== 0) return pinnedDelta;
-
-    // Past/undated events fall back to most recently published so stale events don't sit at the top.
-    return b.data.date.getTime() - a.data.date.getTime();
+    // Archive-like leftovers: newest news/evergreen items first. Expired events are already filtered elsewhere.
+    return bDisplayTime - aDisplayTime;
   });
 }
 
