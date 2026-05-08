@@ -27,6 +27,14 @@ The run must create local files, run the build gate, then commit/push after the 
 
 ## High-level run order
 
+0. Run preflight before starting a batch:
+
+   ```bash
+   npm run preflight
+   ```
+
+   This checks git state, candidate-file freshness, basic tooling, and content validation. Warnings are allowed only when intentionally understood.
+
 1. Check event and news sources.
 2. Select candidates:
    - 5 top events.
@@ -35,13 +43,18 @@ The run must create local files, run the build gate, then commit/push after the 
 4. Run duplicate/safety check with `scripts/leescoop_posts.py`.
 5. Create markdown posts only for non-duplicates.
 6. Handle images according to content type.
-7. Run `npm run build`.
+7. Run the quality gate:
+
+   ```bash
+   npm run quality
+   ```
+
 8. Report:
    - created files
    - skipped duplicates with reason
    - image results
-   - build result
-9. Commit and push the batch after the build passes, then report the result.
+   - validation/build result
+9. Commit and push the batch after the quality gate passes, then report the result.
 
 ## Event selection rules
 
@@ -166,6 +179,12 @@ Use:
 
 ```bash
 python3 scripts/leescoop_posts.py check --input tmp/candidates.json
+```
+
+After writing posts, run the stronger site validator:
+
+```bash
+npm run validate
 ```
 
 ## Markdown creation

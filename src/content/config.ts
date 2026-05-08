@@ -35,7 +35,9 @@ const articles = defineCollection({
 
     // Source fields.
     sourceName: z.string().optional(),
-    sourceUrl: z.string().url().optional()
+    sourceUrl: z.string().url().optional(),
+    sourceImageUrl: z.string().url().optional(),
+    verificationUrl: z.string().url().optional()
   })
 });
 

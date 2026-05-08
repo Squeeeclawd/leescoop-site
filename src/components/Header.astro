@@ -19,7 +19,8 @@ const {
         </a>
         <nav class="main-nav" aria-label="Primary">
           <a href="/">Home</a>
-          <a href="/archive/">Archive</a>
+          <a href="/#latest-feed">Latest</a>
+          <a href="/#browse">Browse</a>
           {enableSearchShortcut ? (
             <button type="button" class="nav-search-trigger" data-search-shortcut data-search-target={searchTargetId}>
               Search
@@ -27,9 +28,26 @@ const {
           ) : (
             <a href="/search/">Search</a>
           )}
+          <a href="/archive/">Archive</a>
         </nav>
+        <details class="mobile-nav-details">
+          <summary aria-label="Open navigation">Menu</summary>
+          <nav class="mobile-nav" aria-label="Mobile primary">
+            <a href="/">Home</a>
+            <a href="/#latest-feed">Latest</a>
+            <a href="/#browse">Browse</a>
+            {enableSearchShortcut ? (
+              <button type="button" class="nav-search-trigger" data-search-shortcut data-search-target={searchTargetId}>
+                Search
+              </button>
+            ) : (
+              <a href="/search/">Search</a>
+            )}
+            <a href="/archive/">Archive</a>
+          </nav>
+        </details>
       </div>
-      <p class="site-tagline">Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area.</p>
+      <p class="site-tagline">Local events and community news across Lee County — quick, dated, and ad-free.</p>
     </div>
   </div>
 </header>
@@ -37,18 +55,23 @@ const {
 {enableSearchShortcut && (
   <script is:inline>
     (() => {
-      const trigger = document.querySelector('[data-search-shortcut]');
-      if (!(trigger instanceof HTMLElement)) return;
+      const triggers = Array.from(document.querySelectorAll('[data-search-shortcut]'));
+      if (!triggers.length) return;
 
-      trigger.addEventListener('click', () => {
-        const targetId = trigger.getAttribute('data-search-target');
-        if (!targetId) return;
-        const input = document.getElementById(targetId);
-        if (!(input instanceof HTMLElement)) return;
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        window.setTimeout(() => {
-          if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.focus();
-        }, 220);
+      triggers.forEach((trigger) => {
+        if (!(trigger instanceof HTMLElement)) return;
+        trigger.addEventListener('click', () => {
+          const targetId = trigger.getAttribute('data-search-target');
+          if (!targetId) return;
+          const input = document.getElementById(targetId);
+          if (!(input instanceof HTMLElement)) return;
+          const menu = trigger.closest('details');
+          if (menu instanceof HTMLDetailsElement) menu.open = false;
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          window.setTimeout(() => {
+            if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) input.focus();
+          }, 220);
+        });
       });
     })();
   </script>

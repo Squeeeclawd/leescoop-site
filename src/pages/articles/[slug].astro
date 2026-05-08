@@ -24,7 +24,7 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
 <BaseLayout title={`${article.data.title} | LeeScoop`} description={article.data.excerpt}>
   <Header />
   <main class="wrap article-shell">
-    <article class="article-body panel-glow local-post-body">
+    <article class="article-body panel-glow local-post-body" data-pagefind-body>
       {article.data.coverImage && <img class="cover-image article-cover" src={article.data.coverImage} alt={`${article.data.title} cover image`} loading="eager" decoding="async" />}
       <header class="article-header">
         <div class="article-kicker-row">

@@ -2534,3 +2534,774 @@ img { max-width: 100%; display: block; }
     justify-items: start;
   }
 }
+
+/* UX iteration 1 — make the homepage easier to understand before scrolling. */
+.site-header {
+  background: rgba(6, 58, 82, 0.94);
+}
+
+.home-header-grid {
+  padding: 0.72rem 0 0.82rem;
+}
+
+.home-brand-block {
+  gap: 0.25rem;
+}
+
+.brand-logo-link {
+  width: clamp(8.4rem, 13vw, 11rem);
+}
+
+.brand-logo {
+  max-height: 4.35rem;
+}
+
+.site-tagline {
+  max-width: 58rem;
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.main-nav {
+  align-items: center;
+  gap: 0.36rem;
+}
+
+.main-nav a,
+.nav-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.22rem;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  color: rgba(248, 243, 232, 0.9);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.main-nav a:hover,
+.nav-search-trigger:hover {
+  background: rgba(139, 210, 222, 0.14);
+  color: #fff;
+}
+
+.hero-panel {
+  border-radius: 1.08rem;
+}
+
+.hero-home-grid-patch {
+  grid-template-columns: minmax(0, 1.18fr) minmax(15rem, 0.72fr);
+  gap: clamp(0.9rem, 2.2vw, 1.55rem);
+}
+
+.lead-headline-patch {
+  max-width: 22ch;
+  font-size: clamp(1.55rem, 3.25vw, 2.65rem);
+  line-height: 1.06;
+}
+
+.hero-home-image {
+  min-height: clamp(11.5rem, 20vw, 15rem);
+  max-height: 15.75rem;
+}
+
+.homepage-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.58rem;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
+.homepage-cta {
+  margin-top: 0;
+}
+
+.homepage-secondary-cta {
+  width: fit-content;
+  border-radius: 999px;
+  background: rgba(139, 210, 222, 0.12);
+  border-color: rgba(139, 210, 222, 0.26);
+  color: rgba(248, 243, 232, 0.92);
+}
+
+.filter-tile-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.15rem;
+}
+
+.filter-tile-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  letter-spacing: -0.025em;
+}
+
+.filter-tile-heading .eyebrow {
+  margin-bottom: 0.28rem;
+}
+
+.filter-tile-heading p:last-child {
+  max-width: 28rem;
+  margin: 0;
+  color: rgba(221, 238, 241, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.38;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .home-brand-row,
+  .filter-tile-heading {
+    align-items: start;
+  }
+
+  .filter-tile-heading {
+    display: grid;
+  }
+
+  .filter-tile-heading p:last-child {
+    text-align: left;
+  }
+
+  .main-nav a,
+  .nav-search-trigger {
+    padding-inline: 0.58rem;
+    font-size: 0.84rem;
+  }
+}
+
+/* UX iteration 2 — prioritize fast finding over decorative browsing. */
+.homepage-main {
+  padding-top: 0.95rem;
+}
+
+.homepage-section {
+  margin-bottom: clamp(0.68rem, 1.5vw, 1.05rem);
+}
+
+.hero-section-home {
+  padding: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+.hero-home-grid-patch {
+  grid-template-columns: minmax(0, 1.28fr) minmax(14rem, 0.62fr);
+}
+
+.hero-home-copy-patch {
+  gap: 0.55rem;
+}
+
+.hero-label-row {
+  gap: 0.65rem;
+}
+
+.lead-headline-patch {
+  font-size: clamp(1.42rem, 2.85vw, 2.24rem);
+  line-height: 1.08;
+}
+
+.hero-home-image {
+  min-height: clamp(9.25rem, 16vw, 12.5rem);
+  max-height: 13.25rem;
+}
+
+.hero-fact-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.45rem;
+  margin: 0.05rem 0 0.08rem;
+}
+
+.hero-fact {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 8.2rem;
+  padding: 0.44rem 0.62rem;
+  border: 1px solid rgba(139, 210, 222, 0.17);
+  border-radius: 0.72rem;
+  background: rgba(3, 26, 37, 0.34);
+}
+
+.hero-fact span {
+  color: rgba(139, 210, 222, 0.86);
+  font-size: 0.66rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-fact strong,
+.hero-fact time {
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.22;
+}
+
+.hero-fact-grid .timeline-kind-pill,
+.hero-fact-grid .hero-category-pill {
+  align-self: center;
+}
+
+.hero-category-pill {
+  padding-block: 0.48rem;
+}
+
+.filter-tile {
+  gap: 0.7rem;
+}
+
+.filter-search-form {
+  max-width: none;
+  display: grid;
+  gap: 0.34rem;
+}
+
+.filter-search-shell {
+  padding: 0.66rem 0.82rem;
+  border-color: rgba(139, 210, 222, 0.34);
+  background: rgba(3, 26, 37, 0.72);
+}
+
+.filter-search-shell:focus-within {
+  border-color: rgba(247, 222, 105, 0.72);
+  box-shadow: 0 0 0 3px rgba(247, 222, 105, 0.14);
+}
+
+.filter-search-shell input {
+  font-size: 1rem;
+}
+
+.filter-control-group {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.filter-group-label {
+  margin: 0;
+  color: rgba(248, 243, 232, 0.88);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.content-kind-filter-row,
+.filter-tile-pill-row {
+  gap: 0.5rem;
+}
+
+.content-kind-filter,
+.filter-tile-pill {
+  min-height: 2.34rem;
+  border-color: rgba(139, 210, 222, 0.32);
+  background: rgba(139, 210, 222, 0.15);
+}
+
+.filter-tile-pill {
+  font-size: 0.78rem;
+}
+
+.content-kind-filter:hover,
+.content-kind-filter.is-active,
+.filter-tile-pill:hover,
+.filter-tile-pill.is-active {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 960px) {
+  .hero-home-grid-patch {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-home-image-wrap {
+    display: none;
+  }
+}
+
+/* UX iteration 3 — responsive cleanup, clearer taps, visible keyboard focus. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+button,
+a,
+input {
+  -webkit-tap-highlight-color: rgba(247, 222, 105, 0.18);
+}
+
+.main-nav a:focus-visible,
+.nav-search-trigger:focus-visible,
+.button:focus-visible,
+.content-kind-filter:focus-visible,
+.filter-tile-pill:focus-visible,
+.tile-category-pill:focus-visible,
+.hero-category-pill:focus-visible,
+.filter-clear-all:focus-visible,
+.homepage-secondary-cta:focus-visible {
+  outline: 3px solid rgba(247, 222, 105, 0.86);
+  outline-offset: 3px;
+}
+
+.filter-search-shell:has(input:focus-visible) {
+  border-color: rgba(247, 222, 105, 0.82);
+  box-shadow: 0 0 0 3px rgba(247, 222, 105, 0.16);
+}
+
+.filter-search-shell input:focus-visible {
+  outline: none;
+}
+
+.home-tile-title,
+.home-tile-deck,
+.hero-fact strong,
+.hero-fact time,
+.site-tagline {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .wrap {
+    width: min(100% - 1rem, 1220px);
+  }
+
+  .home-header-grid {
+    padding: 0.58rem 0 0.68rem;
+  }
+
+  .home-brand-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.55rem;
+  }
+
+  .brand-logo-link {
+    width: min(9.2rem, 64vw);
+  }
+
+  .brand-logo {
+    max-height: 3.85rem;
+  }
+
+  .site-tagline {
+    font-size: 0.86rem;
+  }
+
+  .main-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.36rem;
+  }
+
+  .main-nav a,
+  .nav-search-trigger {
+    justify-content: center;
+    min-width: 0;
+    min-height: 2.4rem;
+    padding: 0.44rem 0.38rem;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .hero-section-home,
+  .filter-tile,
+  .home-tile {
+    border-radius: 0.88rem;
+  }
+
+  .hero-section-home {
+    padding: 0.78rem;
+  }
+
+  .hero-label-row {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .lead-headline-patch {
+    font-size: clamp(1.35rem, 7vw, 1.92rem);
+    line-height: 1.09;
+  }
+
+  .hero-fact-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .hero-fact {
+    min-width: 0;
+    padding: 0.42rem 0.5rem;
+  }
+
+  .hero-fact-grid .timeline-kind-pill,
+  .hero-fact-grid .hero-category-pill {
+    align-self: stretch;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .homepage-cta-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-cta-row .button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .filter-search-shell {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .filter-search-shell input {
+    min-width: 0;
+  }
+
+  .content-kind-filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content-kind-filter {
+    min-width: 0;
+    padding-inline: 0.5rem;
+  }
+
+  .filter-tile-pill-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-tile-pill {
+    justify-content: center;
+    min-width: 0;
+    padding-inline: 0.46rem;
+    text-align: center;
+  }
+
+  .filter-pill-separator {
+    display: none;
+  }
+
+  .tile-top-row {
+    gap: 0.55rem;
+  }
+
+  .event-date-badge {
+    min-width: 3.75rem;
+  }
+
+  .tile-label-stack {
+    min-width: 0;
+  }
+
+  .tile-category-pill-static {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-fact-grid,
+  .filter-tile-pill-row {
+    grid-template-columns: 1fr;
+  }
+
+  .content-kind-filter-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* UX iteration 4 — purpose-built mobile header, hero, and filter behavior. */
+.mobile-nav-details {
+  display: none;
+  position: relative;
+  justify-self: end;
+}
+
+.mobile-nav-details summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.48rem 0.84rem;
+  border: 1px solid rgba(139, 210, 222, 0.28);
+  border-radius: 999px;
+  background: rgba(139, 210, 222, 0.14);
+  color: rgba(248, 243, 232, 0.96);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.mobile-nav-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-nav-details summary::after {
+  content: '☰';
+  margin-left: 0.48rem;
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
+.mobile-nav-details[open] summary::after {
+  content: '×';
+}
+
+.mobile-nav {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 40;
+  display: grid;
+  gap: 0.35rem;
+  width: min(14rem, calc(100vw - 2rem));
+  padding: 0.62rem;
+  border: 1px solid rgba(139, 210, 222, 0.28);
+  border-radius: 1rem;
+  background: rgba(3, 26, 37, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+}
+
+.mobile-nav a,
+.mobile-nav .nav-search-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.58rem 0.72rem;
+  border-radius: 0.72rem;
+  color: rgba(248, 243, 232, 0.94);
+  font-size: 0.92rem;
+  font-weight: 850;
+  text-align: left;
+}
+
+.mobile-nav a:hover,
+.mobile-nav .nav-search-trigger:hover,
+.mobile-nav a:focus-visible,
+.mobile-nav .nav-search-trigger:focus-visible {
+  background: rgba(139, 210, 222, 0.16);
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .home-brand-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .main-nav {
+    display: none;
+  }
+
+  .mobile-nav-details {
+    display: block;
+  }
+
+  .site-tagline {
+    max-width: 34rem;
+  }
+
+  .hero-home-image-wrap {
+    display: block;
+    order: 2;
+    margin: 0.25rem 0 0;
+  }
+
+  .hero-home-image {
+    min-height: 10.5rem;
+    max-height: 13rem;
+    border-radius: 0.82rem;
+  }
+
+  .hero-home-copy-patch {
+    order: 1;
+  }
+
+  .hero-fact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-fact {
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .hero-fact span {
+    margin-top: 0.05rem;
+  }
+
+  .content-kind-filter-row,
+  .filter-tile-pill-row {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    padding: 0.08rem 0 0.34rem;
+    scrollbar-width: thin;
+  }
+
+  .content-kind-filter,
+  .filter-tile-pill {
+    flex: 0 0 auto;
+    min-width: max-content;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+
+  .content-kind-filter {
+    min-width: 8.6rem;
+  }
+
+  .filter-tile-pill {
+    justify-content: center;
+    min-width: 8.2rem;
+  }
+
+  .filter-pill-separator {
+    display: inline;
+  }
+}
+
+@media (max-width: 420px) {
+  .wrap {
+    width: min(100% - 0.84rem, 1220px);
+  }
+
+  .lead-headline-patch {
+    font-size: clamp(1.28rem, 6.4vw, 1.68rem);
+  }
+
+  .hero-section-home {
+    padding: 0.68rem;
+  }
+
+  .filter-tile {
+    padding: 0.82rem;
+  }
+}
+
+/* UX iteration 5 — harden the narrow-phone layout against clipping. */
+@media (max-width: 760px) {
+  .home-brand-block,
+  .homepage-main,
+  .hero-section-home,
+  .hero-home-grid-patch,
+  .hero-home-copy-patch,
+  .filter-tile,
+  .tile-section,
+  .section-heading,
+  .feed-heading,
+  .home-tile,
+  .home-tile-body {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mobile-nav-details {
+    display: block !important;
+  }
+
+  .mobile-nav-details summary {
+    background: rgba(217, 75, 50, 0.92);
+    border-color: rgba(248, 243, 232, 0.22);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+  }
+
+  .site-tagline,
+  .lede,
+  .section-deck,
+  .filter-tile-heading p,
+  .home-tile-deck,
+  .tile-meta-row,
+  .hero-fact strong,
+  .hero-fact time {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .hero-fact-grid .timeline-kind-pill {
+    align-self: start;
+    justify-content: center;
+    width: fit-content;
+    min-width: 0;
+    padding-inline: 0.68rem;
+  }
+
+  .hero-fact-grid .hero-category-pill {
+    width: fit-content;
+    justify-self: start;
+    padding-inline: 0.82rem;
+  }
+
+  .content-kind-filter-row,
+  .filter-tile-pill-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .content-kind-filter,
+  .filter-tile-pill {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .content-kind-filter {
+    justify-content: space-between;
+  }
+
+  .filter-tile-pill {
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .filter-pill-separator {
+    display: inline;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-tagline {
+    font-size: 0.8rem;
+    line-height: 1.32;
+  }
+
+  .mobile-nav-details summary {
+    min-height: 2.25rem;
+    padding-inline: 0.7rem;
+  }
+}
+
+/* UX iteration 6 — clean mobile filter count separators. */
+@media (max-width: 760px) {
+  .filter-pill-separator {
+    display: none;
+  }
+
+  .filter-tile-pill span:first-child {
+    padding-right: 0.5rem;
+  }
+}

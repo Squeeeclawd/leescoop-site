@@ -158,11 +158,24 @@ function tileSearch(article: typeof visible[number]) {
             <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
               <a href={articlePath(lead)}>{lead.data.title}</a>
             </h1>
-            <div class="homepage-meta-row hero-meta-row">
+            <div class="hero-fact-grid" aria-label="Featured item details">
               <span class={`timeline-kind-pill ${lead.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{lead.data.contentKind === 'news' ? 'News' : 'Event'}</span>
-              <time datetime={displayDate(lead)?.toISOString()}>{timelineDateLabel(lead)} {formatLongDate(displayDate(lead))}</time>
-              {lead.data.eventTime && <span>{lead.data.eventTime}</span>}
-              {(lead.data.venue || lead.data.location || lead.data.city) && <span>{lead.data.venue ?? lead.data.location ?? lead.data.city}</span>}
+              <div class="hero-fact">
+                <span>{lead.data.contentKind === 'news' ? 'Posted' : 'Date'}</span>
+                <time datetime={displayDate(lead)?.toISOString()}>{formatLongDate(displayDate(lead))}</time>
+              </div>
+              {lead.data.eventTime && (
+                <div class="hero-fact">
+                  <span>Time</span>
+                  <strong>{lead.data.eventTime}</strong>
+                </div>
+              )}
+              {(lead.data.venue || lead.data.location || lead.data.city) && (
+                <div class="hero-fact">
+                  <span>Place</span>
+                  <strong>{lead.data.venue ?? lead.data.location ?? lead.data.city}</strong>
+                </div>
+              )}
               <button
                 type="button"
                 class="category-pill hero-category-pill"
@@ -171,10 +184,12 @@ function tileSearch(article: typeof visible[number]) {
               >
                 {areaFor(lead)}
               </button>
-              {lead.data.category !== areaFor(lead) && <span>{lead.data.category}</span>}
             </div>
             <p class="lede small-note">{lead.data.excerpt}</p>
-            <a class="button primary homepage-cta" href={articlePath(lead)}>View details</a>
+            <div class="homepage-cta-row">
+              <a class="button primary homepage-cta" href={articlePath(lead)}>{lead.data.contentKind === 'news' ? 'Read update' : 'Event details'}</a>
+              <a class="button secondary homepage-secondary-cta" href="#latest-feed">Browse latest</a>
+            </div>
           </div>
           {lead.data.coverImage && (
             <a class="hero-home-image-wrap" href={articlePath(lead)} aria-label={lead.data.title}>
@@ -185,47 +200,60 @@ function tileSearch(article: typeof visible[number]) {
       </section>
     )}
 
-    <section class="wrap homepage-section filter-tile panel-glow" id="home-filter-tile" aria-label="Homepage filters">
-      <div class="content-kind-filter-row" aria-label="Filter by update type">
-        {contentKindStats.map((item) => (
-          <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false" disabled={item.count === 0}>
-            <span>{item.label}</span>
-            <strong data-count-kind={item.kind}>{item.count}</strong>
-          </button>
-        ))}
+    <section class="wrap homepage-section filter-tile panel-glow" id="browse" aria-label="Homepage filters" data-filter-tile>
+      <div class="filter-tile-heading">
+        <div>
+          <p class="eyebrow">Browse</p>
+          <h2>Find what matters fastest</h2>
+        </div>
+        <p>Filter the feed by type, area, or a quick search.</p>
       </div>
-
-      <div class="filter-tile-pill-row">
-        {categoryStats.map((item) => (
-          <button
-            type="button"
-            class="filter-tile-pill"
-            data-filter-category={item.category}
-            data-filter-pill={item.category}
-            aria-pressed="false"
-            style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
-          >
-            <span>{item.category}</span>
-            <span class="filter-pill-separator">·</span>
-            <span data-count-for={item.category}>{item.count}</span>
-          </button>
-        ))}
-      </div>
-
       <form class="filter-search-form" id="filter-search-form" action="/search/" method="get">
-        <label class="sr-only" for="home-filter-input">Search Lee County updates</label>
+        <label class="filter-group-label" for="home-filter-input">Search the latest feed</label>
         <div class="filter-search-shell">
           <span class="filter-search-icon" aria-hidden="true">⌕</span>
-          <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, cities, venues" />
+          <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, news, cities, or venues" />
         </div>
       </form>
+
+      <div class="filter-control-group">
+        <p class="filter-group-label" id="filter-type-label">Type</p>
+        <div class="content-kind-filter-row" aria-labelledby="filter-type-label">
+          {contentKindStats.map((item) => (
+            <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false" disabled={item.count === 0}>
+              <span>{item.label}</span>
+              <strong data-count-kind={item.kind}>{item.count}</strong>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="filter-control-group">
+        <p class="filter-group-label" id="filter-area-label">Area</p>
+        <div class="filter-tile-pill-row" aria-labelledby="filter-area-label">
+          {categoryStats.map((item) => (
+            <button
+              type="button"
+              class="filter-tile-pill"
+              data-filter-category={item.category}
+              data-filter-pill={item.category}
+              aria-pressed="false"
+              style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
+            >
+              <span>{item.category}</span>
+              <span class="filter-pill-separator">·</span>
+              <span data-count-for={item.category}>{item.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div class="filter-tile-footer">
         <button type="button" class="filter-clear-all" id="filter-clear-all" hidden>clear all filters ×</button>
       </div>
     </section>
 
-    <section class="wrap homepage-section tile-section" aria-label="Upcoming events and local updates">
+    <section class="wrap homepage-section tile-section" id="latest-feed" aria-label="Upcoming events and local updates">
       <div class="section-heading feed-heading">
         <div>
           <p class="eyebrow">Latest</p>
@@ -387,7 +415,7 @@ function tileSearch(article: typeof visible[number]) {
       tileButtons.forEach((button) => {
         if (!(button instanceof HTMLElement)) return;
         button.addEventListener('click', () => {
-          const filterTile = document.getElementById('home-filter-tile');
+          const filterTile = document.querySelector('[data-filter-tile]');
           if (filterTile) filterTile.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
