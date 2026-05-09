@@ -4,6 +4,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ShareButton from '@/components/ShareButton.astro';
+import Comments from '@/components/Comments.astro';
 import { isPublished } from '@/lib/content';
 
 export async function getStaticPaths() {
@@ -76,6 +77,7 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
       </header>
       <Content />
     </article>
+    <Comments articleSlug={article.slug} />
   </main>
   <Footer />
 </BaseLayout>

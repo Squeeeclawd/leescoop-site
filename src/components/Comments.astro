@@ -1,0 +1,73 @@
+---
+interface Props {
+  articleSlug: string;
+}
+
+const { articleSlug } = Astro.props;
+---
+<section class="comments-panel panel-glow" data-comments-root data-article-slug={articleSlug} aria-labelledby="comments-heading">
+  <div class="comments-heading-row">
+    <div>
+      <p class="eyebrow">Local comments</p>
+      <h2 id="comments-heading">Say something useful</h2>
+    </div>
+    <p class="comments-count" data-comments-count>Loading…</p>
+  </div>
+  <p class="comments-note">Comments post immediately. No real name required. Email is optional. Don’t be a menace.</p>
+  <div class="comments-status" data-comments-status role="status" aria-live="polite"></div>
+  <div class="comments-list" data-comments-list></div>
+
+  <div class="comments-auth" data-comments-auth>
+    <div class="comments-user-box" data-user-box hidden>
+      <p>Posting as <strong data-current-username></strong></p>
+      <button class="button secondary comments-small-button" type="button" data-logout-button>Log out</button>
+    </div>
+
+    <div class="comments-guest-box" data-guest-box>
+      <div class="comments-auth-grid">
+        <form class="comments-form comments-login-form" data-login-form>
+          <h3>Log in</h3>
+          <label>
+            <span>Username</span>
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="button primary" type="submit">Log in</button>
+        </form>
+
+        <form class="comments-form comments-signup-form" data-signup-form>
+          <h3>Create a username</h3>
+          <label>
+            <span>Username</span>
+            <input name="username" autocomplete="username" minlength="3" maxlength="24" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="new-password" minlength="8" required />
+          </label>
+          <label>
+            <span>Email optional</span>
+            <input name="email" type="email" autocomplete="email" placeholder="optional" />
+          </label>
+          <p class="comments-field-note">You can leave email blank. If you add one, it is only used for account recovery or moderation contact.</p>
+          <button class="button primary" type="submit">Create account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <form class="comments-form comments-post-form" data-comment-form hidden>
+    <label>
+      <span>Your comment</span>
+      <textarea name="body" rows="4" maxlength="1500" placeholder="Keep it local, useful, funny, annoyed, whatever — just not spammy garbage." required></textarea>
+    </label>
+    <div class="comments-form-footer">
+      <p class="comments-field-note">Plain text only. Comments appear immediately and may be removed by a mod.</p>
+      <button class="button primary" type="submit">Post comment</button>
+    </div>
+  </form>
+</section>
+<script is:inline type="module" src="/scripts/comments.js"></script>

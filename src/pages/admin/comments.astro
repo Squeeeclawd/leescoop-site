@@ -1,0 +1,53 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<BaseLayout title="Comment moderation | LeeScoop" description="LeeScoop moderator tools">
+  <Header />
+  <main class="wrap admin-comments-shell">
+    <section class="panel-glow admin-comments-panel" data-admin-comments-root>
+      <div class="comments-heading-row">
+        <div>
+          <p class="eyebrow">Moderator broom closet</p>
+          <h1>Comment moderation</h1>
+        </div>
+        <p class="comments-count" data-admin-count>Loading…</p>
+      </div>
+      <p class="comments-note">Comments post immediately. This page is for cleanup: hide junk, delete garbage, ban raccoons.</p>
+      <div class="comments-status" data-admin-status role="status" aria-live="polite"></div>
+
+      <div class="admin-login-box" data-admin-login-box hidden>
+        <p>Log in with a moderator/admin account to use this page.</p>
+        <form class="comments-form comments-login-form" data-admin-login-form>
+          <label>
+            <span>Username</span>
+            <input name="username" autocomplete="username" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="button primary" type="submit">Log in</button>
+        </form>
+      </div>
+
+      <div class="admin-comments-tools" data-admin-tools hidden>
+        <label>
+          <span>Status</span>
+          <select data-status-filter>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+            <option value="flagged">Flagged</option>
+            <option value="deleted">Deleted</option>
+          </select>
+        </label>
+        <button class="button secondary comments-small-button" type="button" data-admin-refresh>Refresh</button>
+      </div>
+
+      <div class="admin-comments-list" data-admin-comments-list></div>
+    </section>
+  </main>
+  <Footer />
+  <script is:inline type="module" src="/scripts/admin-comments.js"></script>
+</BaseLayout>

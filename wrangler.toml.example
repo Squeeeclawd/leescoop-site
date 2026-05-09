@@ -1,0 +1,17 @@
+# Copy to wrangler.toml after creating the D1 database.
+# Cloudflare Pages can also bind D1 from the dashboard instead of this file.
+
+name = "leescoop-site"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-05-08"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "leescoop-comments"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+# Any long random secret. Used to pepper password/session/IP hashes.
+COMMENTS_PEPPER = "REPLACE_WITH_LONG_RANDOM_SECRET"
+# Optional: only set after adding Turnstile to the forms/scripts.
+# TURNSTILE_SECRET_KEY = ""

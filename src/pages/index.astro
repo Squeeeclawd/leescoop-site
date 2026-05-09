@@ -9,27 +9,11 @@ const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
 
-const hardNewsPattern = /\b(arrest|arrests|brothel|crash|crime|death|fatal|hit-and-run|immigration|jury|killing|murder|offender|sex offender|shooting|trial)\b/i;
-
-function isHardNews(article: typeof visible[number]) {
-  if (article.data.contentKind !== 'news') return false;
-  return hardNewsPattern.test([
-    article.data.title,
-    article.data.excerpt,
-    article.data.category,
-    article.data.sourceName ?? '',
-    ...article.data.tags
-  ].join(' '));
-}
-
 function selectLeadArticle(articles: typeof visible) {
   const featured = articles.find((article) => article.data.featured);
   if (featured) return featured;
 
-  // The hero should feel useful and inviting, not like the site is yelling the worst headline by default.
-  return articles.find((article) => article.data.contentKind === 'event')
-    ?? articles.find((article) => !isHardNews(article))
-    ?? articles[0];
+  return articles[0];
 }
 
 const lead = selectLeadArticle(feed);
