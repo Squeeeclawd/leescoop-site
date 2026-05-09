@@ -32,17 +32,49 @@ export async function onRequestPost({ request, env }) {
     status: 'active'
   };
 
+  let userInserted = false;
+
   try {
+    const existing = await db.prepare(
+      'SELECT id FROM users WHERE username_normalized = ? LIMIT 1'
+    ).bind(usernameNormalized).first();
+    if (existing) return conflict('That username is already taken. Try logging in instead.');
+
     const passwordHash = await hashPassword(password, env);
     await db.prepare(
       `INSERT INTO users (id, username, username_normalized, password_hash, email, email_is_optional, role, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, 1, 'user', 'active', ?, ?)`
     ).bind(user.id, user.username, user.username_normalized, passwordHash, user.email, now, now).run();
+    userInserted = true;
+
     const session = await createSession(env, request, user.id);
     return loginCookieResponse({ ok: true, user: publicUser(user) }, session.cookie);
   } catch (error) {
     const message = String(error?.message || error || '');
-    if (message.toLowerCase().includes('unique')) return conflict('That username is already taken.');
-    return serverError('Could not create account.');
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('unique') || lowerMessage.includes('constraint failed: users.username')) {
+      return conflict('That username is already taken. Try logging in instead.');
+    }
+
+    if (userInserted) {
+      await db.prepare('DELETE FROM users WHERE id = ?').bind(user.id).run().catch((cleanupError) => {
+        console.error('Signup cleanup failed', cleanupError);
+      });
+    }
+
+    console.error('Signup failed', error);
+
+    if (lowerMessage.includes('no such table')) {
+      return serverError('Account database setup is incomplete. Re-run the comments SQL migration in Cloudflare D1.');
+    }
+    if (lowerMessage.includes('no such column')) {
+      return serverError('Account database schema is out of date. Re-run the comments SQL migration in Cloudflare D1.');
+    }
+    if (lowerMessage.includes('missing d1 binding')) {
+      return serverError('Comments database is not connected yet. Cloudflare D1 needs to be bound as DB.');
+    }
+
+    return serverError('Could not create account. Check Cloudflare Pages Function logs for the exact D1 error.');
   }
 }
