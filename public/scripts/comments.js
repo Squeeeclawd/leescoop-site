@@ -22,7 +22,10 @@ async function api(path, options = {}) {
       ...(options.headers || {})
     }
   });
-  const data = await response.json().catch(() => ({ ok: false, error: 'Comments are not available in this preview yet.' }));
+  const data = await response.json().catch(() => null);
+  if (!data) {
+    throw new Error(response.status === 404 ? 'Comments are not connected yet.' : 'Comments are temporarily unavailable.');
+  }
   if (!response.ok || data.ok === false) throw new Error(data.error || 'Something went sideways.');
   return data;
 }
@@ -34,11 +37,31 @@ function setStatus(root, message, tone = '') {
   status.dataset.tone = tone;
 }
 
+function setAvailability(root, available) {
+  const auth = root.querySelector('[data-comments-auth]');
+  const commentForm = root.querySelector('[data-comment-form]');
+  root.dataset.commentsAvailable = available ? 'true' : 'false';
+  if (auth) auth.hidden = !available;
+  if (!available && commentForm) commentForm.hidden = true;
+}
+
+function showGuestMode(root, mode = 'login') {
+  const normalized = mode === 'signup' ? 'signup' : 'login';
+  root.dataset.authMode = normalized;
+  root.querySelectorAll('[data-auth-switch]').forEach((button) => {
+    button.setAttribute('aria-pressed', button.getAttribute('data-auth-switch') === normalized ? 'true' : 'false');
+  });
+  root.querySelectorAll('[data-auth-panel]').forEach((panel) => {
+    panel.hidden = panel.getAttribute('data-auth-panel') !== normalized;
+  });
+}
+
 function renderUser(root, user) {
   const guestBox = root.querySelector('[data-guest-box]');
   const userBox = root.querySelector('[data-user-box]');
   const commentForm = root.querySelector('[data-comment-form]');
   const username = root.querySelector('[data-current-username]');
+  setAvailability(root, true);
   if (user) {
     if (guestBox) guestBox.hidden = true;
     if (userBox) userBox.hidden = false;
@@ -49,6 +72,7 @@ function renderUser(root, user) {
     if (userBox) userBox.hidden = true;
     if (commentForm) commentForm.hidden = true;
     if (username) username.textContent = '';
+    showGuestMode(root, root.dataset.authMode || 'login');
   }
 }
 
@@ -92,6 +116,21 @@ function renderComments(root, comments) {
   comments.forEach((comment) => list.append(commentNode(comment)));
 }
 
+function renderUnavailable(root, message) {
+  const list = root.querySelector('[data-comments-list]');
+  const count = root.querySelector('[data-comments-count]');
+  if (count) count.textContent = 'Comments offline';
+  if (list) {
+    list.innerHTML = '';
+    const empty = document.createElement('p');
+    empty.className = 'comments-empty';
+    empty.textContent = 'Comments are not connected yet. The article still works; the comment plumbing is just not hooked up.';
+    list.append(empty);
+  }
+  setAvailability(root, false);
+  setStatus(root, message || 'Comments are not connected yet.', 'warn');
+}
+
 async function refresh(root) {
   const slug = root.dataset.articleSlug;
   const [commentsData, meData] = await Promise.all([
@@ -100,6 +139,7 @@ async function refresh(root) {
   ]);
   renderComments(root, commentsData.comments || []);
   renderUser(root, meData.user || null);
+  setStatus(root, '');
 }
 
 function formData(form) {
@@ -113,11 +153,14 @@ function init(root) {
   const commentForm = root.querySelector('[data-comment-form]');
   const logoutButton = root.querySelector('[data-logout-button]');
 
-  refresh(root).catch((error) => {
-    renderComments(root, []);
-    renderUser(root, null);
-    setStatus(root, error.message || 'Comments are not available yet.', 'warn');
+  showGuestMode(root, 'login');
+  setAvailability(root, false);
+
+  root.querySelectorAll('[data-auth-switch]').forEach((button) => {
+    button.addEventListener('click', () => showGuestMode(root, button.getAttribute('data-auth-switch')));
   });
+
+  refresh(root).catch((error) => renderUnavailable(root, error.message));
 
   loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();

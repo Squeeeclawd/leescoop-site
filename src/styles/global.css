@@ -3491,3 +3491,42 @@ input {
     gap: 0.25rem;
   }
 }
+
+.comments-panel [hidden],
+.admin-comments-panel [hidden] {
+  display: none !important;
+}
+
+.comments-auth {
+  margin-top: var(--space-3);
+}
+
+.comments-auth-switch {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid rgba(139, 210, 222, 0.22);
+  border-radius: 999px;
+  background: rgba(3, 26, 37, 0.35);
+  margin-bottom: var(--space-2);
+}
+
+.comments-auth-tab {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0.62rem 0.9rem;
+}
+
+.comments-auth-tab[aria-pressed="true"] {
+  background: var(--citrus-yellow);
+  color: var(--ink-blue);
+}
+
+.comments-auth-card {
+  max-width: 560px;
+}

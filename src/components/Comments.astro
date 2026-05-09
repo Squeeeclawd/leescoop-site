@@ -14,17 +14,22 @@ const { articleSlug } = Astro.props;
     <p class="comments-count" data-comments-count>Loading…</p>
   </div>
   <p class="comments-note">Comments post immediately. No real name required. Email is optional. Don’t be a menace.</p>
-  <div class="comments-status" data-comments-status role="status" aria-live="polite"></div>
+  <div class="comments-status" data-comments-status role="status" aria-live="polite">Loading comments…</div>
   <div class="comments-list" data-comments-list></div>
 
-  <div class="comments-auth" data-comments-auth>
+  <div class="comments-auth" data-comments-auth hidden>
     <div class="comments-user-box" data-user-box hidden>
       <p>Posting as <strong data-current-username></strong></p>
       <button class="button secondary comments-small-button" type="button" data-logout-button>Log out</button>
     </div>
 
-    <div class="comments-guest-box" data-guest-box>
-      <div class="comments-auth-grid">
+    <div class="comments-guest-box" data-guest-box hidden>
+      <div class="comments-auth-switch" role="tablist" aria-label="Comment account options">
+        <button class="comments-auth-tab" type="button" data-auth-switch="login" aria-pressed="true">Log in</button>
+        <button class="comments-auth-tab" type="button" data-auth-switch="signup" aria-pressed="false">Create username</button>
+      </div>
+
+      <div class="comments-auth-card" data-auth-panel="login">
         <form class="comments-form comments-login-form" data-login-form>
           <h3>Log in</h3>
           <label>
@@ -37,7 +42,9 @@ const { articleSlug } = Astro.props;
           </label>
           <button class="button primary" type="submit">Log in</button>
         </form>
+      </div>
 
+      <div class="comments-auth-card" data-auth-panel="signup" hidden>
         <form class="comments-form comments-signup-form" data-signup-form>
           <h3>Create a username</h3>
           <label>
