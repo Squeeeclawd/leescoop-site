@@ -252,17 +252,14 @@ img { max-width: 100%; display: block; }
   background: rgba(3, 26, 37, 0.4);
 }
 
-.header-account[hidden] {
+.header-account[hidden],
+.header-account [hidden] {
   display: none !important;
-}
-
-.header-account span {
-  color: var(--text-muted);
-  font-weight: 700;
 }
 
 .header-account strong {
   color: var(--warm-sand);
+  padding-inline: 0.2rem 0.32rem;
 }
 
 .header-account a,
@@ -3245,10 +3242,6 @@ input {
     max-width: min(13rem, 50vw);
     gap: 0.32rem;
     font-size: 0.76rem;
-  }
-
-  .header-account span {
-    display: none;
   }
 
   .mobile-nav-details {

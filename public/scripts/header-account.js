@@ -23,8 +23,14 @@ function showLoggedOut() {
   const authed = account.querySelector('[data-header-authed]');
   const login = account.querySelector('[data-header-login]');
   const status = account.querySelector('[data-header-login-status]');
-  if (authed) authed.hidden = true;
-  if (login) login.hidden = false;
+  if (authed) {
+    authed.hidden = true;
+    authed.style.display = 'none';
+  }
+  if (login) {
+    login.hidden = false;
+    login.style.display = '';
+  }
   if (status) status.textContent = '';
   account.hidden = false;
 }
@@ -37,8 +43,14 @@ function showLoggedIn(user) {
   const admin = account.querySelector('[data-header-admin]');
   if (username) username.textContent = user.username;
   if (admin) admin.hidden = !['admin', 'moderator'].includes(user.role);
-  if (login) login.hidden = true;
-  if (authed) authed.hidden = false;
+  if (login) {
+    login.hidden = true;
+    login.style.display = 'none';
+  }
+  if (authed) {
+    authed.hidden = false;
+    authed.style.display = '';
+  }
   account.hidden = false;
 }
 
