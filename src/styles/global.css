@@ -3312,6 +3312,10 @@ input {
   margin: var(--space-4) auto;
 }
 
+.comments-panel {
+  max-width: 68ch;
+}
+
 .comments-heading-row {
   display: flex;
   align-items: flex-start;
@@ -3323,7 +3327,7 @@ input {
 .comments-heading-row h1,
 .comments-heading-row h2 {
   margin: 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: clamp(1.55rem, 3vw, 2.25rem);
   line-height: 1;
 }
 
@@ -3482,7 +3486,9 @@ input {
     flex-direction: column;
   }
 
-  .comments-auth-grid {
+  .comments-auth-grid,
+  .comments-login-form,
+  .comments-signup-form {
     grid-template-columns: 1fr;
   }
 
@@ -3498,7 +3504,7 @@ input {
 }
 
 .comments-auth {
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
 }
 
 .comments-auth-switch {
@@ -3527,6 +3533,45 @@ input {
   color: var(--ink-blue);
 }
 
+.comments-guest-box {
+  padding: 0.95rem;
+}
+
 .comments-auth-card {
-  max-width: 560px;
+  max-width: none;
+}
+
+.comments-login-form {
+  grid-template-columns: minmax(9rem, 1fr) minmax(9rem, 1fr) auto;
+  align-items: end;
+}
+
+.comments-login-form h3,
+.comments-signup-form h3 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.comments-signup-form {
+  grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 1fr) minmax(8rem, 1fr) auto;
+  align-items: end;
+}
+
+.comments-signup-form .comments-field-note {
+  grid-column: 1 / -1;
+  margin: -0.25rem 0 0;
+}
+
+@media (max-width: 760px) {
+  .comments-login-form,
+  .comments-signup-form {
+    grid-template-columns: 1fr;
+  }
 }

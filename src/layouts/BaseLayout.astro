@@ -5,9 +5,20 @@ import { site } from '@/data/site';
 interface Props {
   title: string;
   description?: string;
+  image?: string | null;
+  canonicalUrl?: string;
+  type?: 'website' | 'article';
 }
 
-const { title, description = site.description } = Astro.props;
+const {
+  title,
+  description = site.description,
+  image = '/branding/leescoop-logo.png',
+  canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? site.domain).toString(),
+  type = 'website'
+} = Astro.props;
+
+const absoluteImage = image ? new URL(image, Astro.site ?? site.domain).toString() : undefined;
 ---
 <!doctype html>
 <html lang="en">
@@ -16,6 +27,20 @@ const { title, description = site.description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {absoluteImage && <meta property="og:image" content={absoluteImage} />}
+    {absoluteImage && <meta property="og:image:secure_url" content={absoluteImage} />}
+
+    <meta name="twitter:card" content={absoluteImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {absoluteImage && <meta name="twitter:image" content={absoluteImage} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>

@@ -18,9 +18,9 @@ const encodedTitle = encodeURIComponent(title);
   >
     Share article
   </button>
+  <a class="share-link" href={`https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`} target="_blank" rel="noopener noreferrer">Reddit</a>
   <a class="share-link" href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`} target="_blank" rel="noopener noreferrer">Facebook</a>
   <a class="share-link" href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`} target="_blank" rel="noopener noreferrer">X</a>
-  <a class="share-link" href={`mailto:?subject=${encodedTitle}&body=${encodedUrl}`}>Email</a>
 </div>
 
 <script is:inline>

@@ -22,7 +22,13 @@ function formatDate(value?: Date) {
 
 const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com').toString();
 ---
-<BaseLayout title={`${article.data.title} | LeeScoop`} description={article.data.excerpt}>
+<BaseLayout
+  title={`${article.data.title} | LeeScoop`}
+  description={article.data.excerpt}
+  image={article.data.coverImage}
+  canonicalUrl={shareUrl}
+  type="article"
+>
   <Header />
   <main class="wrap article-shell">
     <article class="article-body panel-glow local-post-body" data-pagefind-body>
