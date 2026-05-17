@@ -2,8 +2,9 @@ import { clearSessionCookie, clientIp, forbidden, json, nowIso, parseCookie, req
 
 const SESSION_DAYS = 30;
 const SESSION_MAX_AGE_SECONDS = SESSION_DAYS * 24 * 60 * 60;
-const PASSWORD_ITERATIONS = 160000;
-const PASSWORD_ALGO = 'pbkdf2_sha256';
+const PASSWORD_ITERATIONS = 25000;
+const PASSWORD_ALGO = 'sha256_iter';
+const LEGACY_PASSWORD_ALGO = 'pbkdf2_sha256';
 const textEncoder = new TextEncoder();
 
 function bytesToHex(bytes) {
@@ -43,6 +44,14 @@ async function pbkdf2(password, saltHex, pepper = '') {
   return bytesToHex(new Uint8Array(bits));
 }
 
+async function sha256Iter(password, saltHex, pepper = '', iterations = PASSWORD_ITERATIONS) {
+  let bytes = textEncoder.encode(`${saltHex}:${pepper}:${password}`);
+  for (let i = 0; i < iterations; i += 1) {
+    bytes = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  }
+  return bytesToHex(bytes);
+}
+
 function constantTimeEqual(a, b) {
   if (a.length !== b.length) return false;
   let mismatch = 0;
@@ -52,15 +61,26 @@ function constantTimeEqual(a, b) {
 
 export async function hashPassword(password, env) {
   const salt = randomHex(16);
-  const hash = await pbkdf2(password, salt, env?.COMMENTS_PEPPER || '');
+  const hash = await sha256Iter(password, salt, env?.COMMENTS_PEPPER || '');
   return `${PASSWORD_ALGO}$${PASSWORD_ITERATIONS}$${salt}$${hash}`;
 }
 
 export async function verifyPassword(password, stored, env) {
-  const [algo, iterations, salt, expected] = String(stored || '').split('$');
-  if (algo !== PASSWORD_ALGO || Number(iterations) !== PASSWORD_ITERATIONS || !salt || !expected) return false;
-  const actual = await pbkdf2(password, salt, env?.COMMENTS_PEPPER || '');
-  return constantTimeEqual(actual, expected);
+  const [algo, iterationsRaw, salt, expected] = String(stored || '').split('$');
+  const iterations = Number(iterationsRaw);
+  if (!algo || !iterations || !salt || !expected) return false;
+
+  if (algo === PASSWORD_ALGO) {
+    const actual = await sha256Iter(password, salt, env?.COMMENTS_PEPPER || '', iterations);
+    return constantTimeEqual(actual, expected);
+  }
+
+  if (algo === LEGACY_PASSWORD_ALGO) {
+    const actual = await pbkdf2(password, salt, env?.COMMENTS_PEPPER || '');
+    return constantTimeEqual(actual, expected);
+  }
+
+  return false;
 }
 
 export function normalizeUsername(username) {
