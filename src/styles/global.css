@@ -232,6 +232,17 @@ img { max-width: 100%; display: block; }
 }
 
 .header-account {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.header-account-authed,
+.header-login summary {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -239,9 +250,6 @@ img { max-width: 100%; display: block; }
   border: 1px solid rgba(139, 210, 222, 0.24);
   border-radius: 999px;
   background: rgba(3, 26, 37, 0.4);
-  color: var(--text-soft);
-  font-size: 0.82rem;
-  font-weight: 800;
 }
 
 .header-account[hidden] {
@@ -258,10 +266,10 @@ img { max-width: 100%; display: block; }
 }
 
 .header-account a,
-.header-account button {
+.header-account button,
+.header-login summary {
   border: 0;
   border-radius: 999px;
-  background: rgba(139, 210, 222, 0.13);
   color: var(--text-soft);
   cursor: pointer;
   font: inherit;
@@ -269,10 +277,76 @@ img { max-width: 100%; display: block; }
   padding: 0.36rem 0.58rem;
 }
 
+.header-account a,
+.header-account button {
+  background: rgba(139, 210, 222, 0.13);
+}
+
+.header-login summary {
+  min-height: 2.22rem;
+  border: 1px solid rgba(139, 210, 222, 0.24);
+  background: rgba(3, 26, 37, 0.36);
+  list-style: none;
+}
+
+.header-login summary::-webkit-details-marker {
+  display: none;
+}
+
 .header-account a:hover,
-.header-account button:hover {
+.header-account button:hover,
+.header-login summary:hover {
   background: rgba(247, 222, 105, 0.95);
   color: var(--ink-blue);
+}
+
+.header-login-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.55rem);
+  z-index: 45;
+  display: grid;
+  gap: 0.62rem;
+  width: min(18rem, calc(100vw - 2rem));
+  padding: 0.85rem;
+  border: 1px solid rgba(139, 210, 222, 0.28);
+  border-radius: 1rem;
+  background: rgba(3, 26, 37, 0.98);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
+}
+
+.header-login-panel label {
+  display: grid;
+  gap: 0.32rem;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.header-login-panel input {
+  width: 100%;
+  border: 1px solid rgba(139, 210, 222, 0.25);
+  border-radius: 0.72rem;
+  background: rgba(7, 80, 111, 0.42);
+  color: var(--warm-sand);
+  padding: 0.7rem 0.78rem;
+  font: inherit;
+}
+
+.header-login-panel button {
+  justify-content: center;
+  padding: 0.72rem 0.9rem;
+  background: var(--citrus-yellow);
+  color: var(--ink-blue);
+  font-weight: 900;
+}
+
+.header-login-panel p {
+  min-height: 1rem;
+  margin: 0;
+  color: #ffb3a8;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .header-status-pill,

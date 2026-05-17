@@ -14,36 +14,77 @@ async function api(path, options = {}) {
   return data;
 }
 
-async function refreshHeaderAccount() {
+function formData(form) {
+  return Object.fromEntries(new FormData(form).entries());
+}
+
+function showLoggedOut() {
   if (!account) return;
+  const authed = account.querySelector('[data-header-authed]');
+  const login = account.querySelector('[data-header-login]');
+  const status = account.querySelector('[data-header-login-status]');
+  if (authed) authed.hidden = true;
+  if (login) login.hidden = false;
+  if (status) status.textContent = '';
+  account.hidden = false;
+}
+
+function showLoggedIn(user) {
+  if (!account) return;
+  const authed = account.querySelector('[data-header-authed]');
+  const login = account.querySelector('[data-header-login]');
   const username = account.querySelector('[data-header-username]');
   const admin = account.querySelector('[data-header-admin]');
+  if (username) username.textContent = user.username;
+  if (admin) admin.hidden = !['admin', 'moderator'].includes(user.role);
+  if (login) login.hidden = true;
+  if (authed) authed.hidden = false;
+  account.hidden = false;
+}
+
+async function refreshHeaderAccount() {
+  if (!account) return;
   const logout = account.querySelector('[data-header-logout]');
+  const loginForm = account.querySelector('[data-header-login-form]');
+  const loginDetails = account.querySelector('[data-header-login]');
+  const loginStatus = account.querySelector('[data-header-login-status]');
 
   try {
     const data = await api('/api/auth/me');
-    const user = data.user;
-    if (!user) {
-      account.hidden = true;
-      return;
-    }
-
-    if (username) username.textContent = user.username;
-    if (admin) admin.hidden = !['admin', 'moderator'].includes(user.role);
-    account.hidden = false;
-
-    logout?.addEventListener('click', async () => {
-      logout.disabled = true;
-      try {
-        await api('/api/auth/logout', { method: 'POST' });
-        window.location.reload();
-      } catch {
-        logout.disabled = false;
-      }
-    }, { once: true });
+    if (data.user) showLoggedIn(data.user);
+    else showLoggedOut();
   } catch {
-    account.hidden = true;
+    showLoggedOut();
   }
+
+  logout?.addEventListener('click', async () => {
+    logout.disabled = true;
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+      showLoggedOut();
+      window.dispatchEvent(new CustomEvent('leescoop:auth-change'));
+    } catch {
+      logout.disabled = false;
+    }
+  });
+
+  loginForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = loginForm.querySelector('button[type="submit"]');
+    if (loginStatus) loginStatus.textContent = 'Logging in…';
+    if (submit) submit.disabled = true;
+    try {
+      const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify(formData(loginForm)) });
+      loginForm.reset();
+      if (loginDetails instanceof HTMLDetailsElement) loginDetails.open = false;
+      showLoggedIn(data.user);
+      window.dispatchEvent(new CustomEvent('leescoop:auth-change'));
+    } catch (error) {
+      if (loginStatus) loginStatus.textContent = error.message;
+    } finally {
+      if (submit) submit.disabled = false;
+    }
+  });
 }
 
 refreshHeaderAccount();

@@ -32,10 +32,27 @@ const {
             <a href="/archive/">Archive</a>
           </nav>
           <div class="header-account" data-header-account hidden>
-            <span>Logged in</span>
-            <strong data-header-username></strong>
-            <a href="/admin/comments/" data-header-admin hidden>Admin</a>
-            <button type="button" data-header-logout>Log out</button>
+            <div class="header-account-authed" data-header-authed hidden>
+              <span>Logged in</span>
+              <strong data-header-username></strong>
+              <a href="/admin/comments/" data-header-admin hidden>Admin</a>
+              <button type="button" data-header-logout>Log out</button>
+            </div>
+            <details class="header-login" data-header-login hidden>
+              <summary>Log in</summary>
+              <form class="header-login-panel" data-header-login-form>
+                <label>
+                  <span>Username</span>
+                  <input name="username" autocomplete="username" required />
+                </label>
+                <label>
+                  <span>Password</span>
+                  <input name="password" type="password" autocomplete="current-password" required />
+                </label>
+                <button type="submit">Log in</button>
+                <p data-header-login-status></p>
+              </form>
+            </details>
           </div>
         </div>
         <details class="mobile-nav-details">

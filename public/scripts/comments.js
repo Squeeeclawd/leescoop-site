@@ -161,6 +161,7 @@ function init(root) {
   });
 
   refresh(root).catch((error) => renderUnavailable(root, error.message));
+  window.addEventListener('leescoop:auth-change', () => refresh(root).catch((error) => renderUnavailable(root, error.message)));
 
   loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
