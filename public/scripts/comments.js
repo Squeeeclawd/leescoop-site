@@ -64,7 +64,7 @@ function renderUser(root, user) {
   setAvailability(root, true);
   if (user) {
     if (guestBox) guestBox.hidden = true;
-    if (userBox) userBox.hidden = false;
+    if (userBox) userBox.hidden = true;
     if (commentForm) commentForm.hidden = false;
     if (username) username.textContent = user.username;
   } else {
