@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://leescoop-site.pages.dev',
+  site: 'https://leescoop.com',
   output: 'static',
   vite: {
     resolve: {
