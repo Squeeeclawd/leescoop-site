@@ -61,6 +61,7 @@
 
       form.reset();
       setStatus(data.message || 'Submission saved. LeeScoop will follow up with payment instructions.', 'success');
+      if (button instanceof HTMLButtonElement) button.disabled = false;
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Something went sideways. Please try again.', 'error');
       if (button instanceof HTMLButtonElement) button.disabled = false;

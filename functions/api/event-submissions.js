@@ -24,16 +24,6 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
 }
 
-function isValidUrl(value) {
-  if (!value) return true;
-  try {
-    const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol);
-  } catch {
-    return false;
-  }
-}
-
 function appendPaymentParams(paymentLink, submissionId, email) {
   if (!paymentLink) return '';
   const url = new URL(paymentLink);
@@ -116,8 +106,6 @@ export async function onRequestPost({ request, env }) {
   if (eventName.length < 3) return badRequest('Event name is required.');
   if (eventDate && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return badRequest('Event date needs to use the date picker format.');
   if (!isValidEmail(organizerEmail)) return badRequest('Your email is required so LeeScoop can confirm payment and follow up.');
-  if (!isValidUrl(eventUrl)) return badRequest('Official event link must start with http:// or https://.');
-  if (!isValidUrl(ticketUrl)) return badRequest('Ticket / RSVP link must start with http:// or https://.');
   if (/<\/?[a-z][\s\S]*>/i.test(`${eventName}\n${venue}\n${description}\n${notes}`)) return badRequest('Plain text only, no HTML.');
 
   const now = nowIso();
