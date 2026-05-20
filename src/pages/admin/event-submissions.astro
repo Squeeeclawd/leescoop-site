@@ -1,0 +1,24 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+---
+<BaseLayout title="Event submissions | LeeScoop admin" description="Review paid LeeScoop event submissions.">
+  <Header />
+  <main class="wrap page-shell admin-event-submissions-page">
+    <section class="panel-glow admin-event-submissions-panel">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Admin queue</p>
+          <h1>Featured event submissions</h1>
+          <p class="lede small">Paid items are ready for LeeScoop article/calendar creation. Pending-payment items are saved but not ready yet.</p>
+        </div>
+      </div>
+      <div class="admin-event-submissions-list" data-admin-event-submissions>
+        <p class="small-note">Loading submissions…</p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+  <script is:inline type="module" src="/scripts/admin-event-submissions.js"></script>
+</BaseLayout>

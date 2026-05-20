@@ -2,20 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-
-const intakeEmail = 'squeeeclawd@gmail.com';
-const mailSubject = 'LeeScoop featured event submission';
-const mailBody = `Event name:
-Date:
-Time:
-Venue / location:
-City / area:
-Ticket or info link:
-Short description:
-Organizer name:
-Organizer contact:
-Anything else LeeScoop should know:`;
-const mailtoUrl = `mailto:${intakeEmail}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
 ---
 <BaseLayout title="Feature your event | LeeScoop" description="Submit a Lee County event for LeeScoop calendar consideration.">
   <Header />
@@ -25,7 +11,7 @@ const mailtoUrl = `mailto:${intakeEmail}?subject=${encodeURIComponent(mailSubjec
         <p class="eyebrow">LeeScoop calendar</p>
         <h1>Feature your event.</h1>
         <p class="lede">
-          Get a Lee County event reviewed for the LeeScoop calendar and local feed. Simple flat fee, no ad package maze.
+          Submit a Lee County event for calendar/article consideration. The feature review is a simple $50 flat fee.
         </p>
         <div class="feature-price-card" aria-label="Feature fee">
           <span>$50</span>
@@ -34,17 +20,120 @@ const mailtoUrl = `mailto:${intakeEmail}?subject=${encodeURIComponent(mailSubjec
       </div>
 
       <aside class="feature-event-action" aria-label="Submission action">
-        <p class="feature-action-kicker">Intake route</p>
-        <h2>Send the details</h2>
+        <p class="feature-action-kicker">Secure intake</p>
+        <h2>No public email address.</h2>
         <p>
-          The payment link is being connected. For now, send the event details and LeeScoop will reply with the $50 payment step before publishing.
+          Fill out the form below. LeeScoop stores the submission privately, then sends you to secure payment when the Stripe link is active.
         </p>
-        <a class="button primary feature-submit-button" href={mailtoUrl}>Submit event details</a>
-        <p class="feature-event-note">Opens your email app with the useful fields pre-filled.</p>
+        <a class="button primary feature-submit-button" href="#feature-event-form">Start submission</a>
+        <p class="feature-event-note">Reviewed before publishing. Spam and non-local junk gets tossed.</p>
       </aside>
     </section>
 
+    <section class="feature-event-form-panel panel-glow" aria-labelledby="feature-event-form-title">
+      <div class="feature-form-intro">
+        <p class="eyebrow">Event details</p>
+        <h2 id="feature-event-form-title">Submit your event</h2>
+        <p>Give us enough to verify the listing and turn it into a useful LeeScoop calendar item.</p>
+      </div>
+
+      <form id="feature-event-form" class="feature-event-form" data-feature-event-form>
+        <input class="feature-event-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <label>
+          <span>Event name *</span>
+          <input name="eventName" autocomplete="off" required maxlength="160" />
+        </label>
+
+        <div class="feature-form-row">
+          <label>
+            <span>Date *</span>
+            <input name="eventDate" type="date" required />
+          </label>
+          <label>
+            <span>Time</span>
+            <input name="eventTime" placeholder="7:00 PM, all day, varies…" maxlength="120" />
+          </label>
+        </div>
+
+        <div class="feature-form-row">
+          <label>
+            <span>Venue / location *</span>
+            <input name="venue" required maxlength="180" />
+          </label>
+          <label>
+            <span>City / area *</span>
+            <input name="city" required maxlength="100" placeholder="Fort Myers, Cape Coral…" />
+          </label>
+        </div>
+
+        <label>
+          <span>Address</span>
+          <input name="address" maxlength="220" />
+        </label>
+
+        <div class="feature-form-row">
+          <label>
+            <span>Official event link</span>
+            <input name="eventUrl" type="url" inputmode="url" placeholder="https://…" maxlength="500" />
+          </label>
+          <label>
+            <span>Ticket / RSVP link</span>
+            <input name="ticketUrl" type="url" inputmode="url" placeholder="https://…" maxlength="500" />
+          </label>
+        </div>
+
+        <label>
+          <span>Short event description *</span>
+          <textarea name="description" required maxlength="2200" rows="6" placeholder="What is happening, who it is for, and why locals should care?"></textarea>
+        </label>
+
+        <div class="feature-form-row">
+          <label>
+            <span>Organizer name *</span>
+            <input name="organizerName" required maxlength="140" />
+          </label>
+          <label>
+            <span>Organizer email *</span>
+            <input name="organizerEmail" type="email" autocomplete="email" required maxlength="254" />
+          </label>
+        </div>
+
+        <div class="feature-form-row">
+          <label>
+            <span>Organizer phone</span>
+            <input name="organizerPhone" type="tel" autocomplete="tel" maxlength="80" />
+          </label>
+          <label>
+            <span>Expected attendance</span>
+            <input name="expectedAttendance" maxlength="80" placeholder="Optional" />
+          </label>
+        </div>
+
+        <label>
+          <span>Anything else?</span>
+          <textarea name="notes" maxlength="1200" rows="4" placeholder="Photos, sponsors, parking notes, age restrictions, etc."></textarea>
+        </label>
+
+        <div class="feature-form-submit-row">
+          <button class="button primary feature-submit-button" type="submit">Submit + continue to $50 payment</button>
+          <p class="feature-event-note">Your email is used for follow-up, not shown on the public page.</p>
+        </div>
+
+        <p class="feature-form-status" data-feature-event-status role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
     <section class="feature-event-grid homepage-section">
+      <article class="panel-glow">
+        <p class="eyebrow">What happens next</p>
+        <ol class="feature-steps">
+          <li><span>1</span><p>Submit the private event form.</p></li>
+          <li><span>2</span><p>Pay the $50 feature review fee through Stripe.</p></li>
+          <li><span>3</span><p>Paid submissions enter the LeeScoop article/calendar queue.</p></li>
+        </ol>
+      </article>
+
       <article class="panel-glow">
         <p class="eyebrow">What to include</p>
         <ul class="signal-list compact feature-checklist">
@@ -54,16 +143,8 @@ const mailtoUrl = `mailto:${intakeEmail}?subject=${encodeURIComponent(mailSubjec
           <li><strong>Contact</strong><span>A real organizer contact in case something needs confirmation.</span></li>
         </ul>
       </article>
-
-      <article class="panel-glow">
-        <p class="eyebrow">How it works</p>
-        <ol class="feature-steps">
-          <li><span>1</span><p>Submit the event details.</p></li>
-          <li><span>2</span><p>LeeScoop checks that it is local, dated, and useful.</p></li>
-          <li><span>3</span><p>After payment, approved events are queued for calendar/article creation.</p></li>
-        </ol>
-      </article>
     </section>
   </main>
   <Footer />
+  <script is:inline type="module" src="/scripts/feature-event.js"></script>
 </BaseLayout>

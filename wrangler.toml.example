@@ -15,3 +15,9 @@ database_id = "REPLACE_WITH_D1_DATABASE_ID"
 COMMENTS_PEPPER = "REPLACE_WITH_LONG_RANDOM_SECRET"
 # Optional: only set after adding Turnstile to the forms/scripts.
 # TURNSTILE_SECRET_KEY = ""
+
+# Featured event payment flow. Create a $50 Stripe Payment Link and paste it here.
+# The form will append client_reference_id=<submission id> so the webhook can mark it paid.
+FEATURE_EVENT_PAYMENT_LINK = "https://buy.stripe.com/REPLACE_WITH_PAYMENT_LINK"
+# Stripe webhook signing secret for /api/stripe/webhook.
+STRIPE_WEBHOOK_SECRET = "whsec_REPLACE_WITH_STRIPE_WEBHOOK_SECRET"
