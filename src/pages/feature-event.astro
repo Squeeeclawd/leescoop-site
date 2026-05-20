@@ -34,7 +34,7 @@ import Footer from '@/components/Footer.astro';
       <div class="feature-form-intro">
         <p class="eyebrow">Event details</p>
         <h2 id="feature-event-form-title">Submit your event</h2>
-        <p>Fill in as much as you can. Only the event name and your email are required; missing details may delay review.</p>
+        <p>Fill in as much as you can. Only the event name is required here. If you leave contact details blank, Stripe will still collect payment info during checkout.</p>
       </div>
 
       <form id="feature-event-form" class="feature-event-form" data-feature-event-form>
@@ -94,8 +94,8 @@ import Footer from '@/components/Footer.astro';
             <input name="organizerName" maxlength="140" />
           </label>
           <label>
-            <span>Your email *</span>
-            <input name="organizerEmail" type="email" autocomplete="email" required maxlength="254" />
+            <span>Your email</span>
+            <input name="organizerEmail" type="email" autocomplete="email" maxlength="254" placeholder="Optional, but helpful for follow-up" />
           </label>
         </div>
 
@@ -117,7 +117,7 @@ import Footer from '@/components/Footer.astro';
 
         <div class="feature-form-submit-row">
           <button class="button primary feature-submit-button" type="submit">Submit event and continue to payment</button>
-          <p class="feature-event-note">Your email is private and used for follow-up/payment confirmation.</p>
+          <p class="feature-event-note">Your email is private. If left blank, payment/contact details can be handled through Stripe.</p>
         </div>
 
         <p class="feature-form-status" data-feature-event-status role="status" aria-live="polite"></p>

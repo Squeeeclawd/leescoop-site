@@ -4760,3 +4760,21 @@ input {
     gap: 1.05rem;
   }
 }
+
+/* Make form completion impossible to miss. */
+.feature-form-status:not(:empty) {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(139, 210, 222, 0.24);
+  border-radius: 0.9rem;
+  background: rgba(3, 26, 37, 0.5);
+}
+
+.feature-form-status[data-tone="success"] {
+  border-color: rgba(247, 222, 105, 0.44);
+  background: rgba(247, 222, 105, 0.1);
+}
+
+.feature-form-status[data-tone="error"] {
+  border-color: rgba(217, 75, 50, 0.5);
+  background: rgba(217, 75, 50, 0.1);
+}

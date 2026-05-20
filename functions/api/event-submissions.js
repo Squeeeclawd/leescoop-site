@@ -53,7 +53,7 @@ async function ensureEventSubmissionSchema(db) {
     ticket_url TEXT,
     description TEXT,
     organizer_name TEXT,
-    organizer_email TEXT NOT NULL,
+    organizer_email TEXT,
     organizer_phone TEXT,
     expected_attendance TEXT,
     notes TEXT,
@@ -105,7 +105,7 @@ export async function onRequestPost({ request, env }) {
 
   if (eventName.length < 3) return badRequest('Event name is required.');
   if (eventDate && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return badRequest('Event date needs to use the date picker format.');
-  if (!isValidEmail(organizerEmail)) return badRequest('Your email is required so LeeScoop can confirm payment and follow up.');
+  if (organizerEmail && !isValidEmail(organizerEmail)) return badRequest('If you add an email, it needs to look like an email address.');
   if (/<\/?[a-z][\s\S]*>/i.test(`${eventName}\n${venue}\n${description}\n${notes}`)) return badRequest('Plain text only, no HTML.');
 
   const now = nowIso();

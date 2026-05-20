@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS event_submissions (
   ticket_url TEXT,
   description TEXT,
   organizer_name TEXT,
-  organizer_email TEXT NOT NULL,
+  organizer_email TEXT,
   organizer_phone TEXT,
   expected_attendance TEXT,
   notes TEXT,

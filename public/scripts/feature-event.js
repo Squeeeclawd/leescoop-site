@@ -18,13 +18,18 @@
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const button = form.querySelector('button[type="submit"]');
-    if (button instanceof HTMLButtonElement) button.disabled = true;
+    const originalButtonText = button instanceof HTMLButtonElement ? button.textContent : '';
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = true;
+      button.textContent = 'Submitting…';
+    }
     const missing = [];
     if (!fieldValue('eventDate')) missing.push('date');
     if (!fieldValue('venue')) missing.push('venue');
     if (!fieldValue('city')) missing.push('city/area');
     if (!fieldValue('description')) missing.push('description');
     if (!fieldValue('organizerName')) missing.push('organizer name');
+    if (!fieldValue('organizerEmail')) missing.push('email/contact');
     setStatus(missing.length ? `Saving your event details. Missing: ${missing.join(', ')} — you can still submit.` : 'Saving your event details…');
 
     const payload = {
@@ -56,16 +61,25 @@
 
       if (data.paymentUrl) {
         setStatus('Saved. Sending you to secure payment…', 'success');
+        if (button instanceof HTMLButtonElement) button.textContent = 'Opening payment…';
         window.location.assign(data.paymentUrl);
         return;
       }
 
       form.reset();
       setStatus(data.message || 'Submission saved. LeeScoop will follow up with payment instructions.', 'success');
-      if (button instanceof HTMLButtonElement) button.disabled = false;
+      status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = false;
+        button.textContent = originalButtonText || 'Submit event and continue to payment';
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Something went sideways. Please try again.', 'error');
-      if (button instanceof HTMLButtonElement) button.disabled = false;
+      status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (button instanceof HTMLButtonElement) {
+        button.disabled = false;
+        button.textContent = originalButtonText || 'Submit event and continue to payment';
+      }
     }
   });
 })();
