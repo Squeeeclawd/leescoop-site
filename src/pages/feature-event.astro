@@ -1,0 +1,69 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+const intakeEmail = 'squeeeclawd@gmail.com';
+const mailSubject = 'LeeScoop featured event submission';
+const mailBody = `Event name:
+Date:
+Time:
+Venue / location:
+City / area:
+Ticket or info link:
+Short description:
+Organizer name:
+Organizer contact:
+Anything else LeeScoop should know:`;
+const mailtoUrl = `mailto:${intakeEmail}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(mailBody)}`;
+---
+<BaseLayout title="Feature your event | LeeScoop" description="Submit a Lee County event for LeeScoop calendar consideration.">
+  <Header />
+  <main class="wrap page-shell feature-event-page">
+    <section class="feature-event-hero panel-glow">
+      <div class="feature-event-copy">
+        <p class="eyebrow">LeeScoop calendar</p>
+        <h1>Feature your event.</h1>
+        <p class="lede">
+          Get a Lee County event reviewed for the LeeScoop calendar and local feed. Simple flat fee, no ad package maze.
+        </p>
+        <div class="feature-price-card" aria-label="Feature fee">
+          <span>$50</span>
+          <strong>flat feature review</strong>
+        </div>
+      </div>
+
+      <aside class="feature-event-action" aria-label="Submission action">
+        <p class="feature-action-kicker">Intake route</p>
+        <h2>Send the details</h2>
+        <p>
+          The payment link is being connected. For now, send the event details and LeeScoop will reply with the $50 payment step before publishing.
+        </p>
+        <a class="button primary feature-submit-button" href={mailtoUrl}>Submit event details</a>
+        <p class="feature-event-note">Opens your email app with the useful fields pre-filled.</p>
+      </aside>
+    </section>
+
+    <section class="feature-event-grid homepage-section">
+      <article class="panel-glow">
+        <p class="eyebrow">What to include</p>
+        <ul class="signal-list compact feature-checklist">
+          <li><strong>Basics</strong><span>Event name, date, time, city, venue, and address.</span></li>
+          <li><strong>Link</strong><span>Ticket page, RSVP page, Facebook event, or official source.</span></li>
+          <li><strong>Blurb</strong><span>Two or three sentences telling locals why it matters.</span></li>
+          <li><strong>Contact</strong><span>A real organizer contact in case something needs confirmation.</span></li>
+        </ul>
+      </article>
+
+      <article class="panel-glow">
+        <p class="eyebrow">How it works</p>
+        <ol class="feature-steps">
+          <li><span>1</span><p>Submit the event details.</p></li>
+          <li><span>2</span><p>LeeScoop checks that it is local, dated, and useful.</p></li>
+          <li><span>3</span><p>After payment, approved events are queued for calendar/article creation.</p></li>
+        </ol>
+      </article>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
