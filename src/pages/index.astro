@@ -230,12 +230,6 @@ function tileSearch(article: typeof visible[number]) {
       </div>
 
       <div class="filter-area-strip" aria-label="Area filters">
-        <span class="area-filter-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11Z" />
-            <circle cx="12" cy="10" r="2.4" />
-          </svg>
-        </span>
         <div class="filter-tile-pill-row" aria-label="Areas">
           {categoryStats.map((item) => (
             <button
@@ -246,7 +240,6 @@ function tileSearch(article: typeof visible[number]) {
               aria-pressed="false"
               style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
             >
-              <span class="area-chip-pin" aria-hidden="true">⌾</span>
               <span>{item.category}</span>
               <span data-count-for={item.category}>{item.count}</span>
             </button>

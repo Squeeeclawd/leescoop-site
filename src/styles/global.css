@@ -4136,31 +4136,13 @@ input {
 
 .filter-area-strip {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.66rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
   align-items: center;
-  padding: 0.62rem;
-  border: 1px solid rgba(139, 210, 222, 0.18);
-  border-radius: 1.08rem;
-  background: rgba(3, 26, 37, 0.26);
-}
-
-.area-filter-icon {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid rgba(79, 167, 188, 0.52);
-  border-radius: 0.92rem;
-  color: var(--sea-glass);
-  background: linear-gradient(145deg, rgba(7, 80, 111, 0.68), rgba(3, 26, 37, 0.44));
-  box-shadow: 0 0 0 3px rgba(79, 167, 188, 0.09);
-}
-
-.area-filter-icon svg {
-  width: 1.38rem;
-  height: 1.38rem;
-  stroke: currentColor;
+  padding: 0.18rem 0.08rem 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .browse-panel .filter-tile-pill-row {
@@ -4179,7 +4161,7 @@ input {
   min-height: 2.22rem;
   min-width: 0;
   padding: 0.42rem 0.62rem;
-  border: 1px solid rgba(139, 210, 222, 0.18);
+  border: 0;
   border-radius: 999px;
   background: rgba(139, 210, 222, 0.105);
   color: rgba(248, 243, 232, 0.9);
@@ -4193,19 +4175,6 @@ input {
   transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
 }
 
-.area-chip-pin {
-  display: grid;
-  place-items: center;
-  width: 1.24rem;
-  height: 1.24rem;
-  border: 1px solid rgba(139, 210, 222, 0.28);
-  border-radius: 999px;
-  color: var(--sea-glass);
-  font-size: 0.62rem;
-  line-height: 1;
-  opacity: 0.9;
-}
-
 .browse-panel .filter-tile-pill [data-count-for] {
   color: var(--sea-glass);
   font-weight: 950;
@@ -4214,7 +4183,6 @@ input {
 .browse-panel .filter-tile-pill:hover,
 .browse-panel .filter-tile-pill.is-active {
   transform: translateY(-1px);
-  border-color: rgba(242, 139, 66, 0.72);
   background: rgba(217, 75, 50, 0.28);
   color: white;
   box-shadow: 0 0 0 2px rgba(242, 139, 66, 0.16), 0 10px 24px rgba(0, 0, 0, 0.16);
@@ -4242,7 +4210,7 @@ input {
   padding: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .browse-filter-main {
     grid-template-columns: 1fr;
   }
@@ -4301,10 +4269,6 @@ input {
     grid-template-columns: 1fr;
     padding: 0.5rem;
     border-radius: 0.92rem;
-  }
-
-  .area-filter-icon {
-    display: none;
   }
 
   .browse-panel .filter-tile-pill-row {
