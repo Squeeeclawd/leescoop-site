@@ -184,37 +184,59 @@ function tileSearch(article: typeof visible[number]) {
       </section>
     )}
 
-    <section class="wrap homepage-section filter-tile panel-glow" id="browse" aria-label="Homepage filters" data-filter-tile>
-      <div class="filter-tile-heading">
-        <div>
-          <p class="eyebrow">Browse</p>
-          <h2>Find what matters fastest</h2>
-        </div>
-        <p>Filter the feed by type, area, or a quick search.</p>
-      </div>
-      <form class="filter-search-form" id="filter-search-form" action="/search/" method="get">
-        <label class="filter-group-label" for="home-filter-input">Search the latest feed</label>
-        <div class="filter-search-shell">
-          <span class="filter-search-icon" aria-hidden="true">⌕</span>
-          <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, news, cities, or venues" />
-        </div>
-      </form>
+    <section class="wrap homepage-section filter-tile browse-panel panel-glow" id="browse" aria-label="Browse LeeScoop feed" data-filter-tile>
+      <h2 class="sr-only">Browse LeeScoop feed</h2>
 
-      <div class="filter-control-group">
-        <p class="filter-group-label" id="filter-type-label">Type</p>
-        <div class="content-kind-filter-row" aria-labelledby="filter-type-label">
+      <div class="browse-filter-main">
+        <div class="content-kind-filter-row" aria-label="Primary feed categories">
           {contentKindStats.map((item) => (
             <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false" disabled={item.count === 0}>
-              <span>{item.label}</span>
+              <span class="content-kind-icon" aria-hidden="true">
+                {item.kind === 'event' ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 3v4M17 3v4M4.5 9.5h15" />
+                    <path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" />
+                    <path d="m9 15 1.8 1.8L15.5 12" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 5.5h10.5A2.5 2.5 0 0 1 18 8v10.5H7.5A2.5 2.5 0 0 1 5 16V5.5Z" />
+                    <path d="M18 8h1a2 2 0 0 1 2 2v6a2.5 2.5 0 0 1-2.5 2.5H18" />
+                    <path d="M8 9h6M8 12h6M8 15h4" />
+                  </svg>
+                )}
+              </span>
+              <span class="content-kind-copy">
+                <span>{item.label}</span>
+                <small>{item.kind === 'event' ? 'Happening soon' : 'Latest updates'}</small>
+              </span>
               <strong data-count-kind={item.kind}>{item.count}</strong>
             </button>
           ))}
         </div>
+
+        <form class="filter-search-form" id="filter-search-form" action="/search/" method="get">
+          <label class="sr-only" for="home-filter-input">Search the latest feed</label>
+          <div class="filter-search-shell">
+            <span class="filter-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" />
+              </svg>
+            </span>
+            <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, news, cities, or venues" />
+          </div>
+        </form>
       </div>
 
-      <div class="filter-control-group">
-        <p class="filter-group-label" id="filter-area-label">Area</p>
-        <div class="filter-tile-pill-row" aria-labelledby="filter-area-label">
+      <div class="filter-area-strip" aria-label="Area filters">
+        <span class="area-filter-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11Z" />
+            <circle cx="12" cy="10" r="2.4" />
+          </svg>
+        </span>
+        <div class="filter-tile-pill-row" aria-label="Areas">
           {categoryStats.map((item) => (
             <button
               type="button"
@@ -224,8 +246,8 @@ function tileSearch(article: typeof visible[number]) {
               aria-pressed="false"
               style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
             >
+              <span class="area-chip-pin" aria-hidden="true">⌾</span>
               <span>{item.category}</span>
-              <span class="filter-pill-separator">·</span>
               <span data-count-for={item.category}>{item.count}</span>
             </button>
           ))}
