@@ -4729,3 +4729,34 @@ input {
   clip-path: inset(50%) !important;
   overflow: hidden !important;
 }
+
+/* Make featured-event intake feel less like a full-width spreadsheet. */
+.feature-event-form-panel {
+  width: min(100%, 58rem);
+  margin-inline: auto;
+  padding: clamp(1.1rem, 3vw, 2rem);
+}
+
+.feature-event-form {
+  gap: 1.08rem;
+}
+
+.feature-event-form input,
+.feature-event-form textarea {
+  border-color: rgba(139, 210, 222, 0.2);
+  background: rgba(3, 26, 37, 0.44);
+}
+
+.feature-event-form textarea {
+  min-height: 6rem;
+}
+
+.feature-form-intro {
+  max-width: 48rem;
+}
+
+@media (min-width: 900px) {
+  .feature-form-row {
+    gap: 1.05rem;
+  }
+}

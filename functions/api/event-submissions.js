@@ -54,15 +54,15 @@ async function ensureEventSubmissionSchema(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS event_submissions (
     id TEXT PRIMARY KEY,
     event_name TEXT NOT NULL,
-    event_date TEXT NOT NULL,
+    event_date TEXT,
     event_time TEXT,
-    venue TEXT NOT NULL,
+    venue TEXT,
     address TEXT,
-    city TEXT NOT NULL,
+    city TEXT,
     event_url TEXT,
     ticket_url TEXT,
-    description TEXT NOT NULL,
-    organizer_name TEXT NOT NULL,
+    description TEXT,
+    organizer_name TEXT,
     organizer_email TEXT NOT NULL,
     organizer_phone TEXT,
     expected_attendance TEXT,
@@ -114,12 +114,8 @@ export async function onRequestPost({ request, env }) {
   const notes = clean(data.notes, MAX.notes);
 
   if (eventName.length < 3) return badRequest('Event name is required.');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return badRequest('Event date is required.');
-  if (venue.length < 2) return badRequest('Venue or location is required.');
-  if (city.length < 2) return badRequest('City or area is required.');
-  if (description.length < 20) return badRequest('Add a little more event description.');
-  if (organizerName.length < 2) return badRequest('Organizer name is required.');
-  if (!isValidEmail(organizerEmail)) return badRequest('Organizer email needs to look like an email address.');
+  if (eventDate && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return badRequest('Event date needs to use the date picker format.');
+  if (!isValidEmail(organizerEmail)) return badRequest('Your email is required so LeeScoop can confirm payment and follow up.');
   if (!isValidUrl(eventUrl)) return badRequest('Official event link must start with http:// or https://.');
   if (!isValidUrl(ticketUrl)) return badRequest('Ticket / RSVP link must start with http:// or https://.');
   if (/<\/?[a-z][\s\S]*>/i.test(`${eventName}\n${venue}\n${description}\n${notes}`)) return badRequest('Plain text only, no HTML.');

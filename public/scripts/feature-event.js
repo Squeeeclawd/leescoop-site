@@ -18,7 +18,13 @@
     event.preventDefault();
     const button = form.querySelector('button[type="submit"]');
     if (button instanceof HTMLButtonElement) button.disabled = true;
-    setStatus('Saving your event details…');
+    const missing = [];
+    if (!fieldValue('eventDate')) missing.push('date');
+    if (!fieldValue('venue')) missing.push('venue');
+    if (!fieldValue('city')) missing.push('city/area');
+    if (!fieldValue('description')) missing.push('description');
+    if (!fieldValue('organizerName')) missing.push('organizer name');
+    setStatus(missing.length ? `Saving your event details. Missing: ${missing.join(', ')} — you can still submit.` : 'Saving your event details…');
 
     const payload = {
       website: fieldValue('website'),
