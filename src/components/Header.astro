@@ -20,14 +20,12 @@ const {
         <div class="header-actions">
           <nav class="main-nav" aria-label="Primary">
             <a href="/">Home</a>
-            <a href="/#latest-feed">Latest</a>
-            <a href="/#browse">Browse</a>
-            {enableSearchShortcut ? (
-              <button type="button" class="nav-search-trigger" data-search-shortcut data-search-target={searchTargetId}>
-                Search
-              </button>
-            ) : (
-              <a href="/search/">Search</a>
+            {!enableSearchShortcut && (
+              <>
+                <a href="/#latest-feed">Latest</a>
+                <a href="/#browse">Browse</a>
+                <a href="/search/">Search</a>
+              </>
             )}
             <a href="/archive/">Archive</a>
           </nav>
@@ -58,14 +56,12 @@ const {
           <summary aria-label="Open navigation">Menu</summary>
           <nav class="mobile-nav" aria-label="Mobile primary">
             <a href="/">Home</a>
-            <a href="/#latest-feed">Latest</a>
-            <a href="/#browse">Browse</a>
-            {enableSearchShortcut ? (
-              <button type="button" class="nav-search-trigger" data-search-shortcut data-search-target={searchTargetId}>
-                Search
-              </button>
-            ) : (
-              <a href="/search/">Search</a>
+            {!enableSearchShortcut && (
+              <>
+                <a href="/#latest-feed">Latest</a>
+                <a href="/#browse">Browse</a>
+                <a href="/search/">Search</a>
+              </>
             )}
             <a href="/archive/">Archive</a>
           </nav>
