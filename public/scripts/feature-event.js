@@ -2,6 +2,7 @@
   const form = document.querySelector('[data-feature-event-form]');
   const status = document.querySelector('[data-feature-event-status]');
   if (!(form instanceof HTMLFormElement) || !(status instanceof HTMLElement)) return;
+  form.noValidate = true;
 
   const setStatus = (message, tone = 'neutral') => {
     status.textContent = message;
