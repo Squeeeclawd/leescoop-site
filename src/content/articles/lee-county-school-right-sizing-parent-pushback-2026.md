@@ -22,6 +22,7 @@ location: School District of Lee County
 verificationUrl: "https://www.leeschools.net/leadership/school_board/board_meetings"
 sourceName: Cape Coral Breeze
 sourceUrl: "https://www.capecoralbreeze.com/news/local-news/2026/05/14/district-right-sizing-efforts-questioned/"
+sourceImageUrl: "https://ogden_images.s3.amazonaws.com/florida.ogdennews.com/images/sites/2/2025/02/14123822/School-District-Logo-2025-1-843x840.jpg"
 coverImage: /covers/lee-county-school-right-sizing-parent-pushback-2026.png
 ---
 ## What happened?
