@@ -14,6 +14,32 @@
     return `<a class="read-link" href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
   };
 
+  const formatBytes = (bytes) => {
+    const number = Number(bytes || 0);
+    if (!Number.isFinite(number) || number <= 0) return '';
+    if (number >= 1024 * 1024) return `${(number / 1024 / 1024).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(number / 1024))} KB`;
+  };
+
+  const imageHtml = (item) => {
+    const preference = item.imagePreference === 'provided' ? 'Submitter provided image' : 'Generate LeeScoop image';
+    const uploadDetails = [
+      item.imageUploadName,
+      item.imageUploadWidth && item.imageUploadHeight ? `${item.imageUploadWidth} × ${item.imageUploadHeight}px` : '',
+      formatBytes(item.imageUploadSize)
+    ].filter(Boolean).join(' · ');
+    const links = [
+      linkHtml(item.imageUrl, 'Image / flyer link'),
+      item.imageUploadDataUrl ? `<a class="read-link" href="${escapeHtml(item.imageUploadDataUrl)}" download="${escapeHtml(item.imageUploadName || 'event-image')}">Download uploaded image</a>` : ''
+    ].filter(Boolean).join(' · ');
+    const preview = item.imageUploadDataUrl
+      ? `<figure class="admin-event-image-preview"><img src="${escapeHtml(item.imageUploadDataUrl)}" alt="Uploaded event image" loading="lazy"><figcaption>${escapeHtml(uploadDetails || 'Uploaded image')}</figcaption></figure>`
+      : '';
+    return `
+      <div><dt>Image</dt><dd>${escapeHtml(preference)}${uploadDetails ? `<br>${escapeHtml(uploadDetails)}` : ''}${item.imageNotes ? `<br>${escapeHtml(item.imageNotes)}` : ''}${links ? `<br>${links}` : ''}${preview}</dd></div>
+    `;
+  };
+
   const render = (submissions) => {
     if (!submissions.length) {
       root.innerHTML = '<p class="small-note">No event submissions yet.</p>';
@@ -32,6 +58,7 @@
           <div><dt>Where</dt><dd>${escapeHtml(item.venue)}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.address ? `<br>${escapeHtml(item.address)}` : ''}</dd></div>
           <div><dt>Organizer</dt><dd>${escapeHtml(item.organizerName)} · ${escapeHtml(item.organizerEmail)}${item.organizerPhone ? ` · ${escapeHtml(item.organizerPhone)}` : ''}</dd></div>
           <div><dt>Description</dt><dd>${escapeHtml(item.description)}</dd></div>
+          ${imageHtml(item)}
           ${item.notes ? `<div><dt>Notes</dt><dd>${escapeHtml(item.notes)}</dd></div>` : ''}
           <div><dt>Links</dt><dd>${[linkHtml(item.eventUrl, 'Event page'), linkHtml(item.ticketUrl, 'Tickets / RSVP')].filter(Boolean).join(' · ') || '—'}</dd></div>
         </dl>

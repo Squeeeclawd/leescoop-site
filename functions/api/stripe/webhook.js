@@ -3,6 +3,18 @@ import { json, nowIso, requireDb } from '../../_lib/http.js';
 
 const textEncoder = new TextEncoder();
 
+const IMAGE_COLUMNS = [
+  ['image_preference', 'TEXT'],
+  ['image_url', 'TEXT'],
+  ['image_upload_name', 'TEXT'],
+  ['image_upload_mime', 'TEXT'],
+  ['image_upload_size', 'INTEGER'],
+  ['image_upload_width', 'INTEGER'],
+  ['image_upload_height', 'INTEGER'],
+  ['image_upload_data_url', 'TEXT'],
+  ['image_notes', 'TEXT']
+];
+
 function bytesToHex(bytes) {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
@@ -45,6 +57,16 @@ async function verifyStripeRequest(request, env, rawBody) {
   return constantTimeEqual(expected, signature);
 }
 
+async function addMissingColumns(db, columns) {
+  for (const [name, type] of columns) {
+    try {
+      await db.prepare(`ALTER TABLE event_submissions ADD COLUMN ${name} ${type}`).run();
+    } catch (error) {
+      if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error;
+    }
+  }
+}
+
 async function ensureEventSubmissionSchema(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS event_submissions (
     id TEXT PRIMARY KEY,
@@ -61,6 +83,15 @@ async function ensureEventSubmissionSchema(db) {
     organizer_email TEXT,
     organizer_phone TEXT,
     expected_attendance TEXT,
+    image_preference TEXT,
+    image_url TEXT,
+    image_upload_name TEXT,
+    image_upload_mime TEXT,
+    image_upload_size INTEGER,
+    image_upload_width INTEGER,
+    image_upload_height INTEGER,
+    image_upload_data_url TEXT,
+    image_notes TEXT,
     notes TEXT,
     status TEXT NOT NULL DEFAULT 'pending_payment',
     payment_status TEXT NOT NULL DEFAULT 'unpaid',
@@ -73,6 +104,7 @@ async function ensureEventSubmissionSchema(db) {
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`).run();
+  await addMissingColumns(db, IMAGE_COLUMNS);
 }
 
 export async function onRequestPost({ request, env }) {

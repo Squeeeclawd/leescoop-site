@@ -21,6 +21,19 @@ function textLine(label, value) {
   return value ? `${label}: ${value}\n` : '';
 }
 
+function imageSummary(submission) {
+  if (submission.image_preference === 'generate') return 'Generate LeeScoop cover image';
+  const parts = ['Provided by submitter'];
+  if (submission.image_url) parts.push(`link: ${submission.image_url}`);
+  if (submission.image_upload_name) {
+    const dimensions = submission.image_upload_width && submission.image_upload_height
+      ? `${submission.image_upload_width} × ${submission.image_upload_height}px`
+      : '';
+    parts.push([submission.image_upload_name, dimensions].filter(Boolean).join(' · '));
+  }
+  return parts.join('; ');
+}
+
 function htmlRow(label, value) {
   return value ? `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>` : '';
 }
@@ -40,6 +53,8 @@ function buildPaidSubmissionMessage(submission) {
     textLine('Organizer email', submission.organizer_email),
     textLine('Organizer phone', submission.organizer_phone),
     textLine('Expected attendance', submission.expected_attendance),
+    textLine('Image preference', imageSummary(submission)),
+    textLine('Image notes', submission.image_notes),
     textLine('Event URL', submission.event_url),
     textLine('Ticket URL', submission.ticket_url),
     textLine('Stripe checkout session', submission.stripe_checkout_session_id),
@@ -65,6 +80,9 @@ function buildPaidSubmissionMessage(submission) {
       ${htmlRow('Organizer email', submission.organizer_email)}
       ${htmlRow('Organizer phone', submission.organizer_phone)}
       ${htmlRow('Expected attendance', submission.expected_attendance)}
+      ${htmlRow('Image preference', imageSummary(submission))}
+      ${htmlRow('Image notes', submission.image_notes)}
+      ${submission.image_upload_data_url ? `<p><strong>Uploaded image:</strong><br><img src="${escapeHtml(submission.image_upload_data_url)}" alt="Uploaded event image" style="max-width:100%;height:auto;border-radius:12px;border:1px solid #d8e5e8"></p>` : ''}
       ${submission.event_url ? `<p><strong>Event URL:</strong> <a href="${escapeHtml(submission.event_url)}">${escapeHtml(submission.event_url)}</a></p>` : ''}
       ${submission.ticket_url ? `<p><strong>Ticket URL:</strong> <a href="${escapeHtml(submission.ticket_url)}">${escapeHtml(submission.ticket_url)}</a></p>` : ''}
       ${htmlRow('Stripe checkout session', submission.stripe_checkout_session_id)}

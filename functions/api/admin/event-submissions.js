@@ -1,6 +1,28 @@
 import { requireModerator } from '../../_lib/auth.js';
 import { json, requireDb } from '../../_lib/http.js';
 
+const IMAGE_COLUMNS = [
+  ['image_preference', 'TEXT'],
+  ['image_url', 'TEXT'],
+  ['image_upload_name', 'TEXT'],
+  ['image_upload_mime', 'TEXT'],
+  ['image_upload_size', 'INTEGER'],
+  ['image_upload_width', 'INTEGER'],
+  ['image_upload_height', 'INTEGER'],
+  ['image_upload_data_url', 'TEXT'],
+  ['image_notes', 'TEXT']
+];
+
+async function addMissingColumns(db, columns) {
+  for (const [name, type] of columns) {
+    try {
+      await db.prepare(`ALTER TABLE event_submissions ADD COLUMN ${name} ${type}`).run();
+    } catch (error) {
+      if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error;
+    }
+  }
+}
+
 async function ensureEventSubmissionSchema(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS event_submissions (
     id TEXT PRIMARY KEY,
@@ -17,6 +39,15 @@ async function ensureEventSubmissionSchema(db) {
     organizer_email TEXT,
     organizer_phone TEXT,
     expected_attendance TEXT,
+    image_preference TEXT,
+    image_url TEXT,
+    image_upload_name TEXT,
+    image_upload_mime TEXT,
+    image_upload_size INTEGER,
+    image_upload_width INTEGER,
+    image_upload_height INTEGER,
+    image_upload_data_url TEXT,
+    image_notes TEXT,
     notes TEXT,
     status TEXT NOT NULL DEFAULT 'pending_payment',
     payment_status TEXT NOT NULL DEFAULT 'unpaid',
@@ -29,6 +60,7 @@ async function ensureEventSubmissionSchema(db) {
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`).run();
+  await addMissingColumns(db, IMAGE_COLUMNS);
 }
 
 function publicSubmission(row) {
@@ -47,6 +79,15 @@ function publicSubmission(row) {
     organizerEmail: row.organizer_email,
     organizerPhone: row.organizer_phone,
     expectedAttendance: row.expected_attendance,
+    imagePreference: row.image_preference,
+    imageUrl: row.image_url,
+    imageUploadName: row.image_upload_name,
+    imageUploadMime: row.image_upload_mime,
+    imageUploadSize: row.image_upload_size,
+    imageUploadWidth: row.image_upload_width,
+    imageUploadHeight: row.image_upload_height,
+    imageUploadDataUrl: row.image_upload_data_url,
+    imageNotes: row.image_notes,
     notes: row.notes,
     status: row.status,
     paymentStatus: row.payment_status,

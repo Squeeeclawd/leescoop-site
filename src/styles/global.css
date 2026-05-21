@@ -4587,6 +4587,11 @@ input {
   outline: none;
 }
 
+.feature-event-form input[type="file"] {
+  cursor: pointer;
+  color: rgba(221, 238, 241, 0.78);
+}
+
 .feature-event-form textarea {
   resize: vertical;
   min-height: 7rem;
@@ -4596,6 +4601,87 @@ input {
 .feature-event-form textarea:focus {
   border-color: rgba(247, 222, 105, 0.76);
   box-shadow: 0 0 0 3px rgba(247, 222, 105, 0.14);
+}
+
+.feature-image-fieldset {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid rgba(139, 210, 222, 0.2);
+  border-radius: 1rem;
+  background: rgba(3, 26, 37, 0.24);
+}
+
+.feature-image-fieldset legend {
+  padding-inline: 0.35rem;
+  color: rgba(139, 210, 222, 0.92);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feature-image-help,
+.feature-image-status {
+  margin: 0;
+  color: rgba(221, 238, 241, 0.78);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.feature-image-status[data-tone="success"] {
+  color: var(--citrus-yellow);
+}
+
+.feature-image-status[data-tone="error"] {
+  color: #ffb2a2;
+}
+
+.feature-image-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.feature-choice-card {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem !important;
+  align-items: start;
+  padding: 0.8rem;
+  border: 1px solid rgba(139, 210, 222, 0.2);
+  border-radius: 0.9rem;
+  background: rgba(3, 26, 37, 0.38);
+  cursor: pointer;
+}
+
+.feature-choice-card:has(input:checked) {
+  border-color: rgba(247, 222, 105, 0.58);
+  background: rgba(247, 222, 105, 0.08);
+}
+
+.feature-choice-card input {
+  width: auto;
+  margin-top: 0.2rem;
+  accent-color: var(--sunset-orange);
+}
+
+.feature-choice-card strong,
+.feature-choice-card small {
+  display: block;
+}
+
+.feature-choice-card strong {
+  color: #fff;
+  font-size: 0.98rem;
+}
+
+.feature-choice-card small {
+  margin-top: 0.18rem;
+  color: rgba(221, 238, 241, 0.76);
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .feature-form-row {
@@ -4708,8 +4794,27 @@ input {
   overflow-wrap: anywhere;
 }
 
+.admin-event-image-preview {
+  margin: 0.7rem 0 0;
+}
+
+.admin-event-image-preview img {
+  display: block;
+  width: min(100%, 24rem);
+  height: auto;
+  border: 1px solid rgba(139, 210, 222, 0.24);
+  border-radius: 0.8rem;
+}
+
+.admin-event-image-preview figcaption {
+  margin-top: 0.35rem;
+  color: rgba(221, 238, 241, 0.72);
+  font-size: 0.84rem;
+}
+
 @media (max-width: 760px) {
   .feature-form-row,
+  .feature-image-options,
   .admin-event-submission-topline {
     grid-template-columns: 1fr;
     display: grid;

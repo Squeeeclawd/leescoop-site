@@ -20,13 +20,12 @@ import Footer from '@/components/Footer.astro';
       </div>
 
       <aside class="feature-event-action" aria-label="Submission action">
-        <p class="feature-action-kicker">Secure intake</p>
-        <h2>Simple private submission.</h2>
+        <p class="feature-action-kicker">Secure review</p>
+        <h2>Send the details. We’ll shape the feature.</h2>
         <p>
-          Fill out what you know. Your submission is saved privately, then you’ll continue to secure payment.
+          Share the basics, add an image if you have one, or ask LeeScoop to create a clean event cover.
         </p>
-        <a class="button primary feature-submit-button" href="#feature-event-form">Start submission</a>
-        <p class="feature-event-note">Every submission is reviewed before it appears on LeeScoop.</p>
+        <p class="feature-event-note">You’ll continue to the secure $50 payment step after submitting.</p>
       </aside>
     </section>
 
@@ -85,8 +84,44 @@ import Footer from '@/components/Footer.astro';
 
         <label>
           <span>Short event description</span>
-          <textarea name="description" maxlength="2200" rows="5" placeholder="What is happening, who it is for, and why locals should care?"></textarea>
+          <textarea name="description" maxlength="2200" rows="5" placeholder="What is happening, who is invited, and what makes it worth checking out?"></textarea>
         </label>
+
+        <fieldset class="feature-image-fieldset">
+          <legend>Event image</legend>
+          <p class="feature-image-help">Best image: horizontal, 1216 × 704 px or larger. JPG, PNG, or WebP. Max upload: 1.5 MB.</p>
+          <div class="feature-image-options" role="radiogroup" aria-label="Event image preference">
+            <label class="feature-choice-card">
+              <input type="radio" name="imagePreference" value="generate" checked />
+              <span>
+                <strong>Generate one for me</strong>
+                <small>LeeScoop will make a clean local-style cover image.</small>
+              </span>
+            </label>
+            <label class="feature-choice-card">
+              <input type="radio" name="imagePreference" value="provided" />
+              <span>
+                <strong>I have my own image</strong>
+                <small>Upload it below or paste a public image/flyer link.</small>
+              </span>
+            </label>
+          </div>
+          <div class="feature-form-row feature-image-inputs">
+            <label>
+              <span>Upload image</span>
+              <input name="imageUpload" type="file" accept="image/png,image/jpeg,image/webp" />
+            </label>
+            <label>
+              <span>Image / flyer link</span>
+              <input name="imageUrl" inputmode="url" placeholder="Google Drive, website image, flyer link…" maxlength="500" />
+            </label>
+          </div>
+          <p class="feature-image-status" data-feature-image-status>No image selected yet.</p>
+          <label>
+            <span>Image notes</span>
+            <input name="imageNotes" maxlength="500" placeholder="Optional: photo credit, crop request, or style note" />
+          </label>
+        </fieldset>
 
         <div class="feature-form-row">
           <label>
@@ -139,7 +174,7 @@ import Footer from '@/components/Footer.astro';
         <ul class="signal-list compact feature-checklist">
           <li><strong>Basics</strong><span>Event name, date, time, city, venue, and address.</span></li>
           <li><strong>Link</strong><span>Ticket page, RSVP page, Facebook event, or official source.</span></li>
-          <li><strong>Blurb</strong><span>Two or three sentences telling locals why it matters.</span></li>
+          <li><strong>Blurb</strong><span>Two or three friendly sentences about what people can expect.</span></li>
           <li><strong>Contact</strong><span>A real organizer contact in case something needs confirmation.</span></li>
         </ul>
       </article>

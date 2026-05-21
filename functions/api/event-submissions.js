@@ -13,8 +13,27 @@ const MAX = {
   organizerEmail: 254,
   organizerPhone: 80,
   expectedAttendance: 80,
+  imagePreference: 20,
+  imageUrl: 500,
+  imageUploadName: 180,
+  imageUploadMime: 40,
+  imageNotes: 500,
+  imageUploadDataUrl: 2_100_000,
   notes: 1200
 };
+
+const MAX_IMAGE_UPLOAD_BYTES = 1.5 * 1024 * 1024;
+const IMAGE_COLUMNS = [
+  ['image_preference', 'TEXT'],
+  ['image_url', 'TEXT'],
+  ['image_upload_name', 'TEXT'],
+  ['image_upload_mime', 'TEXT'],
+  ['image_upload_size', 'INTEGER'],
+  ['image_upload_width', 'INTEGER'],
+  ['image_upload_height', 'INTEGER'],
+  ['image_upload_data_url', 'TEXT'],
+  ['image_notes', 'TEXT']
+];
 
 function clean(value, max = 500) {
   return String(value || '').replace(/\r\n/g, '\n').replace(/[\t ]+\n/g, '\n').trim().slice(0, max);
@@ -22,6 +41,22 @@ function clean(value, max = 500) {
 
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
+function cleanInt(value, max = 100000) {
+  const number = Number(value || 0);
+  if (!Number.isFinite(number) || number < 0) return 0;
+  return Math.min(Math.round(number), max);
+}
+
+async function addMissingColumns(db, columns) {
+  for (const [name, type] of columns) {
+    try {
+      await db.prepare(`ALTER TABLE event_submissions ADD COLUMN ${name} ${type}`).run();
+    } catch (error) {
+      if (!String(error?.message || error).toLowerCase().includes('duplicate column')) throw error;
+    }
+  }
 }
 
 function appendPaymentParams(paymentLink, submissionId, email) {
@@ -56,6 +91,15 @@ async function ensureEventSubmissionSchema(db) {
     organizer_email TEXT,
     organizer_phone TEXT,
     expected_attendance TEXT,
+    image_preference TEXT,
+    image_url TEXT,
+    image_upload_name TEXT,
+    image_upload_mime TEXT,
+    image_upload_size INTEGER,
+    image_upload_width INTEGER,
+    image_upload_height INTEGER,
+    image_upload_data_url TEXT,
+    image_notes TEXT,
     notes TEXT,
     status TEXT NOT NULL DEFAULT 'pending_payment',
     payment_status TEXT NOT NULL DEFAULT 'unpaid',
@@ -68,6 +112,7 @@ async function ensureEventSubmissionSchema(db) {
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   )`).run();
+  await addMissingColumns(db, IMAGE_COLUMNS);
   await db.prepare('CREATE INDEX IF NOT EXISTS event_submissions_status_idx ON event_submissions(status, created_at)').run();
   await db.prepare('CREATE INDEX IF NOT EXISTS event_submissions_payment_idx ON event_submissions(payment_status, created_at)').run();
   await db.prepare('CREATE INDEX IF NOT EXISTS event_submissions_email_idx ON event_submissions(organizer_email, created_at)').run();
@@ -101,12 +146,28 @@ export async function onRequestPost({ request, env }) {
   const organizerEmail = clean(data.organizerEmail, MAX.organizerEmail).toLowerCase();
   const organizerPhone = clean(data.organizerPhone, MAX.organizerPhone);
   const expectedAttendance = clean(data.expectedAttendance, MAX.expectedAttendance);
+  const imagePreferenceRaw = clean(data.imagePreference, MAX.imagePreference).toLowerCase();
+  const imagePreference = imagePreferenceRaw === 'provided' ? 'provided' : 'generate';
+  const imageUrl = clean(data.imageUrl, MAX.imageUrl);
+  const imageUploadName = clean(data.imageUploadName, MAX.imageUploadName);
+  const imageUploadMime = clean(data.imageUploadMime, MAX.imageUploadMime).toLowerCase();
+  const imageUploadSize = cleanInt(data.imageUploadSize, 20 * 1024 * 1024);
+  const imageUploadWidth = cleanInt(data.imageUploadWidth, 20000);
+  const imageUploadHeight = cleanInt(data.imageUploadHeight, 20000);
+  const imageUploadDataUrl = clean(data.imageUploadDataUrl, MAX.imageUploadDataUrl);
+  const imageNotes = clean(data.imageNotes, MAX.imageNotes);
   const notes = clean(data.notes, MAX.notes);
 
   if (eventName.length < 3) return badRequest('Event name is required.');
   if (eventDate && !/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) return badRequest('Event date needs to use the date picker format.');
   if (organizerEmail && !isValidEmail(organizerEmail)) return badRequest('If you add an email, it needs to look like an email address.');
-  if (/<\/?[a-z][\s\S]*>/i.test(`${eventName}\n${venue}\n${description}\n${notes}`)) return badRequest('Plain text only, no HTML.');
+  if (imageUrl && !/^https?:\/\//i.test(imageUrl)) return badRequest('Image link needs to start with http:// or https://.');
+  if (imageUploadDataUrl) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(imageUploadMime)) return badRequest('Uploaded image must be JPG, PNG, or WebP.');
+    if (imageUploadSize > MAX_IMAGE_UPLOAD_BYTES) return badRequest('Uploaded image must be under 1.5 MB.');
+    if (!/^data:image\/(jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(imageUploadDataUrl)) return badRequest('Uploaded image could not be read.');
+  }
+  if (/<\/?[a-z][\s\S]*>/i.test(`${eventName}\n${venue}\n${description}\n${imageNotes}\n${notes}`)) return badRequest('Plain text only, no HTML.');
 
   const now = nowIso();
   const id = crypto.randomUUID();
@@ -115,9 +176,11 @@ export async function onRequestPost({ request, env }) {
 
   await db.prepare(`INSERT INTO event_submissions (
     id, event_name, event_date, event_time, venue, address, city, event_url, ticket_url, description,
+    image_preference, image_url, image_upload_name, image_upload_mime, image_upload_size, image_upload_width,
+    image_upload_height, image_upload_data_url, image_notes,
     organizer_name, organizer_email, organizer_phone, expected_attendance, notes, status, payment_status,
     stripe_reference, ip_hash, user_agent_hash, created_at, updated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment', 'unpaid', ?, ?, ?, ?, ?)`).bind(
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_payment', 'unpaid', ?, ?, ?, ?, ?)`).bind(
     id,
     eventName,
     eventDate,
@@ -128,6 +191,15 @@ export async function onRequestPost({ request, env }) {
     eventUrl,
     ticketUrl,
     description,
+    imagePreference,
+    imageUrl,
+    imageUploadName,
+    imageUploadMime,
+    imageUploadSize,
+    imageUploadWidth,
+    imageUploadHeight,
+    imageUploadDataUrl,
+    imageNotes,
     organizerName,
     organizerEmail,
     organizerPhone,
