@@ -1,3 +1,4 @@
+import { sendPaidEventSubmissionEmail } from '../../_lib/email.js';
 import { json, nowIso, requireDb } from '../../_lib/http.js';
 
 const textEncoder = new TextEncoder();
@@ -89,6 +90,9 @@ export async function onRequestPost({ request, env }) {
   const db = requireDb(env);
   await ensureEventSubmissionSchema(db);
   const now = nowIso();
+  const checkoutSessionId = String(session.id || '');
+  const paymentIntentId = String(session.payment_intent || '');
+
   await db.prepare(`UPDATE event_submissions
     SET payment_status = 'paid',
         status = CASE WHEN status = 'pending_payment' THEN 'paid_pending_review' ELSE status END,
@@ -97,12 +101,23 @@ export async function onRequestPost({ request, env }) {
         paid_at = COALESCE(paid_at, ?),
         updated_at = ?
     WHERE id = ?`).bind(
-      String(session.id || ''),
-      String(session.payment_intent || ''),
+      checkoutSessionId,
+      paymentIntentId,
       now,
       now,
       submissionId
     ).run();
 
-  return json({ ok: true });
+  const { results } = await db.prepare('SELECT * FROM event_submissions WHERE id = ? LIMIT 1').bind(submissionId).all();
+  const submission = results?.[0];
+  let notification = { ok: false, skipped: true, reason: 'submission not found' };
+  if (submission) {
+    notification = await sendPaidEventSubmissionEmail(env, {
+      ...submission,
+      stripe_checkout_session_id: checkoutSessionId || submission.stripe_checkout_session_id,
+      stripe_payment_intent_id: paymentIntentId || submission.stripe_payment_intent_id
+    });
+  }
+
+  return json({ ok: true, notification: { ok: Boolean(notification.ok), skipped: Boolean(notification.skipped), provider: notification.provider || null } });
 }
