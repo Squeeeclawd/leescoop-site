@@ -4883,3 +4883,126 @@ input {
   border-color: rgba(217, 75, 50, 0.5);
   background: rgba(217, 75, 50, 0.1);
 }
+
+/* LeeScoop header cleanup — larger brand, calmer desktop nav. */
+@media (min-width: 761px) {
+  .site-header,
+  .home-header-strip {
+    background:
+      linear-gradient(180deg, rgba(6, 58, 82, 0.97), rgba(5, 50, 71, 0.95));
+    border-bottom-color: rgba(139, 210, 222, 0.24);
+    box-shadow: 0 10px 28px rgba(3, 26, 37, 0.18);
+  }
+
+  .home-header-grid {
+    padding: 0.7rem 0 0.78rem;
+  }
+
+  .home-brand-block {
+    display: grid;
+    grid-template-columns: minmax(18rem, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "tagline actions";
+    align-items: center;
+    gap: 0.12rem 1.35rem;
+  }
+
+  .home-brand-row {
+    display: contents;
+  }
+
+  .brand-logo-link {
+    grid-area: brand;
+    width: clamp(12.5rem, 16vw, 15.5rem);
+    align-self: end;
+  }
+
+  .brand-logo {
+    max-height: 5.4rem;
+  }
+
+  .site-tagline {
+    grid-area: tagline;
+    max-width: 72ch;
+    margin: -0.2rem 0 0;
+    color: rgba(221, 238, 241, 0.84);
+    font-size: 0.93rem;
+    line-height: 1.38;
+  }
+
+  .header-actions {
+    grid-area: actions;
+    align-self: center;
+    flex-wrap: nowrap;
+    gap: 0.58rem;
+  }
+
+  .main-nav {
+    flex-wrap: nowrap;
+    gap: 0.08rem;
+    padding: 0.22rem;
+    border: 1px solid rgba(139, 210, 222, 0.18);
+    border-radius: 999px;
+    background: rgba(3, 26, 37, 0.22);
+  }
+
+  .main-nav a,
+  .nav-search-trigger {
+    min-height: 2.1rem;
+    padding: 0.38rem 0.72rem;
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .main-nav .nav-feature-event {
+    background: rgba(139, 210, 222, 0.18);
+    color: #fff;
+  }
+
+  .main-nav .nav-feature-event:hover,
+  .main-nav .nav-feature-event:focus-visible {
+    background: var(--sunset-orange);
+    color: var(--ink-blue);
+  }
+
+  .header-account-authed,
+  .header-login summary {
+    min-height: 2.55rem;
+    padding: 0.32rem 0.46rem 0.32rem 0.76rem;
+    border-color: rgba(139, 210, 222, 0.3);
+    background: rgba(3, 26, 37, 0.32);
+  }
+
+  .header-account strong {
+    max-width: 8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .header-account a,
+  .header-account button {
+    padding: 0.36rem 0.62rem;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1030px) {
+  .home-brand-block {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "actions"
+      "tagline";
+    justify-items: start;
+    gap: 0.35rem;
+  }
+
+  .header-actions {
+    justify-self: start;
+  }
+
+  .site-tagline {
+    margin-top: 0;
+  }
+}
