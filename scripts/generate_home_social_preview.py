@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'public' / 'branding' / 'leescoop-social-art.png'
-OUT = ROOT / 'public' / 'branding' / 'leescoop-social-preview.png'
+OUT = ROOT / 'public' / 'branding' / 'leescoop-social-preview-v2.png'
 W, H = 1216, 704
 
 if not SOURCE.exists():
