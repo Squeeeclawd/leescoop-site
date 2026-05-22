@@ -8,12 +8,12 @@ const { articleSlug } = Astro.props;
 <section class="comments-panel panel-glow" data-comments-root data-article-slug={articleSlug} aria-labelledby="comments-heading">
   <div class="comments-heading-row">
     <div>
-      <p class="eyebrow">Local comments</p>
-      <h2 id="comments-heading">Say something useful</h2>
+      <p class="eyebrow">Comments</p>
+      <h2 id="comments-heading">Join the conversation</h2>
     </div>
     <p class="comments-count" data-comments-count>Loading…</p>
   </div>
-  <p class="comments-note">Comments post immediately. No real name required. Email is optional. Don’t be a menace.</p>
+  <p class="comments-note">Share a local tip, correction, or question. Comments post immediately; email is optional.</p>
   <div class="comments-status" data-comments-status role="status" aria-live="polite">Loading comments…</div>
   <div class="comments-list" data-comments-list></div>
 
@@ -68,11 +68,11 @@ const { articleSlug } = Astro.props;
 
   <form class="comments-form comments-post-form" data-comment-form hidden>
     <label>
-      <span>Your comment</span>
-      <textarea name="body" rows="4" maxlength="1500" placeholder="Add your comment…" required></textarea>
+      <span>Comment</span>
+      <textarea name="body" rows="4" maxlength="1500" placeholder="Write a respectful comment…" required></textarea>
     </label>
     <div class="comments-form-footer">
-      <p class="comments-field-note">Plain text only. Comments appear immediately and may be removed by a mod.</p>
+      <p class="comments-field-note">Plain text only. Keep it civil and useful.</p>
       <button class="button primary" type="submit">Post comment</button>
     </div>
   </form>

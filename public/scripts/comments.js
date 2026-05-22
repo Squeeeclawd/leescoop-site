@@ -26,7 +26,7 @@ async function api(path, options = {}) {
   if (!data) {
     throw new Error(response.status === 404 ? 'Comments are not connected yet.' : 'Comments are temporarily unavailable.');
   }
-  if (!response.ok || data.ok === false) throw new Error(data.error || 'Something went sideways.');
+  if (!response.ok || data.ok === false) throw new Error(data.error || 'Something went wrong.');
   return data;
 }
 
@@ -109,7 +109,7 @@ function renderComments(root, comments) {
   if (!comments.length) {
     const empty = document.createElement('p');
     empty.className = 'comments-empty';
-    empty.textContent = 'No comments yet. Be first, if you dare.';
+    empty.textContent = 'No comments yet. Start the conversation.';
     list.append(empty);
     return;
   }
@@ -124,11 +124,11 @@ function renderUnavailable(root, message) {
     list.innerHTML = '';
     const empty = document.createElement('p');
     empty.className = 'comments-empty';
-    empty.textContent = 'Comments are not connected yet. The article still works; the comment plumbing is just not hooked up.';
+    empty.textContent = 'Comments are temporarily unavailable.';
     list.append(empty);
   }
   setAvailability(root, false);
-  setStatus(root, message || 'Comments are not connected yet.', 'warn');
+  setStatus(root, message || 'Comments are temporarily unavailable.', 'warn');
 }
 
 async function refresh(root) {
@@ -183,7 +183,7 @@ function init(root) {
       await api('/api/auth/signup', { method: 'POST', body: JSON.stringify(formData(signupForm)) });
       signupForm.reset();
       await refresh(root);
-      setStatus(root, 'Account created. You’re in.', 'ok');
+      setStatus(root, 'Account created. You are signed in.', 'ok');
     } catch (error) {
       setStatus(root, error.message, 'error');
     }
@@ -209,7 +209,7 @@ function init(root) {
       await api('/api/comments', { method: 'POST', body: JSON.stringify(data) });
       commentForm.reset();
       await refresh(root);
-      setStatus(root, 'Posted. Thanks for keeping it local.', 'ok');
+      setStatus(root, 'Posted. Thanks for adding to the conversation.', 'ok');
     } catch (error) {
       setStatus(root, error.message, 'error');
     }

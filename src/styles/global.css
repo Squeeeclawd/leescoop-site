@@ -3658,7 +3658,10 @@ input {
 }
 
 .comments-panel {
+  display: grid;
+  gap: clamp(0.78rem, 1.6vw, 1.05rem);
   max-width: 68ch;
+  padding: clamp(1.15rem, 2.8vw, 1.72rem);
 }
 
 .comments-heading-row {
@@ -3666,21 +3669,28 @@ input {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  margin-bottom: 0;
 }
 
 .comments-heading-row h1,
 .comments-heading-row h2 {
   margin: 0;
-  font-size: clamp(1.55rem, 3vw, 2.25rem);
-  line-height: 1;
+  font-size: clamp(1.5rem, 3vw, 2.12rem);
+  line-height: 1.06;
+  text-wrap: balance;
 }
 
 .comments-count {
-  margin: 0;
+  margin: 0.08rem 0 0;
   color: var(--citrus-yellow);
+  font-size: 0.9rem;
   font-weight: 800;
+  line-height: 1;
   white-space: nowrap;
+  padding: 0.38rem 0.62rem;
+  border: 1px solid rgba(247, 222, 105, 0.26);
+  border-radius: 999px;
+  background: rgba(3, 26, 37, 0.24);
 }
 
 .comments-note,
@@ -3691,11 +3701,20 @@ input {
   line-height: 1.55;
 }
 
+.comments-note {
+  max-width: 56ch;
+  margin: -0.18rem 0 0;
+}
+
 .comments-status {
-  min-height: 1.4rem;
-  margin: var(--space-2) 0;
+  min-height: 0;
+  margin: 0;
   color: var(--text-soft);
   font-weight: 700;
+}
+
+.comments-status:empty {
+  display: none;
 }
 
 .comments-status[data-tone="ok"] { color: var(--citrus-yellow); }
@@ -3707,6 +3726,11 @@ input {
   display: grid;
   gap: var(--space-2);
   margin: var(--space-3) 0;
+}
+
+.comments-list {
+  gap: 0.75rem;
+  margin: 0;
 }
 
 .comment-card,
@@ -3747,6 +3771,13 @@ input {
   font-style: italic;
 }
 
+.comments-list .comments-empty {
+  padding: 0.76rem 0.9rem;
+  border: 1px solid rgba(139, 210, 222, 0.16);
+  border-radius: 0.8rem;
+  background: rgba(3, 26, 37, 0.18);
+}
+
 .comments-auth-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3756,6 +3787,11 @@ input {
 .comments-form {
   display: grid;
   gap: var(--space-2);
+}
+
+.comments-post-form {
+  margin-top: 0.1rem;
+  gap: 0.86rem;
 }
 
 .comments-form h3 {
@@ -3783,6 +3819,7 @@ input {
 }
 
 .comments-form textarea {
+  min-height: 6.25rem;
   resize: vertical;
 }
 
@@ -3802,6 +3839,16 @@ input {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.comments-post-form .comments-form-footer {
+  display: grid;
+  justify-items: start;
+  gap: 0.78rem;
+}
+
+.comments-post-form .comments-field-note {
+  margin: 0;
 }
 
 .comments-small-button {
