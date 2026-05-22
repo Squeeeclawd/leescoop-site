@@ -6,6 +6,8 @@ interface Props {
   title: string;
   description?: string;
   image?: string | null;
+  imageWidth?: number | string;
+  imageHeight?: number | string;
   canonicalUrl?: string;
   type?: 'website' | 'article';
 }
@@ -14,6 +16,8 @@ const {
   title,
   description = site.description,
   image = '/branding/leescoop-logo.png',
+  imageWidth = 1216,
+  imageHeight = 704,
   canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? site.domain).toString(),
   type = 'website'
 } = Astro.props;
@@ -36,8 +40,8 @@ const absoluteImage = image ? new URL(image, Astro.site ?? site.domain).toString
     <meta property="og:url" content={canonicalUrl} />
     {absoluteImage && <meta property="og:image" content={absoluteImage} />}
     {absoluteImage && <meta property="og:image:secure_url" content={absoluteImage} />}
-    {absoluteImage && <meta property="og:image:width" content="1216" />}
-    {absoluteImage && <meta property="og:image:height" content="704" />}
+    {absoluteImage && <meta property="og:image:width" content={String(imageWidth)} />}
+    {absoluteImage && <meta property="og:image:height" content={String(imageHeight)} />}
     {absoluteImage && <meta property="og:image:alt" content={title} />}
 
     <meta name="twitter:card" content={absoluteImage ? 'summary_large_image' : 'summary'} />
