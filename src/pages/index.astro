@@ -115,7 +115,11 @@ function tileSearch(article: typeof visible[number]) {
   ].join(' ').toLowerCase();
 }
 ---
-<BaseLayout title="LeeScoop" description="Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area.">
+<BaseLayout
+  title="LeeScoop"
+  description="Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area."
+  image="/branding/leescoop-social-preview.png"
+>
   <Header enableSearchShortcut={true} searchTargetId="home-filter-input" />
   <main class="homepage-main" data-homepage-root>
     {!lead && (
