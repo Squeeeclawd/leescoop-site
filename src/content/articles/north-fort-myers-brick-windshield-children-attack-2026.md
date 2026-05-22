@@ -2,7 +2,7 @@
 title: "Deputies: SUV with four children was rammed twice before a brick smashed the windshield"
 date: 2026-05-22T10:58:00-04:00
 draft: false
-featured: false
+featured: true
 pinned: false
 ticker: false
 category: Public Safety
