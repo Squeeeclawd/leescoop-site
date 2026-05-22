@@ -1,0 +1,31 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+
+const shareUrl = new URL('/community-highlights/', Astro.site ?? 'https://leescoop.com').toString();
+---
+<BaseLayout
+  title="LeeScoop Community Highlights"
+  description="Your scoop on Lee County. Local events, news, and useful updates without the noise."
+  image="/branding/leescoop-social-art.png"
+  imageWidth={1254}
+  imageHeight={1254}
+  canonicalUrl={shareUrl}
+>
+  <Header />
+  <main class="wrap article-shell">
+    <section class="panel-glow local-post-body">
+      <p class="eyebrow">LeeScoop</p>
+      <h1>Community highlights for Lee County</h1>
+      <p class="lede">Local events, news, and useful updates without the noise.</p>
+      <p><a class="button primary" href="/">Open LeeScoop</a></p>
+    </section>
+  </main>
+  <Footer />
+  <script is:inline>
+    window.setTimeout(() => {
+      window.location.replace('/');
+    }, 900);
+  </script>
+</BaseLayout>
