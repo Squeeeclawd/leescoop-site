@@ -39,22 +39,30 @@ The run must create local files, run the build gate, then commit/push after the 
 2. Select candidates:
    - 5 top events.
    - 5 major local news items.
+   - Pick one homepage featured item: the single most interesting active post, including the new batch and existing active posts.
 3. Return candidates as strict JSON using `prompts/leescoop_daily_gpt54mini.md`.
 4. Run duplicate/safety check with `scripts/leescoop_posts.py`.
 5. Create markdown posts only for non-duplicates.
 6. Handle images according to content type.
-7. Run the quality gate:
+7. Set the homepage feature to the strongest current post, clearing all other `featured` flags:
+
+   ```bash
+   python3 scripts/leescoop_posts.py feature --slug <selected-feature-slug>
+   ```
+
+8. Run the quality gate:
 
    ```bash
    npm run quality
    ```
 
-8. Report:
+9. Report:
    - created files
    - skipped duplicates with reason
+   - selected featured article and why
    - image results
    - validation/build result
-9. Commit and push the batch after the quality gate passes, then report the result.
+10. Commit and push the batch after the quality gate passes, then report the result.
 
 ## Event selection rules
 
@@ -157,6 +165,17 @@ Verify with official/public-record sources when possible:
 - FL511
 - FDOT Lee County RoadWatch
 - Lee County Elections
+
+## Featured article rule
+
+Every batch must make the homepage featured article fluid again:
+
+- Do not leave an old `featured: true` in place by inertia.
+- After writing new posts, compare the new batch against existing active posts.
+- Feature the one item with the strongest reader pull: surprising, high-stakes, visually interesting, broadly relevant, or highly talkable.
+- Avoid defaulting to grim crime every time if a weather, civic-impact, strange/local, or major-event story has equal or better pull.
+- Use exactly one `featured: true`; all other posts must be `featured: false`.
+- Run `python3 scripts/leescoop_posts.py feature --slug <selected-feature-slug>` before the build gate.
 
 ## Duplicate prevention
 

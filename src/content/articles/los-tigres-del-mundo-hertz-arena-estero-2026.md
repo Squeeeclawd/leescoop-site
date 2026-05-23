@@ -16,7 +16,7 @@ author: LeeScoop
 contentKind: event
 sourceType: official
 contentType: brief
-eventDate: 2026-10-03
+eventDate: 2026-10-03T20:00:00-04:00
 eventTime: "8:00 PM"
 city: Estero
 location: Estero

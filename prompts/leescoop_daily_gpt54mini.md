@@ -5,6 +5,7 @@ Return ONLY valid JSON. No markdown. No commentary.
 Task:
 - Produce candidates for LeeScoop daily post creation.
 - Default full run: 5 event candidates and 5 major local news candidates.
+- Recommend one `featuredSlug`: the single strongest homepage feature candidate from this batch.
 - Test run may ask for smaller counts.
 
 Hard rules:
@@ -23,6 +24,8 @@ Hard rules:
 
 Output schema:
 {
+  "featuredSlug": "slug from events/news with the strongest reader pull",
+  "featuredReason": "one short sentence explaining why this is the strongest feature",
   "events": [
     {
       "title": "string",
@@ -66,6 +69,7 @@ Output schema:
 }
 
 Quality bar:
+- featuredSlug should go to the most interesting, talkable, broadly relevant, high-stakes, surprising, or visually strong item. Do not automatically pick the newest item. Do not default to grim crime if another story has equal or better reader pull.
 - Events should vary by city, venue, date, event type, and source.
 - Do not use five events from one venue/source unless there are no other valid options.
 - Prefer events that feel big, surprising, visually striking, headline-worthy, or obviously worth texting a friend about.

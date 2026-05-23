@@ -17,11 +17,44 @@ function endOfLocalDay(value: Date) {
   return end;
 }
 
+function clockTo24Hour(hour: number, period: string) {
+  const normalized = hour % 12;
+  return period.toLowerCase() === 'pm' ? normalized + 12 : normalized;
+}
+
+function cutoffFromEventTime(eventDate: Date, eventTime?: string) {
+  if (!eventTime) return undefined;
+
+  const clocks = [...eventTime.matchAll(/(\d{1,2})(?::(\d{2}))?\s*(a\.?m\.?|p\.?m\.?)\b/gi)];
+  if (clocks.length === 0) return undefined;
+
+  const lastClock = clocks[clocks.length - 1];
+  const hour = Number(lastClock[1]);
+  const minute = Number(lastClock[2] ?? 0);
+  const period = lastClock[3].replace(/\./g, '');
+  const cutoff = new Date(eventDate);
+  cutoff.setHours(clockTo24Hour(hour, period), minute, 0, 0);
+
+  // A single listed time is usually the start time. Keep the event live during the likely event window,
+  // but remove it from active feeds once that window has passed.
+  if (clocks.length === 1) cutoff.setHours(cutoff.getHours() + 4);
+
+  return cutoff;
+}
+
+export function eventArchiveCutoff(article: Article) {
+  if (article.data.contentKind !== 'event') return undefined;
+
+  if (article.data.eventEndDate) return endOfLocalDay(article.data.eventEndDate);
+  if (!article.data.eventDate) return undefined;
+
+  return cutoffFromEventTime(article.data.eventDate, article.data.eventTime) ?? endOfLocalDay(article.data.eventDate);
+}
+
 export function isArchivedEvent(article: Article) {
-  if (article.data.contentKind !== 'event') return false;
-  const eventCutoff = article.data.eventEndDate ?? article.data.eventDate;
+  const eventCutoff = eventArchiveCutoff(article);
   if (!eventCutoff) return false;
-  return endOfLocalDay(eventCutoff).getTime() < Date.now();
+  return eventCutoff.getTime() < Date.now();
 }
 
 export function isActiveArticle(article: Article) {

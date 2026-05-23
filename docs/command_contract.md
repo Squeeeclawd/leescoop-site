@@ -18,9 +18,14 @@ Do this without asking for approval unless a hard blocker appears:
 3. Validate / de-duplicate.
 4. Write markdown posts.
 5. Generate or attach covers.
-6. Run `npm run build`.
-7. Commit and push if the build passes.
-8. Report what was created, skipped, or blocked.
+6. Select the single most interesting active post as the homepage feature and run `python3 scripts/leescoop_posts.py feature --slug <selected-feature-slug>`.
+7. Run `npm run build`.
+8. Commit and push if the build passes.
+9. Report what was created, skipped, featured, or blocked.
+
+## Featured article rule
+
+Every new batch must refresh the featured article deliberately. Pick the strongest overall active post, not just the newest one and not an old stale flag. Use exactly one `featured: true`.
 
 ## Stop conditions
 

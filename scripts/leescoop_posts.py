@@ -413,6 +413,30 @@ def write_command(args: argparse.Namespace) -> int:
     return 0 if not report["invalid"] else 2
 
 
+def set_featured_command(args: argparse.Namespace) -> int:
+    slug = slugify(args.slug)
+    target = ARTICLES / f"{slug}.md"
+    if not target.exists():
+        print(json.dumps({"ok": False, "error": f"article not found: {target.relative_to(ROOT)}"}, indent=2))
+        return 2
+
+    changed: list[str] = []
+    for path in sorted(ARTICLES.glob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        desired = "featured: true" if path == target else "featured: false"
+        if "\nfeatured: true\n" in text or "\nfeatured: false\n" in text:
+            updated = re.sub(r"\nfeatured: (true|false)\n", f"\n{desired}\n", text, count=1)
+        else:
+            updated = text.replace("\ndraft: false\n", f"\ndraft: false\n{desired}\n", 1)
+        if updated != text:
+            changed.append(str(path.relative_to(ROOT)))
+            if not args.dry_run:
+                path.write_text(updated, encoding="utf-8")
+
+    print(json.dumps({"ok": True, "featured": slug, "changed": changed, "dryRun": args.dry_run}, indent=2))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -431,6 +455,11 @@ def main() -> int:
     p_write.add_argument("--download-news-images", action="store_true", help="Download news sourceImageUrl if supplied")
     p_write.add_argument("--max-news-age-days", type=int, default=21, help="Reject news older than this many days")
     p_write.set_defaults(func=write_command)
+
+    p_featured = sub.add_parser("feature", help="Set exactly one article as homepage featured and clear all others")
+    p_featured.add_argument("--slug", required=True, help="Article slug to feature")
+    p_featured.add_argument("--dry-run", action="store_true")
+    p_featured.set_defaults(func=set_featured_command)
 
     args = parser.parse_args()
     return args.func(args)

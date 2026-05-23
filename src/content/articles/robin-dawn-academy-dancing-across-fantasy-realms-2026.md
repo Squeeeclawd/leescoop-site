@@ -16,7 +16,8 @@ author: LeeScoop
 contentKind: event
 sourceType: official
 contentType: brief
-eventDate: 2026-06-06
+eventDate: 2026-06-06T00:00:00-04:00
+eventEndDate: 2026-06-07T23:59:59-04:00
 eventTime: "June 6–7, 2026; times vary"
 city: Fort Myers
 location: Fort Myers

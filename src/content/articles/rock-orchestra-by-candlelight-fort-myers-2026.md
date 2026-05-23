@@ -16,7 +16,7 @@ author: LeeScoop
 contentKind: event
 sourceType: official
 contentType: brief
-eventDate: 2026-11-28
+eventDate: 2026-11-28T20:00:00-05:00
 eventTime: "8:00 PM"
 city: Fort Myers
 location: Fort Myers
