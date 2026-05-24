@@ -2,7 +2,7 @@
 title: Meteorologists say Sunday storms spun up landspout tornadoes in Fort Myers and Cape Coral
 date: 2026-05-22T21:50:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Weather
