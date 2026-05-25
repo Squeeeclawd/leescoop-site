@@ -2,7 +2,7 @@
 title: Fort Myers Beach Elementary could reopen through a charter-school path
 date: 2026-05-12T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Education
