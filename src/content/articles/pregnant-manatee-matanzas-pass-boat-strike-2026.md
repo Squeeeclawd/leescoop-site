@@ -2,7 +2,7 @@
 title: Pregnant manatee dies after boat strike in Matanzas Pass off Fort Myers Beach
 date: 2026-05-22T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
