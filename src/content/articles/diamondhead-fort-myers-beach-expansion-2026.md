@@ -2,7 +2,7 @@
 title: DiamondHead files expansion plan that would add 57 rooms on Fort Myers Beach
 date: 2026-05-15T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
