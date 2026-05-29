@@ -2,7 +2,7 @@
 title: Cape Coral council is weighing what to fund in the $164M yacht club rebuild
 date: 2026-05-27T15:49:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
