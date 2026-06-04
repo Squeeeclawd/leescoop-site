@@ -2,7 +2,7 @@
 title: "Cape Coral man accused of threatening to blow up Rep. Byron Donalds' office and shoot every cop"
 date: 2026-06-02T12:56:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
