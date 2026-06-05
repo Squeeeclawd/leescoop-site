@@ -267,6 +267,8 @@ Current preferred path:
 1. Try OpenClaw internal image generation with `openai/gpt-image-1.5`, `1536x1024`, high quality.
    - `openai/gpt-image-2` is preferred when available, but this account currently returns an organization-verification block.
    - Google image generation currently has no usable key in this agent.
+   - In isolated cron runs, treat a response like "background task started" as **not complete**. Do not write, validate, commit, or publish an event post until the finished image file is actually present under `public/covers/`.
+   - If OpenClaw image generation cannot complete synchronously in the cron session, stop before publishing event posts. Either report the blocker or use strong news/source-image posts only when the run can still produce a complete publishable batch.
 2. Crop/resize the accepted generated image to `1216x704`.
 3. Save it under `public/covers/<slug>.png`.
 4. Use local ComfyUI only as a fallback, or when Anthony explicitly asks for local ComfyUI.
