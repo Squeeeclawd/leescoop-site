@@ -2,7 +2,7 @@
 title: 2 dead in shooting along West 13th Street in Lehigh Acres
 date: 2026-06-03T13:34:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
