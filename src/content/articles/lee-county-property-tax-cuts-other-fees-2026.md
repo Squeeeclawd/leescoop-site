@@ -2,7 +2,7 @@
 title: Lee County property tax cut fight could shift the pain into other fees
 date: 2026-06-04T20:49:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
