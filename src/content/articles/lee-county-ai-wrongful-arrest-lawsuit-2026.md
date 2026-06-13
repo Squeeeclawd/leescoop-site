@@ -2,7 +2,7 @@
 title: Lee County man files lawsuit after AI leads to wrongful arrest
 date: 2026-06-11T07:06:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
