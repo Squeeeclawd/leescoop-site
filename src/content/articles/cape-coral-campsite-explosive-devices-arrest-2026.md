@@ -2,7 +2,7 @@
 title: "7 suspected homemade explosive devices found at Cape Coral campsite, 21-year-old arrested"
 date: 2026-06-12T14:34:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
