@@ -2,7 +2,7 @@
 title: Cape Coral couple fears nearby drilling could sink home as city tests road conditions
 date: 2026-06-14T11:23:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
