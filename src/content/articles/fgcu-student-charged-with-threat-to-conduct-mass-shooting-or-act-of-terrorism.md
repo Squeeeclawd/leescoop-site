@@ -2,7 +2,7 @@
 title: FGCU student charged with threat to conduct mass shooting or act of terrorism
 date: 2026-06-16T10:02:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
