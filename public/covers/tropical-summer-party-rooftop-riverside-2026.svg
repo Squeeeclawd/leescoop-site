@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1216 704" role="img" aria-labelledby="title desc">
+  <title id="title">Tropical rooftop summer party illustration</title>
+  <desc id="desc">A sunset rooftop event scene with island musicians, tropical drinks, palm leaves, and guests in colorful summer clothes.</desc>
+  <defs>
+    <linearGradient id="sunset" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#4fa7bc"/>
+      <stop offset="0.42" stop-color="#f7de69"/>
+      <stop offset="0.72" stop-color="#f28b42"/>
+      <stop offset="1" stop-color="#d94b32"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="68%" cy="32%" r="38%">
+      <stop offset="0" stop-color="#f8f3e8"/>
+      <stop offset="0.35" stop-color="#f7de69"/>
+      <stop offset="1" stop-color="#f28b42" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1216" height="704" fill="#063a52"/>
+  <rect width="1216" height="494" fill="url(#sunset)"/>
+  <rect width="1216" height="494" fill="url(#glow)"/>
+  <circle cx="832" cy="214" r="92" fill="#f7de69" stroke="#061f2e" stroke-width="10"/>
+  <path d="M0 394 C160 356 278 420 438 374 C614 324 750 386 906 346 C1034 314 1128 326 1216 294 L1216 704 L0 704 Z" fill="#197894"/>
+  <path d="M0 472 h1216 v232 H0z" fill="#063a52"/>
+  <path d="M88 444 h1040 l-92 198 H180z" fill="#f8f3e8" stroke="#061f2e" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M142 480 h930" stroke="#061f2e" stroke-width="12" stroke-linecap="round"/>
+  <g stroke="#061f2e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M154 154 c86 34 126 98 132 194" fill="none"/>
+    <path d="M156 158 c-34 20 -68 18 -104 -8 c38 -26 74 -24 104 8z" fill="#8bd2de"/>
+    <path d="M178 206 c-46 2 -82 -16 -108 -54 c52 -8 90 10 108 54z" fill="#4fa7bc"/>
+    <path d="M206 260 c-42 18 -82 12 -120 -20 c48 -28 88 -22 120 20z" fill="#8bd2de"/>
+    <path d="M1050 128 c-70 54 -102 122 -98 204" fill="none"/>
+    <path d="M1050 132 c36 12 70 4 102 -24 c-42 -18 -78 -10 -102 24z" fill="#8bd2de"/>
+    <path d="M1018 188 c46 -6 86 -30 118 -72 c-54 -2 -94 22 -118 72z" fill="#4fa7bc"/>
+    <path d="M986 250 c46 12 86 2 120 -30 c-54 -22 -94 -12 -120 30z" fill="#8bd2de"/>
+  </g>
+  <g stroke="#061f2e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M430 356 h340 v154 h-340 z" fill="#07506f"/>
+    <path d="M466 318 h268 l36 38 h-340 z" fill="#d94b32"/>
+    <circle cx="526" cy="426" r="34" fill="#f8f3e8"/>
+    <path d="M526 460 v68 M490 492 h72" fill="none"/>
+    <path d="M574 454 l84 -58" fill="none"/>
+    <circle cx="674" cy="420" r="32" fill="#f8f3e8"/>
+    <path d="M674 454 v70 M638 488 h72" fill="none"/>
+    <path d="M642 404 l-68 -40" fill="none"/>
+  </g>
+  <g stroke="#061f2e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="256" cy="548" r="26" fill="#f8f3e8"/>
+    <path d="M256 578 v62 M222 612 h68" fill="none"/>
+    <path d="M218 642 h78" fill="#d94b32"/>
+    <circle cx="890" cy="548" r="26" fill="#f8f3e8"/>
+    <path d="M890 578 v62 M856 612 h68" fill="none"/>
+    <path d="M852 642 h78" fill="#4fa7bc"/>
+    <path d="M336 572 h92 l-20 82 h-52z" fill="#f28b42"/>
+    <path d="M374 572 l-24 -54" fill="none"/>
+    <circle cx="350" cy="518" r="10" fill="#d94b32"/>
+    <path d="M782 572 h92 l-20 82 h-52z" fill="#8bd2de"/>
+    <path d="M820 572 l32 -56" fill="none"/>
+    <circle cx="852" cy="516" r="10" fill="#f7de69"/>
+  </g>
+  <path d="M146 402 h924" stroke="#061f2e" stroke-width="12" stroke-linecap="round"/>
+</svg>

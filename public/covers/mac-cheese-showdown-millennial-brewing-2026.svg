@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1216 704" role="img" aria-labelledby="title desc">
+  <title id="title">Mac and cheese food truck event illustration</title>
+  <desc id="desc">A bright editorial illustration of food trucks, picnic tables, and bowls of mac and cheese at a downtown Fort Myers brewery patio.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#8bd2de"/>
+      <stop offset="0.52" stop-color="#f7de69"/>
+      <stop offset="1" stop-color="#f28b42"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" x2="1">
+      <stop offset="0" stop-color="#d94b32"/>
+      <stop offset="1" stop-color="#f28b42"/>
+    </linearGradient>
+  </defs>
+  <rect width="1216" height="704" fill="#07506f"/>
+  <rect y="0" width="1216" height="456" fill="url(#sky)"/>
+  <path d="M0 410 C170 350 280 430 420 374 C570 314 730 402 884 338 C1016 282 1110 334 1216 286 L1216 704 L0 704 Z" fill="#197894"/>
+  <path d="M0 470 C180 420 340 490 520 440 C690 392 830 460 1008 406 C1090 382 1152 386 1216 402 L1216 704 L0 704 Z" fill="#063a52"/>
+  <g stroke="#061f2e" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M102 284 h330 v172 h-330 z" fill="#f8f3e8"/>
+    <path d="M102 284 l48 -58 h330 l-48 58 z" fill="#4fa7bc"/>
+    <path d="M154 334 h128 v70 h-128 z" fill="#8bd2de"/>
+    <path d="M312 336 h78 v120 h-78 z" fill="#d94b32"/>
+    <circle cx="170" cy="476" r="34" fill="#061f2e"/>
+    <circle cx="366" cy="476" r="34" fill="#061f2e"/>
+  </g>
+  <g stroke="#061f2e" stroke-width="10" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M740 252 h334 v190 h-334 z" fill="#f8f3e8"/>
+    <path d="M740 252 l60 -66 h334 l-60 66 z" fill="#f28b42"/>
+    <path d="M790 314 h138 v72 h-138 z" fill="#4fa7bc"/>
+    <path d="M952 304 h82 v138 h-82 z" fill="#197894"/>
+    <circle cx="820" cy="464" r="36" fill="#061f2e"/>
+    <circle cx="1024" cy="464" r="36" fill="#061f2e"/>
+  </g>
+  <g stroke="#061f2e" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M388 524 h440 l54 92 h-548 z" fill="url(#table)"/>
+    <path d="M468 616 v48 M748 616 v48" fill="none"/>
+    <ellipse cx="480" cy="502" rx="90" ry="36" fill="#f8f3e8"/>
+    <path d="M414 494 c42 -44 98 -48 142 -2 c-30 50 -106 54 -142 2z" fill="#f7de69"/>
+    <circle cx="458" cy="486" r="13" fill="#d94b32"/>
+    <circle cx="512" cy="492" r="12" fill="#f28b42"/>
+    <ellipse cx="716" cy="500" rx="100" ry="38" fill="#f8f3e8"/>
+    <path d="M642 492 c54 -48 118 -50 154 -2 c-34 54 -116 58 -154 2z" fill="#f7de69"/>
+    <circle cx="696" cy="484" r="13" fill="#d94b32"/>
+    <circle cx="746" cy="492" r="12" fill="#f28b42"/>
+  </g>
+  <g stroke="#061f2e" stroke-width="7" stroke-linecap="round">
+    <circle cx="214" cy="552" r="24" fill="#f8f3e8"/>
+    <path d="M214 578 v58 M182 606 h64" fill="none"/>
+    <circle cx="1002" cy="552" r="24" fill="#f8f3e8"/>
+    <path d="M1002 578 v58 M970 606 h64" fill="none"/>
+    <circle cx="936" cy="528" r="22" fill="#f8f3e8"/>
+    <path d="M936 552 v54 M908 580 h58" fill="none"/>
+  </g>
+  <path d="M560 206 c40 -78 122 -78 164 0" fill="none" stroke="#063a52" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="608" cy="202" r="22" fill="#d94b32" stroke="#061f2e" stroke-width="8"/>
+  <circle cx="676" cy="202" r="22" fill="#f8f3e8" stroke="#061f2e" stroke-width="8"/>
+</svg>

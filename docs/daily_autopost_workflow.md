@@ -1,9 +1,11 @@
 # LeeScoop Daily Autopost Workflow
 
-Goal: one daily assisted run that prepares **10 total LeeScoop posts** for Anthony to review:
+Goal: one daily assisted run that prepares **4 total LeeScoop posts** for Anthony to review:
 
-- 5 event posts
-- 5 major local news posts
+- 2 event posts
+- 2 major local news posts
+
+This mix is a hard gate. Do not substitute extra news for missing events. If two viable event posts cannot be found from the first sources, expand event sourcing before declaring a blocker.
 
 ## Canonical trigger
 
@@ -35,10 +37,10 @@ The run must create local files, run the build gate, then commit/push after the 
 
    This checks git state, candidate-file freshness, basic tooling, and content validation. Warnings are allowed only when intentionally understood.
 
-1. Check event and news sources.
+1. Check event and news sources. Find the 2 event posts first.
 2. Select candidates:
-   - 5 top events.
-   - 5 major local news items.
+   - 2 top events.
+   - 2 major local news items.
    - Pick one homepage featured item: the single most interesting active post, including the new batch and existing active posts.
 3. Return candidates as strict JSON using `prompts/leescoop_daily_gpt54mini.md`.
 4. Run duplicate/safety check with `scripts/leescoop_posts.py`.
@@ -64,9 +66,20 @@ The run must create local files, run the build gate, then commit/push after the 
    - validation/build result
 10. Commit and push the batch after the quality gate passes, then report the result.
 
+## Daily composition gate
+
+Before committing or pushing a daily batch, verify the new batch contains exactly:
+
+- 2 event posts
+- 2 news posts
+
+If the count is not exactly 2 + 2, stop and report the blocker to Anthony. A 4-news batch is a failed run unless Anthony explicitly approves that exception before publishing.
+
+If normal event sources are thin, expand the event search to Facebook/public event pages, Eventbrite, venue calendars, city/county calendars, libraries, parks, chambers, breweries, theaters, nonprofits, local org pages, and tourism calendars before calling it blocked.
+
 ## Event selection rules
 
-Use official event pages/calendars first. Pick the top 5 only.
+Use official event pages/calendars first. Pick the top 2 only for the daily 4-post batch.
 
 LeeScoop should prefer events that make a local reader say some version of: "oh shit, that's happening?"
 
@@ -78,7 +91,7 @@ Prioritize in this order:
 
 Avoid burning slots on low-stakes filler if stronger events exist.
 
-Do not select five events from the same source unless there are no other valid options. Prefer variety across:
+Do not select both events from the same source unless there are no other valid options. Prefer variety across:
 
 - city
 - venue
@@ -117,7 +130,7 @@ Treat Facebook, Reddit, Meetup, and Eventbrite as leads unless the event source 
 
 ## News selection rules
 
-Pick the top 5 major local news items only. Avoid minor filler.
+Pick the top 2 major local news items only for the daily 4-post batch. Avoid minor filler.
 
 LeeScoop is not trying to sound like a sleepy municipal bulletin. When available, prioritize stories with strong headline pull and real local stakes.
 
