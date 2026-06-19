@@ -2,7 +2,7 @@
 title: Someone cut through the roof of a San Carlos Park supermarket and stole thousands
 date: 2026-06-17T22:33:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
