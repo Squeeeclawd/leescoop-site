@@ -2,7 +2,7 @@
 title: Fort Myers police and FWC are hunting a bear near Barden and Towles
 date: 2026-06-22T06:22:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
