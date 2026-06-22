@@ -2,7 +2,7 @@
 title: Oakes Farms withdraws plans for new Bonita Springs entertainment complex
 date: 2026-06-19T08:11:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Bonita Springs
