@@ -2,7 +2,7 @@
 title: Police shut down a social-media-promoted party involving minors at a Cape Coral home
 date: 2026-06-16T08:53:03-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
