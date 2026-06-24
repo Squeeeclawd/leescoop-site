@@ -2,7 +2,7 @@
 title: "Bomb threat shuts down downtown Fort Myers, turns out to be swatting call"
 date: 2026-06-22T16:34:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
