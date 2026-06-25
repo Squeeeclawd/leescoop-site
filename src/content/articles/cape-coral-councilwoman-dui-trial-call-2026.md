@@ -2,7 +2,7 @@
 title: Cape Coral councilwoman Rachel Kaduk heads to court in DUI case
 date: 2026-06-24T05:08:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
