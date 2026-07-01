@@ -2,7 +2,7 @@
 title: Cape Coral DUI suspect found hiding inside a car wash after foot pursuit
 date: 2026-06-25T10:30:14-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
