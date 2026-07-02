@@ -2,7 +2,7 @@
 title: Caloosa Sound is turning July 4 into a downtown fireworks and drone-show night
 date: 2026-07-01T13:12:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Festival
