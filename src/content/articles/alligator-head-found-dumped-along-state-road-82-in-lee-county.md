@@ -2,7 +2,7 @@
 title: Alligator head found dumped along State Road 82 in Lee County
 date: 2026-06-30T21:51:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
