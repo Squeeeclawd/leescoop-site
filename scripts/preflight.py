@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """LeeScoop batch-run preflight.
 
-Run before commands like "post 10 articles" to catch the dumb stuff first:
+Run before a LeeScoop batch to catch the dumb stuff first:
 working tree surprises, stale candidate files, missing assets, and unavailable local gates.
 """
 from __future__ import annotations

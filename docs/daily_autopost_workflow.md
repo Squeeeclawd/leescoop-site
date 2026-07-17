@@ -1,20 +1,22 @@
 # LeeScoop Daily Autopost Workflow
 
-Goal: one daily assisted run that prepares **4 total LeeScoop posts** for Anthony to review:
+Goal: one daily assisted run that prepares **4 total LeeScoop posts** with an event-first Fort Myers focus:
 
-- 2 event posts
-- 2 major local news posts
+- 3 event posts
+- 1 major local news post
 
-This mix is a hard gate. Do not substitute extra news for missing events. If two viable event posts cannot be found from the first sources, expand event sourcing before declaring a blocker.
+This 3 + 1 mix is a hard gate. Do not substitute extra news for missing events. At least 2 of the 3 published events must list their city as Fort Myers. The third may come from elsewhere in Lee County only when it is materially stronger or more useful than the remaining Fort Myers choices.
 
 ## Canonical trigger
 
 If Anthony says any of these (or close variants), treat it as the full LeeScoop batch command and run this workflow automatically:
 
-- `post 10 articles`
-- `post ten new articles`
+- `run the LeeScoop autopost`
+- `post today's LeeScoop batch`
 - `run the LeeScoop batch`
 - `make the daily LeeScoop batch`
+
+An explicit numeric request overrides the four-post daily default. Unless Anthony specifies a different mix, keep larger manual batches close to the same event-heavy 3:1 ratio.
 
 Do not ask for permission again unless a hard blocker appears.
 
@@ -22,7 +24,7 @@ The run must create local files, run the build gate, then commit/push after the 
 
 ## Model target
 
-- Preferred discovery model for full 10-post runs: GPT-5.4 through OAuth.
+- Preferred discovery model for the broad daily source sweep: GPT-5.4 through OAuth.
 - GPT-5.4 mini through OAuth is acceptable for narrower or follow-up formatting tasks, but it has shown weakness/timeouts on broader discovery passes.
 - Keep the model task narrow: collect candidates and return structured JSON. Do not ask the model to directly edit files freestyle.
 - If the chosen OAuth route errors or times out, stop and report the model/provider issue instead of silently switching models.
@@ -37,10 +39,11 @@ The run must create local files, run the build gate, then commit/push after the 
 
    This checks git state, candidate-file freshness, basic tooling, and content validation. Warnings are allowed only when intentionally understood.
 
-1. Check event and news sources. Find the 2 event posts first.
+1. Run the full event-discovery sweep in `docs/event_discovery_sources.md`. Build the event reserve before choosing final posts.
 2. Select candidates:
-   - 2 top events.
-   - 2 major local news items.
+   - Rank at least 8 fully verified, non-duplicate event candidates from a wider lead pool.
+   - Publish the top 3 events, with at least 2 listing the city as Fort Myers.
+   - Rank at least 3 major local news candidates and publish the top 1.
    - Pick one homepage featured item: the single most interesting active post, including the new batch and existing active posts.
 3. Return candidates as strict JSON using `prompts/leescoop_daily_gpt54mini.md`.
 4. Run duplicate/safety check with `scripts/leescoop_posts.py`.
@@ -70,16 +73,16 @@ The run must create local files, run the build gate, then commit/push after the 
 
 Before committing or pushing a daily batch, verify the new batch contains exactly:
 
-- 2 event posts
-- 2 news posts
+- 3 event posts
+- 1 news post
 
-If the count is not exactly 2 + 2, stop and report the blocker to Anthony. A 4-news batch is a failed run unless Anthony explicitly approves that exception before publishing.
+If the count is not exactly 3 + 1, stop and report the blocker to Anthony. Any news-heavy substitution is a failed run unless Anthony explicitly approves that exception before publishing.
 
-If normal event sources are thin, expand the event search to Facebook/public event pages, Eventbrite, venue calendars, city/county calendars, libraries, parks, chambers, breweries, theaters, nonprofits, local org pages, and tourism calendars before calling it blocked.
+The source list below is a starting point, not a stopping condition. Follow the source tiers, query matrix, geography rules, time windows, and reserve-pool requirements in `docs/event_discovery_sources.md` before calling the event pool thin.
 
 ## Event selection rules
 
-Use official event pages/calendars first. Pick the top 2 only for the daily 4-post batch.
+Use official event pages/calendars first. Discover broadly, verify narrowly, and publish the top 3 only.
 
 LeeScoop should prefer events that make a local reader say some version of: "oh shit, that's happening?"
 
@@ -91,13 +94,27 @@ Prioritize in this order:
 
 Avoid burning slots on low-stakes filler if stronger events exist.
 
-Do not select both events from the same source unless there are no other valid options. Prefer variety across:
+Do not publish more than one event from the same venue or organizer in a daily batch unless both are exceptional. Prefer variety across:
 
 - city
 - venue
 - date
 - event type
 - source
+
+Fort Myers geography rules:
+
+- Fort Myers is the core lane; require at least 2 of 3 published events whose verified listing uses `Fort Myers` as the city.
+- Fort Myers Beach is a separate place and does not count toward the Fort Myers minimum.
+- Cape Coral, Estero, Bonita Springs, Sanibel, Captiva, and the rest of Lee County are secondary expansion lanes.
+- Nearby Collier or Charlotte County events do not qualify unless Anthony explicitly expands the coverage area.
+
+Time-window balance:
+
+- one useful near-term event in the next 0-14 days
+- one planning-ahead event in the next 15-45 days
+- one marquee, seasonal, or unusually strong event in the next 46-180 days when available
+- do not publish ordinary events more than 180 days out; major on-sale announcements are the exception
 
 Preferred sources:
 
@@ -128,9 +145,11 @@ Preferred sources:
 
 Treat Facebook, Reddit, Meetup, and Eventbrite as leads unless the event source is clear.
 
+Also check the maintained systematic source map in `docs/event_discovery_sources.md`; it is the authoritative discovery checklist.
+
 ## News selection rules
 
-Pick the top 2 major local news items only for the daily 4-post batch. Avoid minor filler.
+Pick the top 1 major local news item only for the daily 4-post batch. Keep a reserve of at least 3 verified news candidates so a duplicate or image failure does not force filler.
 
 LeeScoop is not trying to sound like a sleepy municipal bulletin. When available, prioritize stories with strong headline pull and real local stakes.
 

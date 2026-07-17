@@ -7,6 +7,7 @@ LOG_DIR="$ROOT/tmp/cron-logs"
 mkdir -p "$LOG_DIR"
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
+SESSION_KEY="agent:main:leescoop-daily-autopost:$STAMP"
 OUT="$(mktemp)"
 ERR="$LOG_DIR/leescoop-daily-cron-$STAMP.err.log"
 
@@ -18,7 +19,7 @@ trap cleanup EXIT
 if ! openclaw agent \
   --local \
   --model openai/gpt-5.4 \
-  --session-key agent:main:leescoop-daily-autopost \
+  --session-key "$SESSION_KEY" \
   --message-file "$PROMPT" \
   --json \
   --timeout 7200 \

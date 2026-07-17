@@ -304,6 +304,12 @@ def validate_item(kind: str, item: dict[str, Any], max_news_age_days: int = 21) 
         expired = has_expired_deadline(item)
         if expired:
             problems.append(f"expired deadline/date mentioned: {expired}")
+    else:
+        event_dt = parse_dt(str(item.get("eventDate", "")))
+        if event_dt:
+            now = datetime.now(event_dt.tzinfo or timezone.utc)
+            if event_dt < now:
+                problems.append("eventDate is in the past")
     return problems
 
 
@@ -361,7 +367,21 @@ def check_command(args: argparse.Namespace) -> int:
                 report["skipped"].append({"kind": singular, "slug": slug, "title": item.get("title"), "reason": dup})
                 continue
             seen_slugs.add(slug); seen_titles.add(title_key); seen_urls.add(url_key)
-            report["accepted"].append({"kind": singular, "slug": slug, "title": item.get("title")})
+            report["accepted"].append({"kind": singular, "slug": slug, "title": item.get("title"), "city": item.get("city", "")})
+    accepted_event_items = [item for item in report["accepted"] if item["kind"] == "event"]
+    accepted_events = len(accepted_event_items)
+    accepted_news = sum(1 for item in report["accepted"] if item["kind"] == "news")
+    if accepted_events < args.min_events:
+        report["ok"] = False
+        report["invalid"].append({"kind": "batch", "reason": f"only {accepted_events} accepted event(s); need at least {args.min_events}"})
+    if accepted_news < args.min_news:
+        report["ok"] = False
+        report["invalid"].append({"kind": "batch", "reason": f"only {accepted_news} accepted news item(s); need at least {args.min_news}"})
+    publish_event_pool = accepted_event_items[:args.publish_events]
+    fort_myers_events = sum(1 for item in publish_event_pool if norm_text(str(item.get("city", ""))) == "fort myers")
+    if fort_myers_events < args.min_fort_myers_events:
+        report["ok"] = False
+        report["invalid"].append({"kind": "batch", "reason": f"only {fort_myers_events} of the first {len(publish_event_pool)} accepted event(s) use city Fort Myers; need at least {args.min_fort_myers_events}"})
     print(json.dumps(report, indent=2))
     return 0 if report["ok"] else 2
 
@@ -444,12 +464,16 @@ def main() -> int:
     p_check = sub.add_parser("check", help="Validate candidates and report duplicates")
     p_check.add_argument("--input", required=True)
     p_check.add_argument("--max-news-age-days", type=int, default=21, help="Reject news older than this many days")
+    p_check.add_argument("--min-events", type=int, default=3, help="Fail when fewer than this many event candidates survive validation/de-duplication")
+    p_check.add_argument("--min-news", type=int, default=1, help="Fail when fewer than this many news candidates survive validation/de-duplication")
+    p_check.add_argument("--publish-events", type=int, default=3, help="Number of top accepted events treated as the publish set for geography checks")
+    p_check.add_argument("--min-fort-myers-events", type=int, default=2, help="Require this many top publish events to use city Fort Myers")
     p_check.set_defaults(func=check_command)
 
     p_write = sub.add_parser("write", help="Write non-duplicate candidates as markdown")
     p_write.add_argument("--input", required=True)
-    p_write.add_argument("--max-events", type=int, default=5)
-    p_write.add_argument("--max-news", type=int, default=5)
+    p_write.add_argument("--max-events", type=int, default=3)
+    p_write.add_argument("--max-news", type=int, default=1)
     p_write.add_argument("--dry-run", action="store_true")
     p_write.add_argument("--set-event-cover", action="store_true", help="Set event coverImage to /covers/<slug>.png; generate image separately")
     p_write.add_argument("--download-news-images", action="store_true", help="Download news sourceImageUrl if supplied")

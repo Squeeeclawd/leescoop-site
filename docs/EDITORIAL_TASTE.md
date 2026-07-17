@@ -31,6 +31,8 @@ Prefer:
 - visually striking or unusual experiences
 - obvious weekend anchors
 
+The daily feed is event-first. Favor verified listings whose city is Fort Myers, but use the wider Lee County area when it adds a genuinely stronger option. Keep the three daily event picks varied by source, venue, date, audience, and event type; LeeScoop should not read like an RSS feed for Hertz Arena and Barbara B. Mann.
+
 Avoid using too many slots on tiny filler events if stronger events exist.
 
 ## Headline style
