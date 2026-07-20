@@ -2,7 +2,7 @@
 title: Big Backpack Giveaway turns the Skatium into a school-supply drive-through
 date: 2026-07-15T10:46:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Community
