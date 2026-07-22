@@ -4,7 +4,7 @@ Repo/workdir: /home/shmee/Desktop/leescoop
 
 Goal: create exactly 4 publishable LeeScoop posts: 3 local event posts and 1 major local news brief. At least 2 of the 3 events must have a verified `city` value of `Fort Myers`; Fort Myers Beach is a separate geography. Do not substitute extra news for missing events. Never force weak filler or incomplete event posts just to hit quota.
 
-Use OAuth GPT-5.4 for judgment/discovery if you delegate or need model-heavy source selection. Do not silently switch model/provider if OAuth GPT-5.4 fails; report the blocker.
+Use the cron runner's configured OAuth model for judgment/discovery if you delegate or need model-heavy source selection. Do not silently switch model/provider inside the workflow if the configured model fails; report the blocker.
 
 Required workflow:
 1. cd /home/shmee/Desktop/leescoop.
