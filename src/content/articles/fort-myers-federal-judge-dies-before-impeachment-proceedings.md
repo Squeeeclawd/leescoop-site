@@ -2,7 +2,7 @@
 title: Fort Myers federal judge dies before facing impeachment proceedings
 date: 2026-07-16T17:02:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
