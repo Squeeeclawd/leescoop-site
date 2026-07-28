@@ -2,7 +2,7 @@
 title: Lee County deputies investigate death of toddler found in hot car
 date: 2026-07-22T14:45:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
