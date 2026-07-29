@@ -2,7 +2,7 @@
 title: I-75 standoff suspect appears in court from hospital bed
 date: 2026-07-24T17:40:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
