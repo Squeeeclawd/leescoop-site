@@ -2,7 +2,7 @@
 title: Fort Myers approves $109M contract for long-awaited police headquarters
 date: 2026-07-20T17:45:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
