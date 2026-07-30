@@ -2,7 +2,7 @@
 title: "Fort Myers man held without bond in mother's shooting and house-fire death"
 date: 2026-07-29T14:50:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
