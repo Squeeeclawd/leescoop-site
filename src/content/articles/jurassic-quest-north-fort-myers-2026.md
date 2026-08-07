@@ -2,7 +2,7 @@
 title: Jurassic Quest brings roaring life-size dinosaurs to North Fort Myers
 date: 2026-08-07T09:40:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Family
