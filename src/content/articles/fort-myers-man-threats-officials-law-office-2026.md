@@ -2,7 +2,7 @@
 title: "Fort Myers man accused of threatening sheriff, state attorney and law firm"
 date: 2026-08-05T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
