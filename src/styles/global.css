@@ -1708,6 +1708,28 @@ img { max-width: 100%; display: block; }
   text-align: right;
 }
 
+.footer-contact {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(171, 173, 166, 0.12);
+  text-align: center;
+}
+
+.footer-contact p {
+  margin: 0;
+}
+
+.footer-contact a {
+  color: var(--color-ash-gray);
+  text-decoration: underline;
+  text-decoration-color: rgba(79, 167, 188, 0.55);
+  text-underline-offset: 0.2em;
+}
+
+.footer-contact a:hover {
+  color: var(--color-slate-periwinkle);
+}
+
 @keyframes ticker-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

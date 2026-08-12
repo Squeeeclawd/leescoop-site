@@ -30,4 +30,7 @@ const { tags = [] } = Astro.props;
       <p class="footer-signoff">No ads. No promotion. Just what’s happening in Lee County.</p>
     </div>
   </div>
+  <div class="wrap footer-contact">
+    <p>Contact me: <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a></p>
+  </div>
 </footer>

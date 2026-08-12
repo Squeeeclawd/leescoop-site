@@ -3,6 +3,7 @@ export const site = {
   tagline: 'Your scoop on Lee County.',
   description: 'No ads. No promotion. Just what’s happening in your area.',
   domain: 'https://leescoop.com',
+  contactEmail: 'squeeeclawd@gmail.com',
   categories: [
     'Cape Coral',
     'Fort Myers',
