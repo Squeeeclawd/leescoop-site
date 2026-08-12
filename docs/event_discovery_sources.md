@@ -1,6 +1,15 @@
 # LeeScoop Fort Myers Event Discovery Map
 
-Use this checklist for every daily autopost run. The goal is not to scrape every calendar blindly. The goal is to build a broad lead pool, verify the best items at first-party sources, and publish three useful event posts without letting arena listings dominate the feed.
+Use this checklist for every daily autopost or manual event batch. The goal is not to scrape every calendar blindly. The goal is to build a broad lead pool, verify the best items at first-party sources, and publish useful event posts without letting arena listings or the same familiar venues dominate the feed.
+
+## Core strategy
+
+Use a funnel: **discover broadly, verify narrowly, rank consistently, then publish selectively.**
+
+- Discovery sources are allowed to be messy; published sources are not.
+- An aggregator, social post, search result, or roundup can reveal an event, but it does not by itself establish the facts.
+- Verify the final date, time, venue, city, admission details, and status on a current first-party or clearly attributable page.
+- Keep reserve candidates alive until duplicate checks, covers, and the full quality gate pass.
 
 ## Daily target
 
@@ -10,6 +19,36 @@ Use this checklist for every daily autopost run. The goal is not to scrape every
 - At least 2 published events must have `city: Fort Myers` on the verified listing.
 - Use at least 2 source families and 2 event types in the published event set.
 - Keep at least 3 verified event backups until covers and the quality gate are complete.
+
+## Larger manual batches
+
+Scale the funnel with the requested event count instead of reusing the daily numbers. For a request to publish `N` event posts:
+
+- Gather at least the greater of `N + 5` or `1.5 × N` plausible leads, rounded up.
+- Fully verify at least the greater of `N + 3` or `1.25 × N` non-duplicate candidates, rounded up.
+- Retain at least the greater of `3` or `0.25 × N` verified backups, rounded up, until publication is complete.
+- For 10 event posts, this means at least 15 leads, 13 fully verified candidates, and 3 backups.
+
+These are floors, not stopping points. Continue searching if the pool is repetitive, weak, too far in the future, or concentrated at one venue.
+
+## Three-pass discovery sweep
+
+Run the search in three deliberate passes so prominent calendars do not crowd out smaller local events:
+
+1. **Anchor pass:** Check the official city, county, tourism, and major first-party venue calendars on every run.
+2. **Rotating local pass:** Check at least 6 sources from the rotating lanes below, favoring lanes that were underrepresented in the previous batch.
+3. **Gap-fill pass:** Review the candidate pool for missing dates, audiences, areas, and event types, then search specifically for those gaps.
+
+Rotating lanes:
+
+- arts, galleries, theaters, museums, and cultural organizations
+- family, libraries, parks, nature, science, and educational programs
+- breweries, restaurants, food halls, markets, nightlife, and live-music rooms
+- sports, races, boating, recreation, charity, and community organizations
+- Fort Myers neighborhoods and merchant associations
+- Fort Myers Beach, Cape Coral, Estero, Bonita Springs, Sanibel, Captiva, Pine Island, Lehigh Acres, North Fort Myers, and Alva
+
+Do not count multiple pages from the same organizer as multiple source families. For a 10-event batch, use at least 4 source families and avoid publishing more than 2 events from one venue or organizer unless Anthony explicitly requests a venue-focused batch.
 
 ## Geography
 
@@ -129,16 +168,33 @@ Every selected candidate must have:
 - no duplicate title, source URL, slug, or event date + venue
 - reasonable confidence that the event is public and still scheduled
 
-Rank verified candidates on:
+Score each verified candidate before choosing the batch:
 
-1. Fort Myers relevance
-2. reader pull and usefulness
-3. timeliness
-4. uniqueness or shareability
-5. source confidence
-6. category, venue, date, and audience diversity
+- **Local relevance, 0–3:** Fort Myers core lane and broad Lee County usefulness score highest.
+- **Reader pull, 0–3:** Would a local reader stop, share it, or make a plan because of it?
+- **Timeliness, 0–2:** Reward events close enough to act on without filling the batch with only this weekend's listings.
+- **Uniqueness, 0–2:** Reward distinctive experiences over generic calendar filler.
+- **Source confidence, 0–2:** Current first-party event pages score above attributable ticketing pages; unconfirmed leads score zero and cannot publish.
+- **Practical completeness, 0–2:** Reward clear time, location, cost, registration, and accessibility/age details when relevant.
+
+Use the score to create the shortlist, then apply a diversity pass across category, venue, organizer, date window, geography, price, and audience. A high score does not justify publishing three near-identical concerts or three events from one venue.
+
+Normally publish candidates scoring 9 or higher out of 14. A lower-scoring event may fill a genuine geographic or audience gap only when every hard verification requirement passes and the reason is documented in the batch report.
 
 Do not let a famous venue automatically outrank a distinctive local festival, free family event, cultural event, or unusual community happening.
+
+## Hard rejection rules
+
+Reject a candidate rather than guessing when:
+
+- the page supports a prior year but not the current event year
+- the date or venue conflicts across sources and cannot be resolved
+- the only evidence is a search snippet, undated flyer, repost, or stale social post
+- the event appears private, canceled, sold out with no useful waitlist, or outside Lee County
+- the page lacks enough information to distinguish it from an existing LeeScoop post
+- the source URL is broken and no authoritative replacement exists
+
+Record the rejection reason. A rejected lead is useful evidence and prevents the same weak item from being reconsidered later in the run.
 
 ## Recurring-event control
 

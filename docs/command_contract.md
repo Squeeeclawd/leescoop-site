@@ -9,7 +9,7 @@ When Anthony says any of these, run the full LeeScoop batch workflow automatical
 - `run the LeeScoop batch`
 - `make the daily LeeScoop batch`
 
-An explicit numeric request overrides the four-post daily default. Unless Anthony specifies another mix, keep larger manual batches close to the same event-heavy 3:1 ratio.
+An explicit numeric request overrides the four-post daily default. Unless Anthony specifies another mix, keep larger manual batches close to the same event-heavy 3:1 ratio. Larger requests must also use the proportional lead, verification, backup, source-family, and venue-diversity rules in `docs/event_discovery_sources.md`.
 
 ## Default action
 

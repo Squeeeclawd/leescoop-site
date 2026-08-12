@@ -16,7 +16,7 @@ If Anthony says any of these (or close variants), treat it as the full LeeScoop 
 - `run the LeeScoop batch`
 - `make the daily LeeScoop batch`
 
-An explicit numeric request overrides the four-post daily default. Unless Anthony specifies a different mix, keep larger manual batches close to the same event-heavy 3:1 ratio.
+An explicit numeric request overrides the four-post daily default. Unless Anthony specifies a different mix, keep larger manual batches close to the same event-heavy 3:1 ratio. Scale lead, verification, backup, source-family, and venue-diversity requirements using `docs/event_discovery_sources.md`; do not use the smaller daily candidate pool for a large manual batch.
 
 Do not ask for permission again unless a hard blocker appears.
 
@@ -39,7 +39,7 @@ The run must create local files, run the build gate, then commit/push after the 
 
    This checks git state, candidate-file freshness, basic tooling, and content validation. Warnings are allowed only when intentionally understood.
 
-1. Run the full event-discovery sweep in `docs/event_discovery_sources.md`. Build the event reserve before choosing final posts.
+1. Run the full three-pass event-discovery sweep in `docs/event_discovery_sources.md`. Build the scaled event reserve and score the verified pool before choosing final posts.
 2. Select candidates:
    - Rank at least 8 fully verified, non-duplicate event candidates from a wider lead pool.
    - Publish the top 3 events, with at least 2 listing the city as Fort Myers.
