@@ -2,7 +2,7 @@
 title: Billions in projects could reshape downtown Fort Myers
 date: 2026-08-06T16:44:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
