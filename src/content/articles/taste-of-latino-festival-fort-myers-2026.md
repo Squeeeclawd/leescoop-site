@@ -2,7 +2,7 @@
 title: Taste of Latino brings an empanada showdown to the Fort Myers riverfront
 date: 2026-08-12T10:25:41-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Festival
