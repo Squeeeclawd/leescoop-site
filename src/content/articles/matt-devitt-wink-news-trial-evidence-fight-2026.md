@@ -2,7 +2,7 @@
 title: "Matt Devitt, WINK News headed to trial as evidence fight grows"
 date: 2026-08-03T09:02:30Z
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
