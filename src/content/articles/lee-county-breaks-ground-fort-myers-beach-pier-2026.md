@@ -2,7 +2,7 @@
 title: Lee County is finally breaking ground on the new Fort Myers Beach Pier
 date: 2026-08-14T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
