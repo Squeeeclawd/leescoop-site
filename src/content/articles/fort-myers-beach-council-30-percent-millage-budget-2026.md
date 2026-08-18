@@ -2,7 +2,7 @@
 title: Fort Myers Beach budget vote tees up a possible 30% millage hike
 date: 2026-08-04T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
