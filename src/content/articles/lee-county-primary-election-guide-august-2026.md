@@ -2,7 +2,7 @@
 title: "Lee County primary voters face commission, school board and congressional races today"
 date: 2026-08-16T12:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
