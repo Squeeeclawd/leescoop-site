@@ -2,7 +2,7 @@
 title: Wings on the Beach turns 12 restaurants into an island-wide food crawl
 date: 2026-08-21T14:40:40-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: "Food & Drink"
