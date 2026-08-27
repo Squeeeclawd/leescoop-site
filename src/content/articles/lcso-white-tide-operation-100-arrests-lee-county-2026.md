@@ -2,7 +2,7 @@
 title: LCSO Says White Tide Operation Led to 100+ Arrests and Major Drug Seizures
 date: 2026-08-20T11:09:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
