@@ -2,7 +2,7 @@
 title: "One dead, five trauma-alerted after Fort Myers crash"
 date: 2026-08-31T08:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
