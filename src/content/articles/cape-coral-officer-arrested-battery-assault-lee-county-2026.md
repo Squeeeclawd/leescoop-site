@@ -2,7 +2,7 @@
 title: "Cape Coral officer arrested on battery, assault charges while off duty"
 date: 2026-08-31T12:24:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Public Safety
