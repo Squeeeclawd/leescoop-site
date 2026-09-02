@@ -2,7 +2,7 @@
 title: Police reports show how a SWFL pool contractor allegedly pushed permits to 2044
 date: 2026-09-01T11:00:00-04:00
 draft: false
-featured: true
+featured: false
 pinned: false
 ticker: false
 category: Local News
