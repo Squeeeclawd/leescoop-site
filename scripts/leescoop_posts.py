@@ -73,6 +73,14 @@ def parse_dt(value: str | None) -> datetime | None:
         return None
 
 
+def event_start_key(value: Any) -> str:
+    """Keep separate same-venue events distinct, normalizing equivalent offsets."""
+    parsed = parse_dt(str(value or ""))
+    if parsed is not None and parsed.tzinfo is not None:
+        return parsed.astimezone(timezone.utc).isoformat()
+    return str(value or "")
+
+
 def has_expired_deadline(item: dict[str, Any], now: datetime | None = None) -> str | None:
     """Catch obvious stale news like a March deadline discovered in May."""
     now = now or datetime.now().astimezone()
@@ -155,7 +163,7 @@ def existing_index() -> dict[str, Any]:
         if url_key:
             idx["urls"][url_key] = str(path.relative_to(ROOT))
         if str(fm.get("contentKind", "")) == "event":
-            event_date = str(fm.get("eventDate", ""))[:10]
+            event_date = event_start_key(fm.get("eventDate", ""))
             venue_key = norm_text(str(fm.get("venue", "")))
             if event_date and venue_key:
                 idx["event_keys"][(event_date, venue_key)] = str(path.relative_to(ROOT))
@@ -184,10 +192,10 @@ def duplicate_reason(kind: str, item: dict[str, Any], idx: dict[str, Any]) -> st
     if source_url and source_url in idx["urls"]:
         return f"same sourceUrl as {idx['urls'][source_url]}"
     if kind == "event":
-        event_date = str(item.get("eventDate", ""))[:10]
+        event_date = event_start_key(item.get("eventDate", ""))
         venue_key = norm_text(str(item.get("venue", "")))
         if event_date and venue_key and (event_date, venue_key) in idx["event_keys"]:
-            return f"same event date + venue as {idx['event_keys'][(event_date, venue_key)]}"
+            return f"same event start time + venue as {idx['event_keys'][(event_date, venue_key)]}"
     return None
 
 
@@ -261,6 +269,7 @@ def frontmatter(kind: str, item: dict[str, Any], slug: str, cover: str) -> str:
     if kind == "event":
         lines.extend([
             f"eventDate: {item.get('eventDate', '')}",
+            *([f"eventEndDate: {item['eventEndDate']}"] if item.get('eventEndDate') else []),
             f"eventTime: {yaml_string(item.get('eventTime', ''))}",
             f"city: {yaml_string(item.get('city', ''))}",
             f"location: {yaml_string(item.get('location') or item.get('city') or '')}",

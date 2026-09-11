@@ -4203,6 +4203,92 @@ input {
   color: rgba(221, 238, 241, 0.78);
 }
 
+
+/* Author display rules must not override native hidden-state filtering. */
+.home-tile[hidden],
+[data-expirable-feature][hidden],
+[data-filter-category][hidden],
+#filter-clear-all[hidden],
+#home-empty-state[hidden] {
+  display: none !important;
+}
+
+.date-window-filter-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.48rem;
+  align-items: stretch;
+}
+
+.date-window-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.1rem 0.55rem;
+  align-items: center;
+  min-height: 3.05rem;
+  padding: 0.58rem 0.72rem;
+  border: 1px solid rgba(139, 210, 222, 0.22);
+  border-radius: 0.88rem;
+  background: rgba(3, 26, 37, 0.32);
+  color: var(--warm-sand);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+
+.date-window-filter:hover,
+.date-window-filter.is-active {
+  transform: translateY(-1px);
+  border-color: rgba(247, 222, 105, 0.58);
+  background: rgba(217, 75, 50, 0.18);
+  box-shadow: 0 0 0 2px rgba(247, 222, 105, 0.1), 0 10px 22px rgba(0, 0, 0, 0.14);
+}
+
+.date-window-filter:focus-visible {
+  outline: 3px solid var(--citrus-yellow);
+  outline-offset: 3px;
+}
+
+.date-window-filter:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.date-window-filter span {
+  min-width: 0;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.date-window-filter small {
+  grid-column: 1;
+  color: rgba(221, 238, 241, 0.72);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.date-window-filter strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.42rem;
+  border-radius: 999px;
+  background: rgba(3, 26, 37, 0.58);
+  color: var(--citrus-yellow);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
 .filter-area-strip {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -4332,6 +4418,14 @@ input {
     min-height: 3.75rem;
     padding: 0.66rem 0.76rem;
     border-radius: 0.78rem;
+  }
+
+  .date-window-filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .date-window-filter {
+    min-height: 2.8rem;
   }
 
   .filter-area-strip {

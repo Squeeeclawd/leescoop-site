@@ -20,7 +20,7 @@ An explicit numeric request overrides the four-post daily default. Unless Anthon
 
 Do not ask for permission again unless a hard blocker appears.
 
-The run must create local files, run the build gate, then commit/push after the build passes.
+The run must create local files, pass validation and the build gate, commit/push, and verify production. A push is not completion.
 
 ## Model target
 
@@ -67,7 +67,8 @@ The run must create local files, run the build gate, then commit/push after the 
    - selected featured article and why
    - image results
    - validation/build result
-10. Commit and push the batch after the quality gate passes, then report the result.
+10. Commit and push only the scoped batch after the quality gate passes.
+11. Verify every production article returns HTTP 200 with the expected title, official source link and cover. Verify each generated cover is a real PNG at 1216x704, not an HTML fallback. Verify homepage date-window chips. Record URLs, commit and validation/live evidence; report any unverified rendered visual checks explicitly.
 
 ## Daily composition gate
 
@@ -296,11 +297,10 @@ Event posts get generated LeeScoop-style cover art. Use the best available gener
 
 Current preferred path:
 
-1. Try OpenClaw internal image generation with `openai/gpt-image-1.5`, `1536x1024`, high quality.
-   - `openai/gpt-image-2` is preferred when available, but this account currently returns an organization-verification block.
-   - Google image generation currently has no usable key in this agent.
+1. Use the user-approved OpenClaw `openai/gpt-image-2` route, proven for the September 2026 batch, with the existing cel-shaded house style retained. This proves generation through configured authentication, not specifically OAuth. Do not assume historical provider failures remain current.
    - In isolated cron runs, treat a response like "background task started" as **not complete**. Do not write, validate, commit, or publish an event post until the finished image file is actually present under `public/covers/`.
-   - If OpenClaw image generation cannot complete synchronously in the cron session, stop before publishing event posts. Either report the blocker or use strong news/source-image posts only when the run can still produce a complete publishable batch.
+   - For asynchronous generation, retain the task identity, originating request, destination slug and continuation owner. Await the existing completion path; do not start duplicate generations. Resume by inspecting the delivered image, center-fitting with Pillow to 1216x704 PNG, installing it and checking coverImage before validation.
+   - If completion arrives without tool authority, provide the owning session the exact image path and remaining commands/gates as actionable continuation state, never mark publication complete. Missing artwork is a blocker, not permission to replace event quota with news.
 2. Crop/resize the accepted generated image to `1216x704`.
 3. Save it under `public/covers/<slug>.png`.
 4. Use local ComfyUI only as a fallback, or when Anthony explicitly asks for local ComfyUI.
@@ -365,4 +365,12 @@ If the build fails, stop and report the error.
 
 ## Publish gate
 
-If the build passes, commit and push the batch.
+After validation and build pass, commit and push only explicit task paths; preserve unrelated user work and verify protected hashes before and after. Complete only after the production checks above pass. Do not add autonomous monitoring routines or change existing schedules for a publication run.
+
+## Current posting plan — September 11, 2026
+
+- Finish the explicitly requested ten-event catch-up release before starting another batch; this all-event request overrides the daily 3 + 1 mix. Track evidence in `docs/ten_event_release_2026-09-10.md`.
+- Re-evaluate dates in America/New_York at execution time, not the date in an old candidate filename. Exclude expired listings; prioritize useful near-term catch-up coverage first (Family ArtLab, September 19), followed by October planning and stronger November marquee events. Do not backfill expired daily quotas or invent publication dates.
+- Resume the normal daily 3 + 1 composition only after the catch-up release is verified live. Keep summaries brief and original with direct source links.
+- Schedules are unchanged by this plan; no current automation schedule was inspected or asserted. Any schedule change requires a separate authorized need.
+- Deployment pending is not done: retain ownership and use an available supported continuation path if a delayed check is needed; no shell sleep-polling or new autonomous monitoring.

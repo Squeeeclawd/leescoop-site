@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import { activeArticles, articlePath, sortArticlesForFeed, tagCounts } from '@/lib/content';
+import { LEE_COUNTY_TIME_ZONE, activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, tagCounts } from '@/lib/content';
 
 const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
@@ -80,13 +80,29 @@ const contentKindStats = [
 
 function formatDate(value?: Date) {
   if (!value) return 'Date TBA';
-  return value.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return value.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric' });
 }
 
 function formatLongDate(value?: Date) {
   if (!value) return 'Date TBA';
-  return value.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return value.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric' });
 }
+
+function dateKey(value?: Date) {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('en-CA', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+}
+
+function eventEndDateKey(article: typeof visible[number]) {
+  if (article.data.contentKind !== 'event') return '';
+  return dateKey(eventArchiveCutoff(article) ?? article.data.eventDate);
+}
+
+const dateWindowStats = [
+  { window: 'today', label: 'Today', help: 'Lee County time' },
+  { window: 'weekend', label: 'This weekend', help: 'Sat + Sun' },
+  { window: 'next14', label: 'Next 14 days', help: 'Today + 13 days' }
+];
 
 function timelineDateLabel(article: typeof visible[number]) {
   return article.data.contentKind === 'news' ? 'Posted' : 'Happens';
@@ -135,7 +151,7 @@ function tileSearch(article: typeof visible[number]) {
     )}
 
     {lead && (
-      <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
+      <section class="wrap homepage-section hero-section-home hero-panel panel-glow" data-expirable-feature data-kind={lead.data.contentKind} data-active-until={lead.data.contentKind === 'event' ? eventArchiveCutoff(lead)?.toISOString() : undefined}>
         <div class="hero-home-grid hero-home-grid-patch">
           <div class="hero-home-copy hero-home-copy-patch">
             <div class="hero-label-row">
@@ -235,6 +251,16 @@ function tileSearch(article: typeof visible[number]) {
         </form>
       </div>
 
+      <div class="date-window-filter-row" role="group" aria-label="Event date filters (America/New_York)">
+        {dateWindowStats.map((item) => (
+          <button type="button" class="date-window-filter" data-filter-date-window={item.window} aria-pressed="false">
+            <span>{item.label}</span>
+            <small>{item.help}</small>
+            <strong data-count-date-window={item.window}>0</strong>
+          </button>
+        ))}
+      </div>
+
       <div class="filter-area-strip" aria-label="Area filters">
         <div class="filter-tile-pill-row" aria-label="Areas">
           {categoryStats.map((item) => (
@@ -272,7 +298,7 @@ function tileSearch(article: typeof visible[number]) {
           const cardDate = displayDate(article);
           const cardDateParts = formatDate(cardDate).split(' ');
           return (
-            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-search={tileSearch(article)}>
+            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={dateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={article.data.contentKind === 'event' ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
 
               {hasCover && (
@@ -306,7 +332,7 @@ function tileSearch(article: typeof visible[number]) {
         })}
       </div>
 
-      <div class="home-empty-state" id="home-empty-state" hidden>No updates match that filter right now.</div>
+      <div class="home-empty-state" id="home-empty-state" role="status" hidden>No updates match that filter right now.</div>
     </section>
   </main>
   <Footer tags={topTags} />
@@ -321,9 +347,53 @@ function tileSearch(article: typeof visible[number]) {
       const searchForm = document.getElementById('filter-search-form');
       const clearAll = document.getElementById('filter-clear-all');
       const emptyState = document.getElementById('home-empty-state');
-      const state = { category: '', kind: '', query: '' };
+      const dateButtons = Array.from(document.querySelectorAll('[data-filter-date-window]'));
+      const feature = document.querySelector('[data-expirable-feature]');
+      const state = { category: '', kind: '', dateWindow: '', query: '' };
 
-      if (!(searchInput instanceof HTMLInputElement) || !(searchForm instanceof HTMLFormElement) || !(clearAll instanceof HTMLButtonElement) || !(emptyState instanceof HTMLElement) || !tiles.length) return;
+      const leeCountyDateKey = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+      const addDays = (date, days) => {
+        // Add Lee County civil days independently of the visitor's timezone/DST.
+        const copy = new Date(`${leeCountyDateKey(date)}T12:00:00Z`);
+        copy.setUTCDate(copy.getUTCDate() + days);
+        return copy;
+      };
+      let filterNow = new Date();
+      const dateWindowRange = (dateWindow) => {
+        const now = filterNow;
+        if (dateWindow === 'today') {
+          const key = leeCountyDateKey(now);
+          return { start: key, end: key };
+        }
+        if (dateWindow === 'next14') {
+          return { start: leeCountyDateKey(now), end: leeCountyDateKey(addDays(now, 13)) };
+        }
+        if (dateWindow !== 'weekend') return undefined;
+
+        const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        const weekday = weekdayMap[now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short' })] ?? now.getDay();
+        const daysUntilSaturday = weekday === 0 ? -1 : (6 - weekday);
+        const saturday = addDays(now, daysUntilSaturday);
+        return { start: leeCountyDateKey(saturday), end: leeCountyDateKey(addDays(saturday, 1)) };
+      };
+      const isPastActiveWindow = (tile) => {
+        if (tile.getAttribute('data-kind') !== 'event') return false;
+        const activeUntil = tile.getAttribute('data-active-until');
+        return activeUntil && new Date(activeUntil).getTime() < filterNow.getTime();
+      };
+      const matchesDateWindow = (tile, dateWindow = state.dateWindow) => {
+        if (!dateWindow) return true;
+        if (tile.getAttribute('data-kind') !== 'event') return false;
+        const startKey = tile.getAttribute('data-date-key') || '';
+        const endKey = tile.getAttribute('data-end-date-key') || startKey;
+        const range = dateWindowRange(dateWindow);
+        if (!startKey || !endKey || !range) return false;
+        return startKey <= range.end && endKey >= range.start;
+      };
+
+      if (feature instanceof HTMLElement && isPastActiveWindow(feature)) feature.hidden = true;
+
+      if (!(searchInput instanceof HTMLInputElement) || !(searchForm instanceof HTMLFormElement) || !(clearAll instanceof HTMLButtonElement) || !(emptyState instanceof HTMLElement)) return;
 
       const updateCounts = () => {
         const query = state.query.trim().toLowerCase();
@@ -335,7 +405,7 @@ function tileSearch(article: typeof visible[number]) {
             const tileCategory = tile.getAttribute('data-category') || '';
             const tileKind = tile.getAttribute('data-kind') || '';
             const haystack = tile.getAttribute('data-search') || '';
-            return tileCategory === category && (!state.kind || tileKind === state.kind) && (!query || haystack.includes(query));
+            return !isPastActiveWindow(tile) && tileCategory === category && (!state.kind || tileKind === state.kind) && matchesDateWindow(tile) && (!query || haystack.includes(query));
           }).length;
           if (countTarget) countTarget.textContent = String(count);
           pill.hidden = count === 0 && state.category !== category;
@@ -351,7 +421,7 @@ function tileSearch(article: typeof visible[number]) {
             const tileCategory = tile.getAttribute('data-category') || '';
             const tileKind = tile.getAttribute('data-kind') || '';
             const haystack = tile.getAttribute('data-search') || '';
-            return tileKind === kind && (!state.category || tileCategory === state.category) && (!query || haystack.includes(query));
+            return !isPastActiveWindow(tile) && tileKind === kind && (!state.category || tileCategory === state.category) && (kind === 'news' || matchesDateWindow(tile)) && (!query || haystack.includes(query));
           }).length;
           if (countTarget) countTarget.textContent = String(count);
           if (button instanceof HTMLButtonElement) button.disabled = count === 0 && state.kind !== kind;
@@ -360,7 +430,27 @@ function tileSearch(article: typeof visible[number]) {
         });
       };
 
+      const updateDateCounts = () => {
+        dateButtons.forEach((button) => {
+          if (!(button instanceof HTMLElement)) return;
+          const dateWindow = button.getAttribute('data-filter-date-window') || '';
+          const countTarget = button.querySelector('[data-count-date-window]');
+          const query = state.query.trim().toLowerCase();
+          const count = tiles.filter((tile) => {
+            const category = tile.getAttribute('data-category') || '';
+            const haystack = tile.getAttribute('data-search') || '';
+            return !isPastActiveWindow(tile) && matchesDateWindow(tile, dateWindow) && (!state.category || category === state.category) && (!query || haystack.includes(query));
+          }).length;
+          if (countTarget) countTarget.textContent = String(count);
+          if (button instanceof HTMLButtonElement) button.disabled = count === 0 && state.dateWindow !== dateWindow;
+          button.setAttribute('aria-pressed', String(state.dateWindow === dateWindow));
+          button.classList.toggle('is-active', state.dateWindow === dateWindow);
+        });
+      };
+
       const applyFilters = () => {
+        filterNow = new Date();
+        if (feature instanceof HTMLElement) feature.hidden = Boolean(isPastActiveWindow(feature));
         const query = state.query.trim().toLowerCase();
         let visibleCount = 0;
         tiles.forEach((tile) => {
@@ -369,13 +459,15 @@ function tileSearch(article: typeof visible[number]) {
           const haystack = tile.getAttribute('data-search') || '';
           const matchesCategory = !state.category || category === state.category;
           const matchesKind = !state.kind || kind === state.kind;
+          const matchesDate = matchesDateWindow(tile);
           const matchesQuery = !query || haystack.includes(query);
-          const shouldShow = matchesCategory && matchesKind && matchesQuery;
+          const shouldShow = !isPastActiveWindow(tile) && matchesCategory && matchesKind && matchesDate && matchesQuery;
           tile.hidden = !shouldShow;
           if (shouldShow) visibleCount += 1;
         });
         updateCounts();
-        clearAll.hidden = !(state.category || state.kind || state.query.trim());
+        updateDateCounts();
+        clearAll.hidden = !(state.category || state.kind || state.dateWindow || state.query.trim());
         emptyState.hidden = visibleCount > 0;
       };
 
@@ -395,12 +487,23 @@ function tileSearch(article: typeof visible[number]) {
           event.preventDefault();
           const kind = kindButton.getAttribute('data-filter-kind') || '';
           state.kind = state.kind === kind ? '' : kind;
+          if (state.kind === 'news') state.dateWindow = '';
           applyFilters();
           return;
         }
-        if (target === clearAll) {
+        const dateButton = target.closest('[data-filter-date-window]');
+        if (dateButton instanceof HTMLElement) {
+          event.preventDefault();
+          const dateWindow = dateButton.getAttribute('data-filter-date-window') || '';
+          state.dateWindow = state.dateWindow === dateWindow ? '' : dateWindow;
+          if (state.dateWindow) state.kind = 'event';
+          applyFilters();
+          return;
+        }
+        if (target.closest('#filter-clear-all') === clearAll) {
           state.category = '';
           state.kind = '';
+          state.dateWindow = '';
           state.query = '';
           searchInput.value = '';
           applyFilters();
@@ -426,6 +529,9 @@ function tileSearch(article: typeof visible[number]) {
       });
 
       applyFilters();
+      // Keep date counts and expiry accurate for tabs left open across midnight.
+      window.setInterval(applyFilters, 60_000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) applyFilters(); });
     })();
   </script>
 </BaseLayout>
