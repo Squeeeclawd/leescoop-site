@@ -1,6 +1,6 @@
 # September 10, 2026 — ten-event release
 
-Status: all ten covers installed and inspected; final release gates in progress. Publication requires production verification.
+Status: COMPLETE — all ten articles and covers verified live September 11, 2026 at 19:18 EDT. Release commit `fe363beabd506b96c062e00f33163c2791612219` is pushed to main.
 
 ## Recovery checkpoint — September 11, 2026
 
@@ -40,3 +40,20 @@ Ten new event briefs (eight Fort Myers, two Cape Coral), with generated no-text 
 ## Final local gate evidence
 
 September 11: npm validate passed (existing past-event warnings retained); npm check passed with zero errors/warnings and one unused-variable hint. Date/filter regressions, civil-window/DST tests, discovery DOM fixture tests and six Python tests passed. Constrained build and Pagefind completed successfully. All ten PNGs are 1216x704; all nine protected hashes match. Rendered visual browser check remains unverified due to policy restriction.
+
+## Production evidence — 2026-09-11T23:18:40.292780+00:00
+
+All ten routes returned HTTP 200 with expected title, official source URL and cover reference. Every cover decoded as PNG 1216x704 and matched its committed local file SHA-256 (no HTML fallback). Homepage contains Today, This weekend and Next 14 days date chips. Exact committed-tree constrained build passed independently of unrelated dirty/untracked user files. All nine protected hashes remain unchanged and excluded.
+
+- https://leescoop.com/press-play-gamers-halloween-family-concert-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/edison-ford-fall-festival-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/star-spangled-girl-florida-rep-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/wait-until-dark-florida-rep-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/for-the-love-of-music-vol-iv-alliance-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/cirque-night-before-christmas-bbmann-fort-myers-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/cape-coral-bike-night-october-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/cape-coral-trunk-or-treat-halloween-movie-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/fort-myers-culinary-district-market-expansion-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+- https://leescoop.com/family-artlab-alliance-fort-myers-september-2026/ — page 200; title/source verified; cover 200, PNG 1216x704, hash matched.
+
+Rendered desktop/mobile browser verification remains unverified: browser navigation was policy-blocked. HTTP/content checks and DOM fixture tests are the verified evidence. No schedules were changed or new monitoring routines added.

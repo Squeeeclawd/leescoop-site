@@ -369,7 +369,7 @@ After validation and build pass, commit and push only explicit task paths; prese
 
 ## Current posting plan — September 11, 2026
 
-- Finish the explicitly requested ten-event catch-up release before starting another batch; this all-event request overrides the daily 3 + 1 mix. Track evidence in `docs/ten_event_release_2026-09-10.md`.
+- The explicitly requested ten-event catch-up release is complete: commit `fe363be`, all ten pages/covers verified live September 11 at 19:18 EDT. Evidence: `docs/ten_event_release_2026-09-10.md`. Its all-event mix was an explicit exception, not a change to the daily default.
 - Re-evaluate dates in America/New_York at execution time, not the date in an old candidate filename. Exclude expired listings; prioritize useful near-term catch-up coverage first (Family ArtLab, September 19), followed by October planning and stronger November marquee events. Do not backfill expired daily quotas or invent publication dates.
 - Resume the normal daily 3 + 1 composition only after the catch-up release is verified live. Keep summaries brief and original with direct source links.
 - Schedules are unchanged by this plan; no current automation schedule was inspected or asserted. Any schedule change requires a separate authorized need.
