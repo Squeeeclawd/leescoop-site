@@ -88,6 +88,25 @@ function formatLongDate(value?: Date) {
   return value.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function formatRangeEndpoint(value: Date, includeYear = false) {
+  return value.toLocaleDateString('en-US', {
+    timeZone: LEE_COUNTY_TIME_ZONE,
+    month: 'short',
+    day: 'numeric',
+    ...(includeYear ? { year: 'numeric' as const } : {})
+  });
+}
+
+function formatEventRange(start?: Date, end?: Date) {
+  if (!start) return 'Date TBA';
+  if (!end || dateKey(start) === dateKey(end)) return formatLongDate(start);
+
+  const startYear = start.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric' });
+  const endYear = end.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric' });
+  const includeStartYear = startYear !== endYear;
+  return `${formatRangeEndpoint(start, includeStartYear)}–${formatRangeEndpoint(end, true)}`;
+}
+
 function dateKey(value?: Date) {
   if (!value) return '';
   return new Intl.DateTimeFormat('en-CA', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
@@ -104,8 +123,39 @@ const dateWindowStats = [
   { window: 'next14', label: 'Next 14 days', help: 'Today + 13 days' }
 ];
 
+function hasMultiDayEventRange(article: typeof visible[number]) {
+  if (article.data.contentKind !== 'event' || !article.data.eventDate) return false;
+  const end = eventArchiveCutoff(article);
+  return Boolean(end && dateKey(article.data.eventDate) !== dateKey(end));
+}
+
 function timelineDateLabel(article: typeof visible[number]) {
-  return article.data.contentKind === 'news' ? 'Posted' : 'Happens';
+  if (article.data.contentKind === 'news') return 'Posted';
+  return hasMultiDayEventRange(article) ? 'Runs' : 'Happens';
+}
+
+function timelineDateText(article: typeof visible[number]) {
+  if (article.data.contentKind === 'news') return formatLongDate(article.data.date);
+  if (!hasMultiDayEventRange(article)) return formatLongDate(article.data.eventDate);
+  return formatEventRange(article.data.eventDate, eventArchiveCutoff(article));
+}
+
+function badgeParts(article: typeof visible[number]) {
+  const start = displayDate(article);
+  if (article.data.contentKind !== 'event' || !hasMultiDayEventRange(article)) {
+    const parts = formatDate(start).split(' ');
+    return { top: parts[0] ?? '', bottom: parts[1] ?? '' };
+  }
+
+  const end = eventArchiveCutoff(article);
+  const startMonth = start?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short' }) ?? '';
+  const endMonth = end?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short' }) ?? '';
+  const startDay = start?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, day: 'numeric' }) ?? '';
+  const endDay = end?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, day: 'numeric' }) ?? '';
+  return {
+    top: startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`,
+    bottom: `${startDay}–${endDay}`
+  };
 }
 
 function displayDate(article: typeof visible[number]) {
@@ -156,8 +206,8 @@ function tileSearch(article: typeof visible[number]) {
           <div class="hero-home-copy hero-home-copy-patch">
             <div class="hero-label-row">
               <div class="event-date-badge hero-date-badge">
-                <span>{formatDate(displayDate(lead)).split(' ')[0]}</span>
-                <strong>{formatDate(displayDate(lead)).split(' ')[1] ?? ''}</strong>
+                <span>{badgeParts(lead).top}</span>
+                <strong>{badgeParts(lead).bottom}</strong>
               </div>
               <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Featured update' : 'Featured event'}</p>
             </div>
@@ -167,8 +217,8 @@ function tileSearch(article: typeof visible[number]) {
             <div class="hero-fact-grid" aria-label="Featured item details">
               <span class={`timeline-kind-pill ${lead.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{lead.data.contentKind === 'news' ? 'News' : 'Event'}</span>
               <div class="hero-fact">
-                <span>{lead.data.contentKind === 'news' ? 'Posted' : 'Date'}</span>
-                <time datetime={displayDate(lead)?.toISOString()}>{formatLongDate(displayDate(lead))}</time>
+                <span>{timelineDateLabel(lead)}</span>
+                <time datetime={displayDate(lead)?.toISOString()}>{timelineDateText(lead)}</time>
               </div>
               {lead.data.eventTime && (
                 <div class="hero-fact">
@@ -296,7 +346,7 @@ function tileSearch(article: typeof visible[number]) {
         {cardFeed.map((article) => {
           const hasCover = Boolean(article.data.coverImage);
           const cardDate = displayDate(article);
-          const cardDateParts = formatDate(cardDate).split(' ');
+          const cardDateParts = badgeParts(article);
           return (
             <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={dateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={article.data.contentKind === 'event' ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
@@ -311,8 +361,8 @@ function tileSearch(article: typeof visible[number]) {
               <div class="home-tile-body">
                 <div class="tile-top-row">
                   <div class="event-date-badge">
-                    <span>{cardDateParts[0]}</span>
-                    <strong>{cardDateParts[1] ?? ''}</strong>
+                    <span>{cardDateParts.top}</span>
+                    <strong>{cardDateParts.bottom}</strong>
                   </div>
                   <div class="tile-label-stack">
                     <span class={`timeline-kind-pill ${article.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{article.data.contentKind === 'news' ? 'News' : 'Event'}</span>
@@ -322,7 +372,7 @@ function tileSearch(article: typeof visible[number]) {
                 <h2 class="home-tile-title" title={article.data.title}>{article.data.title}</h2>
                 <p class="home-tile-deck">{article.data.excerpt}</p>
                 <div class="tile-meta-row">
-                  <time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {formatLongDate(cardDate)}</time>
+                  <time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {timelineDateText(article)}</time>
                   {article.data.eventTime && <span>{article.data.eventTime}</span>}
                   {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
                 </div>
