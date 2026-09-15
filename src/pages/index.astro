@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import { LEE_COUNTY_TIME_ZONE, activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, tagCounts } from '@/lib/content';
+import { activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, tagCounts } from '@/lib/content';
+import { homepageBadgeParts, homepageDateKey, homepageDisplayDate, homepageTimelineDateLabel, homepageTimelineDateText } from '@/lib/homepageDateLabels';
 
 const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
@@ -78,43 +79,9 @@ const contentKindStats = [
   { kind: 'news', label: 'Local News', count: cardFeed.filter((article) => article.data.contentKind === 'news').length }
 ];
 
-function formatDate(value?: Date) {
-  if (!value) return 'Date TBA';
-  return value.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric' });
-}
-
-function formatLongDate(value?: Date) {
-  if (!value) return 'Date TBA';
-  return value.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function formatRangeEndpoint(value: Date, includeYear = false) {
-  return value.toLocaleDateString('en-US', {
-    timeZone: LEE_COUNTY_TIME_ZONE,
-    month: 'short',
-    day: 'numeric',
-    ...(includeYear ? { year: 'numeric' as const } : {})
-  });
-}
-
-function formatEventRange(start?: Date, end?: Date) {
-  if (!start) return 'Date TBA';
-  if (!end || dateKey(start) === dateKey(end)) return formatLongDate(start);
-
-  const startYear = start.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric' });
-  const endYear = end.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric' });
-  const includeStartYear = startYear !== endYear;
-  return `${formatRangeEndpoint(start, includeStartYear)}–${formatRangeEndpoint(end, true)}`;
-}
-
-function dateKey(value?: Date) {
-  if (!value) return '';
-  return new Intl.DateTimeFormat('en-CA', { timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
-}
-
 function eventEndDateKey(article: typeof visible[number]) {
   if (article.data.contentKind !== 'event') return '';
-  return dateKey(eventArchiveCutoff(article) ?? article.data.eventDate);
+  return homepageDateKey(eventArchiveCutoff(article) ?? article.data.eventDate);
 }
 
 const dateWindowStats = [
@@ -123,43 +90,20 @@ const dateWindowStats = [
   { window: 'next14', label: 'Next 14 days', help: 'Today + 13 days' }
 ];
 
-function hasMultiDayEventRange(article: typeof visible[number]) {
-  if (article.data.contentKind !== 'event' || !article.data.eventDate) return false;
-  const end = eventArchiveCutoff(article);
-  return Boolean(end && dateKey(article.data.eventDate) !== dateKey(end));
-}
-
 function timelineDateLabel(article: typeof visible[number]) {
-  if (article.data.contentKind === 'news') return 'Posted';
-  return hasMultiDayEventRange(article) ? 'Runs' : 'Happens';
+  return homepageTimelineDateLabel(article, eventArchiveCutoff(article));
 }
 
 function timelineDateText(article: typeof visible[number]) {
-  if (article.data.contentKind === 'news') return formatLongDate(article.data.date);
-  if (!hasMultiDayEventRange(article)) return formatLongDate(article.data.eventDate);
-  return formatEventRange(article.data.eventDate, eventArchiveCutoff(article));
+  return homepageTimelineDateText(article, eventArchiveCutoff(article));
 }
 
 function badgeParts(article: typeof visible[number]) {
-  const start = displayDate(article);
-  if (article.data.contentKind !== 'event' || !hasMultiDayEventRange(article)) {
-    const parts = formatDate(start).split(' ');
-    return { top: parts[0] ?? '', bottom: parts[1] ?? '' };
-  }
-
-  const end = eventArchiveCutoff(article);
-  const startMonth = start?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short' }) ?? '';
-  const endMonth = end?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short' }) ?? '';
-  const startDay = start?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, day: 'numeric' }) ?? '';
-  const endDay = end?.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, day: 'numeric' }) ?? '';
-  return {
-    top: startMonth === endMonth ? startMonth : `${startMonth}–${endMonth}`,
-    bottom: `${startDay}–${endDay}`
-  };
+  return homepageBadgeParts(article, eventArchiveCutoff(article));
 }
 
 function displayDate(article: typeof visible[number]) {
-  return article.data.contentKind === 'event' ? article.data.eventDate : article.data.date;
+  return homepageDisplayDate(article);
 }
 
 function categoryAccent(category: string) {
@@ -348,7 +292,7 @@ function tileSearch(article: typeof visible[number]) {
           const cardDate = displayDate(article);
           const cardDateParts = badgeParts(article);
           return (
-            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={dateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={article.data.contentKind === 'event' ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
+            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={homepageDateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={article.data.contentKind === 'event' ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
               <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
 
               {hasCover && (
