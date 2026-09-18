@@ -39,26 +39,30 @@
   },
   "routes": {
     "routine": {
-      "model": null,
+      "model": "openai/gpt-5.6-luna",
       "auth": "oauth",
-      "verifiedAt": null,
-      "expiresAt": null,
-      "evidence": null
+      "verifiedAt": "2026-09-18T14:40:00-04:00",
+      "expiresAt": "2026-09-25T14:40:00-04:00",
+      "evidence": "parent-provided successful economical routine inference and OAuth route attestation; refresh from secret-free config metadata plus a successful job before use",
+      "successfulInferenceReceipt": "parent-live-proof-2026-09-18-routine"
     },
     "review": {
-      "model": null,
+      "model": "openai/gpt-5.5",
       "auth": "oauth",
-      "verifiedAt": null,
-      "expiresAt": null,
-      "evidence": null
+      "verifiedAt": "2026-09-18T14:40:00-04:00",
+      "expiresAt": "2026-09-25T14:40:00-04:00",
+      "evidence": "parent-provided configured and successful reviewer inference; refresh from secret-free config metadata plus a successful job before use",
+      "successfulInferenceReceipt": "parent-live-proof-2026-09-18-review"
     },
     "image": {
       "model": "openai/gpt-image-2",
       "auth": "oauth",
-      "verifiedAt": null,
-      "expiresAt": null,
-      "evidence": null,
-      "directOverrideAbsent": false
+      "verifiedAt": "2026-09-18T14:42:00-04:00",
+      "expiresAt": "2026-09-25T14:42:00-04:00",
+      "evidence": "parent config evidence: models.providers.openai path not found; OpenAI OAuth profile present; docs/tools/image-generation.md says explicit openai/gpt-image-2 routes through Codex OAuth with no API-key fallback when no explicit direct provider override exists; no live generation tested",
+      "directOverrideAbsent": true,
+      "liveGenerationTested": false,
+      "mustSpecifyExactModel": true
     }
   },
   "sources": [
@@ -93,7 +97,12 @@
       "anchor": false,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "seedUrls": [
+        "https://www.capecoral.gov/calendar.php"
+      ],
+      "auditStatus": "reachable",
+      "currentEventsVerified": false
     },
     {
       "id": "bonita",
@@ -159,7 +168,12 @@
       "anchor": false,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "seedUrls": [
+        "https://www.leegov.com/parks/events"
+      ],
+      "auditStatus": "reachable",
+      "currentEventsVerified": false
     },
     {
       "id": "arts",
@@ -236,7 +250,10 @@
       "anchor": false,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "imageHosts": [
+        "townnews.com"
+      ]
     },
     {
       "id": "breeze",
@@ -259,6 +276,228 @@
       "lane": "nearby",
       "access": "manual_review",
       "verifiedEndpoint": false
+    },
+    {
+      "id": "sanibel-chamber",
+      "name": "Sanibel Island Chamber",
+      "url": "https://sanibel-captiva.org/",
+      "seedUrls": [
+        "https://sanibel-captiva.org/events/"
+      ],
+      "city": "Sanibel",
+      "family": "community",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false,
+      "auditStatus": "reachable",
+      "currentEventsVerified": false
+    },
+    {
+      "id": "artsbonita",
+      "name": "Arts Bonita",
+      "url": "https://artsbonita.org/",
+      "seedUrls": [
+        "https://artsbonita.org/calendar-of-events/",
+        "https://artsbonita.org/events/"
+      ],
+      "city": "Bonita Springs",
+      "family": "arts",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false,
+      "auditStatus": "reachable_no_upcoming_events",
+      "currentEventsVerified": false
     }
-  ]
+  ],
+  "categories": [
+    "arts_culture",
+    "family_learning",
+    "food_nightlife",
+    "outdoors_coast",
+    "community_civic",
+    "entertainment"
+  ],
+  "categoryAliases": {
+    "arts": "arts_culture",
+    "culture": "arts_culture",
+    "gallery": "arts_culture",
+    "theater": "arts_culture",
+    "museum": "arts_culture",
+    "family": "family_learning",
+    "learning": "family_learning",
+    "kids": "family_learning",
+    "library": "family_learning",
+    "school": "family_learning",
+    "food": "food_nightlife",
+    "nightlife": "food_nightlife",
+    "brewery": "food_nightlife",
+    "market": "food_nightlife",
+    "restaurant": "food_nightlife",
+    "outdoors": "outdoors_coast",
+    "coast": "outdoors_coast",
+    "beach": "outdoors_coast",
+    "parks": "outdoors_coast",
+    "nature": "outdoors_coast",
+    "community": "community_civic",
+    "civic": "community_civic",
+    "government": "community_civic",
+    "nonprofit": "community_civic",
+    "neighborhood": "community_civic",
+    "music": "entertainment",
+    "concert": "entertainment",
+    "comedy": "entertainment",
+    "sports": "entertainment",
+    "ticketed": "entertainment"
+  },
+  "weeklyRotation": {
+    "monday": {
+      "focus": [
+        "arts_culture"
+      ],
+      "cities": [
+        "Fort Myers",
+        "Cape Coral",
+        "Sanibel",
+        "Bonita Springs"
+      ]
+    },
+    "tuesday": {
+      "focus": [
+        "family_learning"
+      ],
+      "cities": [
+        "Estero",
+        "Lehigh Acres",
+        "North Fort Myers"
+      ]
+    },
+    "wednesday": {
+      "focus": [
+        "food_nightlife"
+      ],
+      "cities": [
+        "Cape Coral",
+        "Fort Myers",
+        "Estero",
+        "Bonita Springs"
+      ]
+    },
+    "thursday": {
+      "focus": [
+        "outdoors_coast"
+      ],
+      "cities": [
+        "Fort Myers Beach",
+        "Sanibel",
+        "Captiva",
+        "Pine Island"
+      ]
+    },
+    "friday": {
+      "focus": [
+        "community_civic"
+      ],
+      "cities": [
+        "Alva",
+        "Lehigh Acres",
+        "North Fort Myers"
+      ]
+    },
+    "saturday": {
+      "focus": [
+        "entertainment"
+      ],
+      "cities": [
+        "Fort Myers",
+        "Cape Coral",
+        "Estero",
+        "Bonita Springs",
+        "Fort Myers Beach",
+        "Sanibel",
+        "Lehigh Acres",
+        "North Fort Myers"
+      ]
+    },
+    "sunday": {
+      "focus": [
+        "arts_culture",
+        "family_learning",
+        "food_nightlife",
+        "outdoors_coast",
+        "community_civic",
+        "entertainment"
+      ],
+      "cities": [
+        "Fort Myers",
+        "Cape Coral",
+        "Estero",
+        "Bonita Springs",
+        "Fort Myers Beach",
+        "Sanibel",
+        "Lehigh Acres",
+        "North Fort Myers"
+      ],
+      "mode": "measured_gapfill"
+    }
+  },
+  "deploymentCheckout": "/home/shmee/.openclaw/workspace/worktrees/leescoop-publishing-runner",
+  "scope": {
+    "ownedPaths": [
+      "scripts/",
+      "prompts/",
+      "docs/workflow/",
+      "docs/daily_autopost_workflow.md",
+      "docs/event_discovery_sources.md",
+      "docs/command_contract.md",
+      "docs/EDITORIAL_TASTE.md"
+    ],
+    "excludedFrontendPaths": [
+      "src/components/",
+      "src/styles/",
+      "src/pages/",
+      "src/lib/",
+      "UI tests"
+    ]
+  },
+  "availableConfiguredModels": [
+    "openai/gpt-5.6-luna",
+    "openai/gpt-5.6-terra",
+    "openai/gpt-5.6-sol",
+    "openai/gpt-5.5"
+  ],
+  "publication": {
+    "remote": "origin",
+    "branch": "main",
+    "canonicalOrigin": "https://leescoop.com"
+  },
+  "sourceAudit": {
+    "checkedAt": "2026-09-18T14:51:27-04:00",
+    "evidenceFile": "/home/shmee/.openclaw/workspace/reference/leescoop/source-audit-2026-09-18/sources.json",
+    "currentEventsVerified": false,
+    "note": "Reachability, HTTP 200, a calendar title, or a root page is seed evidence only; every event must pass actual title/date extraction evidence.",
+    "failedSeeds": [
+      {
+        "url": "https://flcapecoralweb.myvscloud.com/webtrac/web/search.html?display=Calendar&module=Event",
+        "status": "blocked-403"
+      },
+      {
+        "url": "https://www.sanlib.org/events/",
+        "status": "404"
+      },
+      {
+        "url": "https://pineislandchamber.org/events/",
+        "status": "404"
+      },
+      {
+        "url": "https://www.estero-fl.gov/calendar.aspx",
+        "status": "tls-failure"
+      },
+      {
+        "url": "https://www.bonitaspringsfl.gov/calendar.aspx",
+        "status": "dns-failure"
+      }
+    ]
+  }
 }

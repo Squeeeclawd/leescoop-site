@@ -1,33 +1,13 @@
 # LeeScoop publishing workflow
-Supersedes fixed 3+1 and Fort Myers quotas. Quality over fill: aim for up to three
-strong events and one consequential news brief; zero is a valid no-op. Never make
-news compensate for event/cover failure. No new content is created by planning.
 
-1. Deterministic daily source plan: `bash scripts/run_daily_cron.sh`.
-2. Parent checks verified routine OAuth route; narrowly collect source-backed leads.
-3. Strong verified review route checks facts, usefulness, dates and diversity.
-4. Parent resolves covers before prepare. OAuth-only image policy below.
-5. Prepare validated checkpoint, inspect rejects/reserves/report; gate immediately
-   before materializing exact selected files. See command_contract.md.
-6. Parent materializes only checkpoint entries, runs existing quality/build checks,
-   checks exact file manifest, then commits/pushes ONLY under separate publication
-   authority. This build does not publish. Verify actual deployed title/source/image,
-   not just HTTP 200. Record final commit/URLs in a parent receipt.
+Quality over fill: publish up to three strong events and one consequential news brief; zero is valid. The executable and recovery contract is `docs/command_contract.md`.
 
-## Image policy (mandatory)
-New generated covers use `openai/gpt-image-2` through verified Codex OAuth only.
-Installed OpenClaw docs tools/image-generation.md say OAuth wins over API-key env
-when configured UNLESS explicit models.providers.openai opts into direct routing.
-Tool listing/configured=true is NOT proof of auth route. Parent must obtain secret-free
-route evidence (OAuth profile active, no direct override, effective routing evidence),
-record evidence reference and expiry in local config, and verify again after config
-changes. No credentials are read by these scripts. No API-key fallback or ComfyUI.
-Current image route is UNVERIFIED and blocked. Preserve existing covers and their
-provenance. Completed task receipt plus decoded 1216x704 PNG required for events;
-queued/running does not count. Missing/invalid covers block the whole selected batch.
-News defaults to source/OG images with attribution and source rights/access review;
-if unavailable, stop that image-required item, never silently generate art.
+1. Run the deterministic source plan and require a fresh successful routine-route receipt.
+2. Read only configured public sources with supported agent tools and explicit plan budgets. There is no automatic fetch adapter in this repository.
+3. Require a fresh successful strong-review route receipt; verify facts, dates, locality, usefulness and diversity. Every event needs an actual extracted title/date and matching structured start from its event page. Reachability, HTTP 200, a root/calendar title or search snippet is only a lead.
+4. Resolve selected covers. New events require exact `openai/gpt-image-2` generation through live-proven Codex OAuth. Reviewed tracked existing covers may be preserved. News uses attributable source images or reviewed existing assets; generated news art is blocked.
+5. `prepare` acquires the durable global release lease. `gate` binds routes, input, selection and asset hashes. `materialize` exclusively creates checkpoint-selected articles in the isolated release checkout.
+6. Run fixed quality, scoped commit and fast-forward push commands. Push is not publication.
+7. Parent verifies production title, direct source link and decoded cover hash for every selected item. `finalize` updates the ledger only from the exact deployment/live receipt.
 
-Retain coastal cel-shaded editorial art: thick confident outlines, crisp silhouettes,
-graphic shadows, tropical Gulf Coast palette; concrete article-specific scenes,
-no text, fake lettering, signage, logos or watermarks. No frontend change here.
+Do not bypass the lease, checkpoint writer, source registry, cover policy or receipt finalizer. Do not add shell/model callbacks to the workflow script. Parent owns scheduler installation, first live release and production verification.

@@ -16,7 +16,7 @@ from original checkout, never installed packages or modified original dependenci
 reran JS and full quality successfully. Logs /tmp/leescoop-workflow-{tests,quality}.log.
 
 Missing setup before autonomous publication: verified routine/review model routes,
-secret-free proof of image OAuth without explicit direct-route override, permitted
+live image generation proof using exact `model="openai/gpt-image-2"`, permitted
 source adapters/cache, parent scoped materialization and deployment receipt integration,
 shared absolute state/lock and scheduler creation. These are intentionally not claimed
 working. Empty routes fail closed. Existing covers remain untouched. Legacy writer is
@@ -28,3 +28,7 @@ contracts, not claimed enforced fetching. Candidate factual review and configura
 attestation still require the parent; flags are not independent proof of truth.
 
 Recommended schedule and exact command/payload contracts: ../command_contract.md.
+
+Parent later provided live proof for economical routine route `openai/gpt-5.6-luna` in a read-only source coverage task. This commit records it only for bounded extraction/triage and adds enum normalization because its category numbering was inconsistent. Strong review route still needs live proof. Parent also verified backup history bundle and gzip archives and wrote RESTORE.md outside this worktree.
+
+Integration coordination update: frontend work is intentionally separate and owns src/components, styles, pages, lib and UI tests. This branch/worktree remains distinct: /home/shmee/Desktop/leescoop-publishing-2026-09-18 on work/leescoop-publishing-2026-09-18. Parent persistent deployment checkout should be /home/shmee/.openclaw/workspace/worktrees/leescoop-publishing-runner. No push performed. No additional co-author trailer was added.

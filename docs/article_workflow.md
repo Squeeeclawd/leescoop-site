@@ -23,11 +23,11 @@ That creates a draft markdown file in:
 src/content/articles/
 ```
 
-For batch posts, prefer the canonical writer instead of hand-copying templates:
+For automated batches, use the checkpoint-bound workflow in `docs/command_contract.md`.
+The compatibility writer cannot bypass it and requires an existing gated run:
 
 ```bash
-python3 scripts/leescoop_posts.py check --input tmp/candidates.json
-python3 scripts/leescoop_posts.py write --input tmp/candidates.json
+python3 scripts/leescoop_posts.py write --state /ABS/STATE --run RUN_ID --input /ABS/candidates.json --dry-run
 ```
 
 ## Required frontmatter

@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 import unicodedata
 from datetime import datetime, timedelta, timezone
@@ -149,24 +150,24 @@ def parse_frontmatter(path: Path) -> dict[str, Any]:
     return data
 
 
-def existing_index() -> dict[str, Any]:
+def existing_index(articles: Path = ARTICLES) -> dict[str, Any]:
     idx = {"titles": {}, "urls": {}, "slugs": {}, "event_keys": {}}
-    ARTICLES.mkdir(parents=True, exist_ok=True)
-    for path in ARTICLES.glob("*.md"):
+    articles.mkdir(parents=True, exist_ok=True)
+    for path in articles.glob("*.md"):
         fm = parse_frontmatter(path)
         slug = path.stem
-        idx["slugs"][slug] = str(path.relative_to(ROOT))
+        idx["slugs"][slug] = str(path)
         title_key = norm_text(str(fm.get("title", "")))
         if title_key:
-            idx["titles"][title_key] = str(path.relative_to(ROOT))
+            idx["titles"][title_key] = str(path)
         url_key = norm_url(str(fm.get("sourceUrl", "")))
         if url_key:
-            idx["urls"][url_key] = str(path.relative_to(ROOT))
+            idx["urls"][url_key] = str(path)
         if str(fm.get("contentKind", "")) == "event":
             event_date = event_start_key(fm.get("eventDate", ""))
             venue_key = norm_text(str(fm.get("venue", "")))
             if event_date and venue_key:
-                idx["event_keys"][(event_date, venue_key)] = str(path.relative_to(ROOT))
+                idx["event_keys"][(event_date, venue_key)] = str(path)
     return idx
 
 
@@ -225,21 +226,23 @@ def body_from_summary(kind: str, item: dict[str, Any]) -> str:
     source_label = "Official source" if kind == "event" else "Source"
     if kind == "event":
         audience = str(item.get("audience") or "").strip()
+        name = str(item.get('sourceName') or 'Official source').replace('[', '').replace(']', '')
         return (
             "## What is it?\n\n"
             f"{summary}\n\n"
             "## Who is it for?\n\n"
             f"{audience or 'Anyone looking for a local event in Lee County.'}\n\n"
             f"## {source_label}\n\n"
-            f"Use the {item.get('sourceName') or 'linked'} page for current details, tickets, policies, and schedule changes.\n"
+            f"Use [{name}]({item.get('sourceUrl')}) for current details, tickets, policies, and schedule changes.\n"
         )
+    name = str(item.get('sourceName') or 'Source').replace('[', '').replace(']', '')
     return (
         "## What happened?\n\n"
         f"{summary}\n\n"
         "## Why it matters\n\n"
         "This is a local update worth knowing for residents, visitors, or nearby businesses.\n\n"
         f"## {source_label}\n\n"
-        f"Use the {item.get('sourceName') or 'linked'} source for the latest details.\n"
+        f"Use [{name}]({item.get('sourceUrl')}) for the latest details.\n"
     )
 
 
@@ -403,8 +406,16 @@ def check_command(args: argparse.Namespace) -> int:
 
 
 def write_command(args: argparse.Namespace) -> int:
-    print(json.dumps({"ok": False, "error": "Legacy writer disabled: use reviewed publishing_workflow checkpoint and parent-controlled scoped materialization; see docs/command_contract.md"}))
-    return 2
+    """Compatibility writer: only the checkpoint-bound materializer may write."""
+    command = [
+        sys.executable, str(ROOT / "scripts/publishing_workflow.py"),
+        "--state", str(Path(args.state).resolve()),
+        "materialize", "--run", args.run, "--input", str(Path(args.input).resolve()),
+        "--release-root", str(ROOT),
+    ]
+    if args.dry_run:
+        command.append("--dry-run")
+    return subprocess.run(command, cwd=ROOT).returncode
 
 
 def set_featured_command(args: argparse.Namespace) -> int:
@@ -444,14 +455,11 @@ def main() -> int:
     p_check.add_argument("--min-fort-myers-events", type=int, default=0, help="Require this many top publish events to use city Fort Myers")
     p_check.set_defaults(func=check_command)
 
-    p_write = sub.add_parser("write", help="Write non-duplicate candidates as markdown")
+    p_write = sub.add_parser("write", help="Materialize only an already gated workflow checkpoint")
     p_write.add_argument("--input", required=True)
-    p_write.add_argument("--max-events", type=int, default=3)
-    p_write.add_argument("--max-news", type=int, default=1)
+    p_write.add_argument("--state", required=True, help="Shared durable workflow state directory")
+    p_write.add_argument("--run", required=True, help="Existing gated run identifier")
     p_write.add_argument("--dry-run", action="store_true")
-    p_write.add_argument("--set-event-cover", action="store_true", help="Set event coverImage to /covers/<slug>.png; generate image separately")
-    p_write.add_argument("--download-news-images", action="store_true", help="Download news sourceImageUrl if supplied")
-    p_write.add_argument("--max-news-age-days", type=int, default=21, help="Reject news older than this many days")
     p_write.set_defaults(func=write_command)
 
     p_featured = sub.add_parser("feature", help="Set exactly one article as homepage featured and clear all others")

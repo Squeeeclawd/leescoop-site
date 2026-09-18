@@ -9,4 +9,6 @@ Covers: openai/gpt-image-2 ONLY after positive OAuth routing evidence; no API ke
 no ComfyUI, no fallback. Preserve existing covers. Incomplete image tasks block the
 image-required batch, never trigger a substitution of news.
 Return source-backed candidate JSON per prompts/leescoop_candidates.md, never
-fabricate verification. Parent owns materialization, quality checks and publication.
+fabricate verification. Execute only the fixed checkpoint/materialize/quality/release
+contract in docs/command_contract.md. Push is not publication; parent live evidence
+and `finalize` are mandatory before the ledger can say published.
