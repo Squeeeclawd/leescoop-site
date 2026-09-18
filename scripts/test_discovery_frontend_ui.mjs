@@ -47,6 +47,7 @@ assert.ok(fs.readFileSync('src/styles/discovery.css','utf8').includes('prefers-r
 
 class ActionNode {
   constructor(dataset = {}) { this.dataset = dataset; this.attrs = {}; this.textContent = ''; this.hidden = false; this.listeners = {}; this.classList = {toggle: (name, active) => { this[name] = active; }}; }
+  getAttribute(name) { return this.attrs[name] ?? null; }
   setAttribute(name, value) { this.attrs[name] = String(value); }
   addEventListener(name, handler) { this.listeners[name] = handler; }
   closest(selector) { return selector === '[data-save]' && this.dataset.save ? this : selector === '[data-share]' && this.dataset.share ? this : null; }
@@ -57,12 +58,15 @@ const actionCards = [new ActionNode({slug: 'one'}), new ActionNode({slug: 'two'}
 const actionStatus = new ActionNode();
 const savedFilter = new ActionNode();
 const savedEmpty = new ActionNode();
+const savedResult = new ActionNode();
+savedResult.textContent = '1 events · Lee County time';
+savedResult.setAttribute('data-base-text', savedResult.textContent);
 const actionHandlers = {};
 const storageHandlers = {};
 let stored = JSON.stringify(['one', 42]);
 const actionDocument = {
   querySelectorAll(selector) { return selector === '[data-save]' ? actionButtons : selector === '.discovery-card' ? actionCards : []; },
-  getElementById(id) { return ({'action-status': actionStatus, 'saved-filter': savedFilter, 'saved-empty': savedEmpty})[id] ?? null; },
+  getElementById(id) { return ({'action-status': actionStatus, 'saved-filter': savedFilter, 'saved-empty': savedEmpty, 'feed-result': savedResult})[id] ?? null; },
   addEventListener(name, handler) { actionHandlers[name] = handler; },
   createElement() { return new ActionNode(); }
 };
@@ -72,20 +76,29 @@ assert.equal(actionButtons[0].attrs['aria-pressed'], 'true', 'valid saved slugs 
 assert.equal(actionButtons[1].attrs['aria-pressed'], 'false', 'non-string storage entries are ignored');
 await actionHandlers.click({target: actionButtons[1]});
 assert.deepEqual(JSON.parse(stored), ['one', 'two'], 'save changes persist locally');
+actionCards[1].hidden = true;
 savedFilter.listeners.click({currentTarget: savedFilter});
 assert.equal(actionCards[0]['not-saved'], false);
 assert.equal(actionCards[1]['not-saved'], false);
+assert.equal(savedResult.textContent, '1 saved item · this browser', 'Saved count must reflect active filters');
+savedFilter.listeners.click({currentTarget: savedFilter});
+assert.equal(savedResult.textContent, '1 events · Lee County time', 'leaving Saved restores the active-filter count');
 stored = '{'; storageHandlers.storage({key: 'leescoop:saved:v1'});
 assert.match(actionStatus.textContent, /storage unavailable/i, 'corrupt or unavailable storage fails softly');
 
-const reminder = calendarReminder('sample/event', 'Café, Music; Night\\Fun', '2026-09-18', '2026-09-20', 'Hall, A; East\\Wing\nDesk', 'javascript:alert(1)', new Date('2026-09-18T18:49:00Z'));
+const reminder = calendarReminder('sample/event', 'Café, Music; Night\\Fun\rATTENDEE:bad', '2026-09-18', '2026-09-20', 'Hall, A; East\\Wing\nDesk', 'https://example.com/\r\nATTENDEE:bad', new Date('2026-09-18T18:49:00Z'));
+assert.ok(reminder, 'valid date ranges must produce a reminder');
 assert.ok(reminder.endsWith('\r\n'), 'ICS must end with CRLF');
 assert.ok(reminder.includes('DTSTAMP:20260918T184900Z\r\n'));
 assert.ok(reminder.includes('DTSTART;VALUE=DATE:20260918\r\nDTEND;VALUE=DATE:20260921\r\n'), 'all-day DTEND must be exclusive');
-assert.ok(reminder.includes('SUMMARY:Café\\, Music\\; Night\\\\Fun\r\n'));
+assert.ok(reminder.includes('SUMMARY:Café\\, Music\\; Night\\\\Fun\\nATTENDEE:bad\r\n'));
 assert.ok(reminder.includes('LOCATION:Hall\\, A\\; East\\\\Wing\\nDesk\r\n'));
-assert.ok(reminder.includes('URL:https://leescoop.com/sample%2Fevent/\r\n'), 'unsafe calendar URLs must fall back to LeeScoop');
+assert.ok(reminder.includes('URL:https://leescoop.com/sample%2Fevent/\r\n'), 'control-bearing calendar URLs must fall back to LeeScoop');
 assert.ok(reminder.includes('UID:sample-event@leescoop.com\r\n'), 'calendar UID must be header-safe');
 assert.ok(reminder.split('\r\n').every(line => Buffer.byteLength(line) <= 75), 'folded ICS lines must fit RFC 5545 octet limits');
 assert.ok(!/(^|[^\r])\n/.test(reminder), 'ICS must not contain bare LF line endings');
-console.log('PASS: discovery UI opens events-first, filters naturally, includes resilient save/share/calendar affordances, safe URLs and RFC-shaped ICS');
+assert.equal(calendarReminder('sample', 'Title', 'not-a-date', '2026-09-20', '', 'https://leescoop.com/', new Date()), undefined);
+assert.equal(calendarReminder('sample', 'Title', '2026-09-21', '2026-09-20', '', 'https://leescoop.com/', new Date()), undefined);
+assert.equal(calendarReminder('sample', 'Title', '2026-02-30', '2026-03-01', '', 'https://leescoop.com/', new Date()), undefined);
+assert.equal(calendarReminder('sample', 'Title', '2026-09-18', '2026-09-20', '', 'https://leescoop.com/', new Date('invalid')), undefined);
+console.log('PASS: discovery UI opens events-first, keeps Saved counts aligned, and includes resilient safe RFC-shaped calendar downloads');

@@ -312,7 +312,11 @@ function tileSearch(article: typeof visible[number]) {
           if (shouldShow) visibleCount += 1;
         });
         const result = document.getElementById('feed-result');
-        if (result) result.textContent = `${visibleCount} ${state.kind === 'news' ? 'local updates' : 'events'} · Lee County time`;
+        if (result) {
+          const message = `${visibleCount} ${state.kind === 'news' ? 'local updates' : 'events'} · Lee County time`;
+          result.textContent = message;
+          result.setAttribute('data-base-text', message);
+        }
         document.dispatchEvent(new Event('leescoop:filtered'));
         updateCounts();
         updateDateCounts();

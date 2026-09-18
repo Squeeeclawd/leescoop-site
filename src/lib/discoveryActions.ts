@@ -23,6 +23,8 @@ function renderSaved() {
   });
   const empty = document.getElementById('saved-empty');
   if (empty) empty.hidden = !savedOnly || count > 0;
+  const result = document.getElementById('feed-result');
+  if (result) result.textContent = savedOnly ? `${count} saved ${count === 1 ? 'item' : 'items'} · this browser` : result.getAttribute('data-base-text') ?? result.textContent;
 }
 readSaved();
 renderSaved();

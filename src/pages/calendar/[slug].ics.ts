@@ -8,5 +8,7 @@ export async function getStaticPaths() {
 export const GET: APIRoute = ({props}) => {
   const article = props.article;
   const data = article.data;
-  return new Response(calendarReminder(article.slug, data.title, leeCountyDateKey(data.eventDate), leeCountyDateKey(eventArchiveCutoff(article) ?? data.eventDate), data.venue ?? data.location ?? data.city ?? '', data.sourceUrl ?? `https://leescoop.com/${article.slug}/`, siteNow()), {headers: {'Content-Type': 'text/calendar; charset=utf-8', 'Content-Disposition': `attachment; filename="leescoop-${article.slug}.ics"`}});
+  const reminder = calendarReminder(article.slug, data.title, leeCountyDateKey(data.eventDate), leeCountyDateKey(eventArchiveCutoff(article) ?? data.eventDate), data.venue ?? data.location ?? data.city ?? '', data.sourceUrl ?? `https://leescoop.com/${article.slug}/`, siteNow());
+  if (!reminder) return new Response('Calendar reminder unavailable.', {status: 404});
+  return new Response(reminder, {headers: {'Content-Type': 'text/calendar; charset=utf-8', 'Content-Disposition': `attachment; filename="leescoop-${article.slug}.ics"`}});
 };

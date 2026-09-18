@@ -1,12 +1,19 @@
 // Date reminders deliberately avoid inventing performance times for ongoing runs.
 export function calendarReminder(slug: string, title: string, start: string, end: string, location: string, url: string, createdAt = new Date()) {
-  const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
+  const validDateKey = (key: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return false;
+    const parsed = new Date(`${key}T12:00:00Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === key;
+  };
+  if (!validDateKey(start) || !validDateKey(end) || end < start || Number.isNaN(createdAt.getTime())) return undefined;
+  const escape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\r\n|\r|\n/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
   const next = new Date(`${end}T12:00:00Z`); next.setUTCDate(next.getUTCDate() + 1);
   const date = (key: string) => key.replaceAll('-', '');
   const stamp = createdAt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
   const uid = slug.replace(/[^A-Za-z0-9._~-]/g, '-');
   const safeUrl = (() => {
     try {
+      if (/[\u0000-\u001F\u007F]/.test(url)) throw new TypeError('Control characters are not allowed in calendar URLs');
       const parsed = new URL(url);
       return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : `https://leescoop.com/${encodeURIComponent(slug)}/`;
     } catch { return `https://leescoop.com/${encodeURIComponent(slug)}/`; }
