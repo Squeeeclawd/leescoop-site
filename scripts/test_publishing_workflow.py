@@ -223,10 +223,19 @@ class WorkflowTests(unittest.TestCase):
             args = SimpleNamespace(state=state, run="run", receipt=receipt_path)
             with self.assertRaises(ValueError):
                 w.finalize(args, self.config)
+            checked_at = datetime.now(w.NY).isoformat()
             receipt = {
                 "run": "run", "commit": "c" * 40, "productionCommit": "c" * 40,
-                "canonicalOrigin": "https://leescoop.com", "checkedAt": datetime.now(w.NY).isoformat(),
-                "deploymentReceipt": "cloudflare-production-proof", "verifiedBy": "parent-liveverify",
+                "canonicalOrigin": "https://leescoop.com", "checkedAt": checked_at,
+                "deploymentReceipt": "cloudflare-pages:deployment:319c8d3a-22db-4dd8-ad40-a4976b701594;github-check-run:105741020376",
+                "deploymentProof": {
+                    "provider": "cloudflare-pages", "deploymentId": "319c8d3a-22db-4dd8-ad40-a4976b701594",
+                    "githubCheckRunId": 105741020376, "headSha": "c" * 40, "conclusion": "success",
+                    "completedAt": checked_at,
+                    "detailsUrl": "https://github.com/Squeeeclawd/leescoop-site/runs/105741020376",
+                    "previewUrl": "https://319c8d3a.leescoop-site.pages.dev",
+                },
+                "verifiedBy": "parent-liveverify",
                 "articles": [{
                     "slug": "fixture-only", "url": "https://leescoop.com/fixture-only/",
                     "coverUrl": "https://leescoop.com/covers/fixture.png", "httpStatus": 200,
@@ -242,6 +251,39 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue(ledger["candidate"]["published"])
             self.assertFalse((state / "active-release.json").exists())
             self.assertTrue(w.finalize(args, self.config)["idempotent"])
+
+    def test_finalize_rejects_cf_ray_as_deployment_identity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory); item = dict(self.item, coverImage="/covers/fixture.png")
+            checkpoint = w.checkpoint_value("input", [item], {"fixture-only": "a" * 64}, {"routine": {}, "review": {}})
+            w.save(state / "checkpoints/run.json", checkpoint)
+            w.save(state / "active-release.json", {"run": "run", "inputHash": "input", "releaseHead": "base", "status": "pushed", "commit": "c" * 40})
+            receipt_path = state / "receipt.json"
+            receipt_path.write_text(json.dumps({
+                "run": "run", "commit": "c" * 40, "productionCommit": "c" * 40,
+                "canonicalOrigin": "https://leescoop.com", "checkedAt": datetime.now(w.NY).isoformat(),
+                "deploymentReceipt": "cloudflare:cf-ray:not-a-deployment", "verifiedBy": "parent-liveverify",
+                "articles": [],
+            }))
+            with self.assertRaisesRegex(ValueError, "live-verification evidence"):
+                w.finalize(SimpleNamespace(state=state, run="run", receipt=receipt_path), self.config)
+
+    def test_status_reconciles_stale_blocked_attempt_from_final_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory)
+            receipt = {"run": "run", "commit": "c" * 40}
+            receipt_hash = w.digest(receipt)
+            w.save(state / "runs/run.json", {"run": "run", "status": "blocked", "error": "stale dirt"})
+            w.save(state / "receipts/run.json", receipt)
+            w.save(state / "ledger.json", {"candidate": {
+                "run": "run", "state": "published", "published": True,
+                "commit": "c" * 40, "receiptHash": receipt_hash,
+            }})
+            result = w.workflow_status(state)
+            self.assertEqual(result["runs"][0]["status"], "published")
+            self.assertEqual(result["runs"][0]["reconciledFromStatus"], "blocked")
+            self.assertNotIn("error", result["runs"][0])
+            self.assertEqual(result["runs"][0]["priorError"], "stale dirt")
 
     def test_legacy_writer_requires_gate_contract(self):
         result = subprocess.run([sys.executable, str(w.ROOT / "scripts/leescoop_posts.py"), "write", "--input", "missing.json"], capture_output=True)
@@ -313,7 +355,20 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue(w.push_release(args, self.config)["recovered"])
             self.assertFalse(next(iter(w.load_json(state / "ledger.json").values()))["published"])
             commit = committed["commit"]
-            receipt = dict(run="run", commit=commit, productionCommit=commit, canonicalOrigin="https://leescoop.com", checkedAt=datetime.now(w.NY).isoformat(), deploymentReceipt="synthetic fixture, not live proof", verifiedBy="parent-liveverify", articles=[dict(slug=self.item["slug"], url="https://leescoop.com/fixture-only/", coverUrl="https://leescoop.com/covers/fixture.png", httpStatus=200, title=self.item["title"], sourceUrl=self.item["sourceUrl"], coverSha256=w.file_hash(cover), titleVerified=True, sourceLinkVerified=True, coverHashVerified=True, coverDecoded=True)])
+            checked_at = datetime.now(w.NY).isoformat()
+            receipt = dict(
+                run="run", commit=commit, productionCommit=commit,
+                canonicalOrigin="https://leescoop.com", checkedAt=checked_at,
+                deploymentReceipt="cloudflare-pages:deployment:319c8d3a-22db-4dd8-ad40-a4976b701594;github-check-run:105741020376",
+                deploymentProof=dict(
+                    provider="cloudflare-pages", deploymentId="319c8d3a-22db-4dd8-ad40-a4976b701594",
+                    githubCheckRunId=105741020376, headSha=commit, conclusion="success", completedAt=checked_at,
+                    detailsUrl="https://github.com/Squeeeclawd/leescoop-site/runs/105741020376",
+                    previewUrl="https://319c8d3a.leescoop-site.pages.dev",
+                ),
+                verifiedBy="parent-liveverify",
+                articles=[dict(slug=self.item["slug"], url="https://leescoop.com/fixture-only/", coverUrl="https://leescoop.com/covers/fixture.png", httpStatus=200, title=self.item["title"], sourceUrl=self.item["sourceUrl"], coverSha256=w.file_hash(cover), titleVerified=True, sourceLinkVerified=True, coverHashVerified=True, coverDecoded=True)],
+            )
             args.receipt = base / "receipt.json"; w.save(args.receipt, receipt)
             self.assertEqual(w.finalize(args, self.config)["status"], "published")
             self.assertTrue(w.finalize(args, self.config)["idempotent"])

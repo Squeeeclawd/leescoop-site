@@ -19,11 +19,15 @@ import tempfile
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
+sys.dont_write_bytecode = True
 import leescoop_posts as posts
 
 ROOT = Path(__file__).resolve().parents[1]
 NY = ZoneInfo("America/New_York")
 RUN_RE = re.compile(r"[a-zA-Z0-9_-]{1,80}")
+CF_DEPLOYMENT_RECEIPT_RE = re.compile(
+    r"cloudflare-pages:deployment:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12});github-check-run:([1-9][0-9]*)"
+)
 QUALITY_COMMANDS = (
     (sys.executable, "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"),
     ("node", "scripts/test_event_dates.mjs"),
@@ -84,6 +88,45 @@ def load_json(path):
     if not isinstance(value, dict):
         raise ValueError(f"{path.name} must contain a JSON object")
     return value
+
+
+def workflow_status(state):
+    """Report final receipts as authoritative over stale pre-finalize attempt files."""
+    ledger_file = state / "ledger.json"
+    ledger = load_json(ledger_file) if ledger_file.exists() else {}
+    runs = []
+    for path in sorted((state / "runs").glob("*.json")):
+        report = load_json(path)
+        run = report.get("run") or path.stem
+        final_file = state / "receipts" / f"{run}.json"
+        records = [record for record in ledger.values() if record.get("run") == run]
+        if final_file.exists() and records:
+            receipt = load_json(final_file)
+            receipt_hash = digest(receipt)
+            if all(
+                record.get("published") is True
+                and record.get("state") == "published"
+                and record.get("commit") == receipt.get("commit")
+                and record.get("receiptHash") == receipt_hash
+                for record in records
+            ):
+                prior_status = report.get("status")
+                prior_error = report.pop("error", None)
+                report = {
+                    **report,
+                    "status": "published",
+                    "commit": receipt.get("commit"),
+                    "receiptHash": receipt_hash,
+                }
+                if prior_status != "published":
+                    report["reconciledFromStatus"] = prior_status
+                if prior_error:
+                    report["priorError"] = prior_error
+        runs.append(report)
+    return {
+        "active": load_json(active_path(state)) if active_path(state).exists() else None,
+        "runs": runs,
+    }
 
 
 def timestamp(value):
@@ -725,8 +768,30 @@ def finalize(args, config):
     now = datetime.now(NY)
     if not now - timedelta(hours=24) <= checked <= now + timedelta(minutes=2):
         raise ValueError("live verification receipt is stale or future-dated")
-    if not receipt.get("deploymentReceipt") or receipt.get("verifiedBy") != "parent-liveverify":
+    deployment_match = CF_DEPLOYMENT_RECEIPT_RE.fullmatch(str(receipt.get("deploymentReceipt", "")))
+    deployment_proof = receipt.get("deploymentProof")
+    if receipt.get("verifiedBy") != "parent-liveverify" or not deployment_match or not isinstance(deployment_proof, dict):
         raise ValueError("receipt lacks parent live-verification evidence")
+    deployment_id, check_run_id = deployment_match.groups()
+    if (
+        deployment_proof.get("provider") != "cloudflare-pages"
+        or deployment_proof.get("deploymentId") != deployment_id
+        or str(deployment_proof.get("githubCheckRunId")) != check_run_id
+        or deployment_proof.get("headSha") != active["commit"]
+        or deployment_proof.get("conclusion") != "success"
+    ):
+        raise ValueError("deployment proof does not identify a successful Cloudflare Pages build of the release commit")
+    completed = timestamp(deployment_proof.get("completedAt"))
+    if completed > checked or checked - completed > timedelta(hours=24):
+        raise ValueError("deployment proof completion time is inconsistent with live verification")
+    details_url = public_https_url(deployment_proof.get("detailsUrl"), "deployment details URL")
+    preview_url = public_https_url(deployment_proof.get("previewUrl"), "deployment preview URL")
+    if (
+        details_url.hostname != "github.com"
+        or details_url.path != f"/Squeeeclawd/leescoop-site/runs/{check_run_id}"
+        or preview_url.hostname != f"{deployment_id.split('-', 1)[0]}.leescoop-site.pages.dev"
+    ):
+        raise ValueError("deployment proof URLs do not match the Cloudflare Pages deployment")
     articles = receipt.get("articles")
     if not isinstance(articles, list) or {entry.get("slug") for entry in articles if isinstance(entry, dict)} != set(expected):
         raise ValueError("receipt article set differs from checkpoint")
@@ -810,7 +875,7 @@ def main(argv=None):
         elif args.command == "route":
             result = {"tier": args.tier, "model": route(config, args.tier, now)}
         elif args.command == "status":
-            result = {"active": load_json(active_path(args.state)) if active_path(args.state).exists() else None, "runs": [load_json(path) for path in sorted((args.state / "runs").glob("*.json"))]}
+            result = workflow_status(args.state)
         else:
             with lock(args.state):
                 if args.command in ("prepare", "gate"):

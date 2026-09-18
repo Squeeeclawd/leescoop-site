@@ -69,7 +69,17 @@ The parent waits for the production deployment, verifies every live article and 
   "productionCommit": "40-hex-release-commit",
   "canonicalOrigin": "https://leescoop.com",
   "checkedAt": "2026-09-18T15:30:00-04:00",
-  "deploymentReceipt": "secret-free Cloudflare production deployment reference",
+  "deploymentReceipt": "cloudflare-pages:deployment:<UUID>;github-check-run:<numeric ID>",
+  "deploymentProof": {
+    "provider": "cloudflare-pages",
+    "deploymentId": "Cloudflare Pages deployment UUID",
+    "githubCheckRunId": 123456789,
+    "headSha": "40-hex-release-commit",
+    "conclusion": "success",
+    "completedAt": "2026-09-18T15:29:30-04:00",
+    "detailsUrl": "https://github.com/<owner>/<repo>/runs/<check-run-id>",
+    "previewUrl": "https://<deployment-prefix>.<project>.pages.dev"
+  },
   "verifiedBy": "parent-liveverify",
   "articles": [{
     "slug": "example",
@@ -94,7 +104,7 @@ python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" finalize --run 
 python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" status
 ```
 
-`finalize` checks exact run/commit/deployment identity, canonical public URLs, fresh parent verification, exact selected slug set, title/source link and live cover hash/decode proof. Only then does it atomically mark ledger records published and release the global lease.
+`finalize` checks exact run/commit/deployment identity, including a successful Cloudflare Pages GitHub check run whose head SHA is the release commit; a `cf-ray` request identifier is not deployment proof. It also checks canonical public URLs, fresh parent verification, the exact selected slug set, title/source link and live cover hash/decode proof. Only then does it atomically mark ledger records published and release the global lease.
 
 Before commit only, a deliberately stopped run may be released with:
 
