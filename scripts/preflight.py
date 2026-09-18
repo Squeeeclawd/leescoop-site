@@ -42,6 +42,7 @@ def summarize_candidate(path: Path) -> str:
 
 def main() -> int:
     failures: list[str] = []
+    print("Publishing routes are NOT proven by site preflight. Run publishing_workflow.py route image before generation; OAuth ONLY, no API-key/ComfyUI fallback. prepare + gate required before parent publication.")
     warnings: list[str] = []
 
     print("LeeScoop preflight")

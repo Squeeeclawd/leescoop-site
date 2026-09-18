@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """LeeScoop candidate safety check + markdown writer.
 
-Input is the strict JSON produced from prompts/leescoop_daily_gpt54mini.md.
+Input is the strict JSON produced from prompts/leescoop_candidates.md.
 This script intentionally does not commit, push, or overwrite existing files.
 """
 from __future__ import annotations
@@ -306,7 +306,9 @@ def validate_item(kind: str, item: dict[str, Any], max_news_age_days: int = 21) 
     problems = [field for field in required if not str(item.get(field, "")).strip()]
     if kind == "news":
         dt = parse_dt(str(item.get("date", "")))
-        if dt:
+        if not dt or dt.tzinfo is None:
+            problems.append("date must be valid with explicit UTC offset")
+        else:
             age = datetime.now(dt.tzinfo or timezone.utc) - dt
             if age > timedelta(days=max_news_age_days):
                 problems.append(f"date older than {max_news_age_days} days")
@@ -315,9 +317,14 @@ def validate_item(kind: str, item: dict[str, Any], max_news_age_days: int = 21) 
             problems.append(f"expired deadline/date mentioned: {expired}")
     else:
         event_dt = parse_dt(str(item.get("eventDate", "")))
-        if event_dt:
+        if not event_dt or event_dt.tzinfo is None:
+            problems.append("eventDate must be valid with explicit UTC offset")
+        else:
             now = datetime.now(event_dt.tzinfo or timezone.utc)
-            if event_dt < now:
+            end_dt = parse_dt(str(item.get("eventEndDate") or item.get("eventDate")))
+            if not end_dt or end_dt.tzinfo is None or end_dt < event_dt:
+                problems.append("invalid eventEndDate")
+            elif end_dt < now:
                 problems.append("eventDate is in the past")
     return problems
 
@@ -396,50 +403,8 @@ def check_command(args: argparse.Namespace) -> int:
 
 
 def write_command(args: argparse.Namespace) -> int:
-    data = load_candidates(Path(args.input))
-    idx = existing_index()
-    report = {"created": [], "skipped": [], "invalid": [], "images": []}
-    for kind in ["events", "news"]:
-        singular = "event" if kind == "events" else "news"
-        max_count = args.max_events if singular == "event" else args.max_news
-        written = 0
-        for item in data[kind]:
-            if written >= max_count:
-                continue
-            slug = slugify(str(item.get("slug") or item.get("title") or ""))
-            item["slug"] = slug
-            missing = validate_item(singular, item, max_news_age_days=args.max_news_age_days)
-            if missing:
-                report["invalid"].append({"kind": singular, "slug": slug, "reason": f"invalid/missing fields: {', '.join(missing)}"})
-                continue
-            dup = duplicate_reason(singular, item, idx)
-            if dup:
-                report["skipped"].append({"kind": singular, "slug": slug, "title": item.get("title"), "reason": dup})
-                continue
-            out = ARTICLES / f"{slug}.md"
-            if out.exists():
-                report["skipped"].append({"kind": singular, "slug": slug, "title": item.get("title"), "reason": "file exists"})
-                continue
-            cover = ""
-            if singular == "event":
-                cover = f"/covers/{slug}.png" if args.set_event_cover else ""
-            elif args.download_news_images and item.get("sourceImageUrl"):
-                try:
-                    cover = maybe_download_source_image(item, slug)
-                    report["images"].append({"kind": singular, "slug": slug, "coverImage": cover, "sourceImageUrl": item.get("sourceImageUrl")})
-                except Exception as exc:
-                    report["images"].append({"kind": singular, "slug": slug, "error": str(exc), "sourceImageUrl": item.get("sourceImageUrl")})
-            if args.dry_run:
-                report["created"].append({"kind": singular, "slug": slug, "path": str(out.relative_to(ROOT)), "dryRun": True})
-            else:
-                text = frontmatter(singular, item, slug, cover) + body_from_summary(singular, item) + "\n"
-                out.write_text(text, encoding="utf-8")
-                report["created"].append({"kind": singular, "slug": slug, "path": str(out.relative_to(ROOT))})
-                # Update index to prevent duplicates later in same write run.
-                idx = existing_index()
-            written += 1
-    print(json.dumps(report, indent=2))
-    return 0 if not report["invalid"] else 2
+    print(json.dumps({"ok": False, "error": "Legacy writer disabled: use reviewed publishing_workflow checkpoint and parent-controlled scoped materialization; see docs/command_contract.md"}))
+    return 2
 
 
 def set_featured_command(args: argparse.Namespace) -> int:
@@ -473,10 +438,10 @@ def main() -> int:
     p_check = sub.add_parser("check", help="Validate candidates and report duplicates")
     p_check.add_argument("--input", required=True)
     p_check.add_argument("--max-news-age-days", type=int, default=21, help="Reject news older than this many days")
-    p_check.add_argument("--min-events", type=int, default=3, help="Fail when fewer than this many event candidates survive validation/de-duplication")
-    p_check.add_argument("--min-news", type=int, default=1, help="Fail when fewer than this many news candidates survive validation/de-duplication")
+    p_check.add_argument("--min-events", type=int, default=0, help="Fail when fewer than this many event candidates survive validation/de-duplication")
+    p_check.add_argument("--min-news", type=int, default=0, help="Fail when fewer than this many news candidates survive validation/de-duplication")
     p_check.add_argument("--publish-events", type=int, default=3, help="Number of top accepted events treated as the publish set for geography checks")
-    p_check.add_argument("--min-fort-myers-events", type=int, default=2, help="Require this many top publish events to use city Fort Myers")
+    p_check.add_argument("--min-fort-myers-events", type=int, default=0, help="Require this many top publish events to use city Fort Myers")
     p_check.set_defaults(func=check_command)
 
     p_write = sub.add_parser("write", help="Write non-duplicate candidates as markdown")

@@ -31,7 +31,7 @@ Prefer:
 - visually striking or unusual experiences
 - obvious weekend anchors
 
-The daily feed is event-first. Favor verified listings whose city is Fort Myers, but use the wider Lee County area when it adds a genuinely stronger option. Keep the three daily event picks varied by source, venue, date, audience, and event type; LeeScoop should not read like an RSS feed for Hertz Arena and Barbara B. Mann.
+The daily feed is event-first. Discover across Lee County without city quotas; prioritize useful near-term options. Keep selected event picks varied by source, venue, date, audience, and event type; LeeScoop should not read like an RSS feed for Hertz Arena and Barbara B. Mann.
 
 Avoid using too many slots on tiny filler events if stronger events exist.
 
@@ -58,10 +58,10 @@ They should not be:
 Default to source images from the original article/page.
 - Prefer `og:image` or the main article image.
 - Use obvious first-party publisher/CDN images when they clearly belong to the outlet.
-- Only use generated art if there is no usable source image.
+- No AI art by default; missing source images require an explicit editorial decision, not automatic generation.
 
 ### Events
-Use generated LeeScoop-style cover art unless Anthony explicitly wants real source art.
+Use coastal LeeScoop-style cover art only through verified Codex OAuth (openai/gpt-image-2); no API-key or ComfyUI fallback. Preserve existing covers. Incomplete covers block publishing.
 
 ## Quick reject test
 If a pick feels like one of these, reject it unless the day is dead quiet:

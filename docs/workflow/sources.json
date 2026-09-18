@@ -1,0 +1,264 @@
+{
+  "version": 1,
+  "cities": [
+    "Fort Myers",
+    "Cape Coral",
+    "Fort Myers Beach",
+    "Estero",
+    "Bonita Springs",
+    "Sanibel",
+    "Captiva",
+    "Pine Island",
+    "Matlacha",
+    "Lehigh Acres",
+    "North Fort Myers",
+    "Alva",
+    "Bokeelia",
+    "St. James City",
+    "Boca Grande"
+  ],
+  "nearbyEnabled": false,
+  "nearbyCities": [
+    "Naples",
+    "Punta Gorda"
+  ],
+  "rotationSize": 6,
+  "goals": {
+    "event": 3,
+    "news": 1
+  },
+  "network": {
+    "maxPagesPerRun": 24,
+    "maxPagesPerHost": 3,
+    "minSecondsPerHost": 5,
+    "timeoutSeconds": 20,
+    "maxResponseBytes": 2000000,
+    "obeyRobots": true,
+    "retry429": "defer until Retry-After; no same-run retry",
+    "bypassAccessControls": false
+  },
+  "routes": {
+    "routine": {
+      "model": null,
+      "auth": "oauth",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "evidence": null
+    },
+    "review": {
+      "model": null,
+      "auth": "oauth",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "evidence": null
+    },
+    "image": {
+      "model": "openai/gpt-image-2",
+      "auth": "oauth",
+      "verifiedAt": null,
+      "expiresAt": null,
+      "evidence": null,
+      "directOverrideAbsent": false
+    }
+  },
+  "sources": [
+    {
+      "id": "tourism",
+      "name": "Visit Fort Myers",
+      "url": "https://www.visitfortmyers.com/",
+      "city": "county",
+      "family": "tourism",
+      "anchor": true,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "county",
+      "name": "Lee County",
+      "url": "https://www.leegov.com/",
+      "city": "county",
+      "family": "government",
+      "anchor": true,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "cape",
+      "name": "Cape Coral",
+      "url": "https://www.capecoral.gov/",
+      "city": "Cape Coral",
+      "family": "government",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "bonita",
+      "name": "Bonita Springs",
+      "url": "https://www.cityofbonitasprings.org/",
+      "city": "Bonita Springs",
+      "family": "government",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "estero",
+      "name": "Village of Estero",
+      "url": "https://estero-fl.gov/",
+      "city": "Estero",
+      "family": "government",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "sanibel",
+      "name": "Sanibel",
+      "url": "https://www.mysanibel.com/",
+      "city": "Sanibel",
+      "family": "government",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "beach",
+      "name": "Fort Myers Beach",
+      "url": "https://www.fortmyersbeachfl.gov/",
+      "city": "Fort Myers Beach",
+      "family": "government",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "library",
+      "name": "Lee Libraries",
+      "url": "https://www.leegov.com/library",
+      "city": "county",
+      "family": "family",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "parks",
+      "name": "Lee Parks",
+      "url": "https://www.leegov.com/parks",
+      "city": "county",
+      "family": "outdoors",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "arts",
+      "name": "Alliance for the Arts",
+      "url": "https://www.artinlee.org/",
+      "city": "Fort Myers",
+      "family": "arts",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "hertz",
+      "name": "Hertz Arena",
+      "url": "https://hertzarena.com/",
+      "city": "Estero",
+      "family": "music",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "mann",
+      "name": "Barbara B Mann",
+      "url": "https://www.bbmannpah.com/",
+      "city": "Fort Myers",
+      "family": "theater",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "family",
+      "name": "Fun 4 Fort Myers Kids",
+      "url": "https://fun4fortmyerskids.com/",
+      "city": "county",
+      "family": "family",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "chamber",
+      "name": "Greater Fort Myers Chamber",
+      "url": "https://fortmyers.org/",
+      "city": "county",
+      "family": "community",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "wgcu",
+      "name": "WGCU",
+      "url": "https://www.wgcu.org/",
+      "city": "county",
+      "family": "news",
+      "anchor": true,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "wink",
+      "name": "WINK",
+      "url": "https://winknews.com/",
+      "city": "county",
+      "family": "news",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "breeze",
+      "name": "Cape Coral Breeze",
+      "url": "https://www.capecoralbreeze.com/",
+      "city": "Cape Coral",
+      "family": "news",
+      "anchor": false,
+      "lane": "lee",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    },
+    {
+      "id": "naples",
+      "name": "Naples exceptional leads",
+      "url": "https://www.naplesgov.com/",
+      "city": "Naples",
+      "family": "government",
+      "anchor": false,
+      "lane": "nearby",
+      "access": "manual_review",
+      "verifiedEndpoint": false
+    }
+  ]
+}
