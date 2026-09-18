@@ -56,17 +56,18 @@ const ids = Object.fromEntries(['home-filter-input','filter-search-form','filter
 const handlers = {};
 const document = {
   hidden: false,
+  dispatchEvent() {},
   querySelectorAll(selector) { return ({'.home-tile': tiles, '[data-filter-date-window]': dates, '[data-filter-kind]': kinds})[selector] ?? []; },
   querySelector() { return null; },
   getElementById(id) { return ids[id]; },
   addEventListener(key, fn) { handlers[key] = fn; }
 };
-vm.runInNewContext(script, {document, window: {setInterval() {}}, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
+vm.runInNewContext(script, {Event: class {}, document, window: {setInterval() {}}, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
 
 const click = element => handlers.click({target: element, preventDefault() {}});
 const shown = () => tiles.flatMap((tile, index) => tile.hidden ? [] : [index]);
 
-assert.deepEqual(shown(), [0, 2, 3], 'runtime expiry hides expired event but keeps ongoing, future and news before filters');
+assert.deepEqual(shown(), [0, 2], 'runtime expiry hides expired event but keeps ongoing, future and news before filters');
 assert.deepEqual(dates.map(x => x.count.textContent), ['1', '1', '2'], 'Today counts ongoing only; weekend counts the still-running range; next14 counts ongoing plus future event');
 
 click(dates[0]);

@@ -1,24 +1,17 @@
 ---
+import '@/styles/discovery.css';
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import { activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, tagCounts } from '@/lib/content';
-import { homepageBadgeParts, homepageDateKey, homepageDisplayDate, homepageTimelineDateLabel, homepageTimelineDateText } from '@/lib/homepageDateLabels';
+import { homepageDateKey, homepageDisplayDate, homepageTimelineDateLabel, homepageTimelineDateText } from '@/lib/homepageDateLabels';
 
 const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
 
-function selectLeadArticle(articles: typeof visible) {
-  const featured = articles.find((article) => article.data.featured);
-  if (featured) return featured;
-
-  return articles[0];
-}
-
-const lead = selectLeadArticle(feed);
-const cardFeed = lead ? feed.filter((article) => article.slug !== lead.slug) : feed;
+const cardFeed = [...feed.filter(a => a.data.contentKind === 'event'), ...feed.filter(a => a.data.contentKind === 'news')];
 const topTags = tagCounts(allArticles).slice(0, 10);
 
 const categoryAccentMap: Record<string, string> = {
@@ -98,16 +91,8 @@ function timelineDateText(article: typeof visible[number]) {
   return homepageTimelineDateText(article, eventArchiveCutoff(article));
 }
 
-function badgeParts(article: typeof visible[number]) {
-  return homepageBadgeParts(article, eventArchiveCutoff(article));
-}
-
 function displayDate(article: typeof visible[number]) {
   return homepageDisplayDate(article);
-}
-
-function categoryAccent(category: string) {
-  return categoryAccentMap[category] ?? '#197894';
 }
 
 function tileSearch(article: typeof visible[number]) {
@@ -125,225 +110,84 @@ function tileSearch(article: typeof visible[number]) {
   ].join(' ').toLowerCase();
 }
 ---
-<BaseLayout
-  title="LeeScoop"
-  description="Your scoop on Lee County. No ads. No promotion. Just what’s happening in your area."
-  image="/branding/leescoop-social-art.png"
-  imageWidth={1254}
-  imageHeight={1254}
->
-  <Header enableSearchShortcut={true} searchTargetId="home-filter-input" />
-  <main class="homepage-main" data-homepage-root>
-    {!lead && (
-      <section class="wrap homepage-section hero-section-home hero-panel panel-glow">
-        <div class="hero-home-copy hero-home-copy-patch">
-          <p class="eyebrow">Lee County, quickly</p>
-          <h1 class="lead-headline lead-headline-patch">Your scoop on Lee County.</h1>
-          <p class="lede">No ads. No promotion. Just what’s happening in your area.</p>
-        </div>
-      </section>
-    )}
 
-    {lead && (
-      <section class="wrap homepage-section hero-section-home hero-panel panel-glow" data-expirable-feature data-kind={lead.data.contentKind} data-active-until={lead.data.contentKind === 'event' ? eventArchiveCutoff(lead)?.toISOString() : undefined}>
-        <div class="hero-home-grid hero-home-grid-patch">
-          <div class="hero-home-copy hero-home-copy-patch">
-            <div class="hero-label-row">
-              <div class="event-date-badge hero-date-badge">
-                <span>{badgeParts(lead).top}</span>
-                <strong>{badgeParts(lead).bottom}</strong>
-              </div>
-              <p class="eyebrow">{lead.data.contentKind === 'news' ? 'Featured update' : 'Featured event'}</p>
+<BaseLayout title="LeeScoop — Find your next local adventure" description="Good times, close to home. Discover Lee County events and quick, source-linked local news." image="/branding/leescoop-social-art.png" imageWidth={1254} imageHeight={1254}>
+  <div class="discovery-shell">
+  <a class="discovery-skip" href="#latest-feed">Skip to events</a>
+  <Header enableSearchShortcut={true} />
+  <main class="homepage-main discovery" data-homepage-root>
+    <h1 class="discovery-heading">Good times. <span>Close to home.</span></h1>
+    <section class="discovery-filters" id="browse" aria-label="Browse LeeScoop feed" data-filter-tile>
+      <div class="discovery-filter-top">
+        <div class="discovery-tabs" role="group" aria-label="Feed type">
+          {contentKindStats.map(item => <button type="button" data-filter-kind={item.kind} aria-pressed={item.kind === 'event' ? 'true' : 'false'}>{item.label} <span data-count-kind={item.kind}>{item.count}</span></button>)}
+        </div>
+        <button type="button" id="saved-filter" aria-pressed="false">Saved</button>
+        <details class="discovery-more">
+          <summary>Search &amp; area</summary>
+          <div class="discovery-more-panel">
+            <form id="filter-search-form" action="/search/" method="get">
+              <label for="home-filter-input">Find a plan</label>
+              <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Music, markets, venues…" />
+            </form>
+            <div class="discovery-areas" role="group" aria-label="Areas">
+              {categoryStats.map(item => <button type="button" data-filter-category={item.category} data-filter-pill={item.category} aria-pressed="false">{item.category} <span data-count-for={item.category}>{item.count}</span></button>)}
             </div>
-            <h1 class="lead-headline lead-headline-patch" title={lead.data.title}>
-              <a href={articlePath(lead)}>{lead.data.title}</a>
-            </h1>
-            <div class="hero-fact-grid" aria-label="Featured item details">
-              <span class={`timeline-kind-pill ${lead.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{lead.data.contentKind === 'news' ? 'News' : 'Event'}</span>
-              <div class="hero-fact">
-                <span>{timelineDateLabel(lead)}</span>
-                <time datetime={displayDate(lead)?.toISOString()}>{timelineDateText(lead)}</time>
-              </div>
-              {lead.data.eventTime && (
-                <div class="hero-fact">
-                  <span>Time</span>
-                  <strong>{lead.data.eventTime}</strong>
-                </div>
-              )}
-              {(lead.data.venue || lead.data.location || lead.data.city) && (
-                <div class="hero-fact">
-                  <span>Place</span>
-                  <strong>{lead.data.venue ?? lead.data.location ?? lead.data.city}</strong>
-                </div>
-              )}
-              <button
-                type="button"
-                class="category-pill hero-category-pill"
-                style={`--category-accent: ${categoryAccent(lead.data.category)}`}
-                data-filter-category={areaFor(lead)}
-              >
-                {areaFor(lead)}
-              </button>
-            </div>
-            <p class="lede small-note">{lead.data.excerpt}</p>
-            <div class="homepage-cta-row">
-              <a class="button primary homepage-cta" href={articlePath(lead)}>{lead.data.contentKind === 'news' ? 'Read update' : 'Event details'}</a>
-              <a class="button secondary homepage-secondary-cta" href="#latest-feed">Browse latest</a>
-            </div>
+            <p>Dates are in Lee County time. Runs may have select performances; check the organizer.</p>
           </div>
-          {lead.data.coverImage && (
-            <a class="hero-home-image-wrap" href={articlePath(lead)} aria-label={lead.data.title}>
-              <img class="hero-home-image" src={lead.data.coverImage} alt={`${lead.data.title} cover image`} loading="eager" decoding="async" />
-            </a>
-          )}
-        </div>
-      </section>
-    )}
-
-    <section class="wrap homepage-section filter-tile browse-panel panel-glow" id="browse" aria-label="Browse LeeScoop feed" data-filter-tile>
-      <h2 class="sr-only">Browse LeeScoop feed</h2>
-
-      <div class="browse-filter-main">
-        <div class="content-kind-filter-row" aria-label="Primary feed categories">
-          {contentKindStats.map((item) => (
-            <button type="button" class="content-kind-filter" data-filter-kind={item.kind} aria-pressed="false" disabled={item.count === 0}>
-              <span class="content-kind-icon" aria-hidden="true">
-                {item.kind === 'event' ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M7 3v4M17 3v4M4.5 9.5h15" />
-                    <path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z" />
-                    <path d="m9 15 1.8 1.8L15.5 12" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M5 5.5h10.5A2.5 2.5 0 0 1 18 8v10.5H7.5A2.5 2.5 0 0 1 5 16V5.5Z" />
-                    <path d="M18 8h1a2 2 0 0 1 2 2v6a2.5 2.5 0 0 1-2.5 2.5H18" />
-                    <path d="M8 9h6M8 12h6M8 15h4" />
-                  </svg>
-                )}
-              </span>
-              <span class="content-kind-copy">
-                <span>{item.label}</span>
-                <small>{item.kind === 'event' ? 'Happening soon' : 'Latest updates'}</small>
-              </span>
-              <strong data-count-kind={item.kind}>{item.count}</strong>
-            </button>
-          ))}
-        </div>
-
-        <form class="filter-search-form" id="filter-search-form" action="/search/" method="get">
-          <label class="sr-only" for="home-filter-input">Search the latest feed</label>
-          <div class="filter-search-shell">
-            <span class="filter-search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-3.5-3.5" />
-              </svg>
-            </span>
-            <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Search events, news, cities, or venues" />
-          </div>
-        </form>
+        </details>
       </div>
-
-      <div class="date-window-filter-row" role="group" aria-label="Event date filters (America/New_York)">
-        {dateWindowStats.map((item) => (
-          <button type="button" class="date-window-filter" data-filter-date-window={item.window} aria-pressed="false">
-            <span>{item.label}</span>
-            <small>{item.help}</small>
-            <strong data-count-date-window={item.window}>0</strong>
-          </button>
-        ))}
-      </div>
-
-      <div class="filter-area-strip" aria-label="Area filters">
-        <div class="filter-tile-pill-row" aria-label="Areas">
-          {categoryStats.map((item) => (
-            <button
-              type="button"
-              class="filter-tile-pill"
-              data-filter-category={item.category}
-              data-filter-pill={item.category}
-              aria-pressed="false"
-              style={`--pill-fill: ${item.accent}; --pill-text: ${item.textColor};`}
-            >
-              <span>{item.category}</span>
-              <span data-count-for={item.category}>{item.count}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div class="filter-tile-footer">
-        <button type="button" class="filter-clear-all" id="filter-clear-all" hidden>clear all filters ×</button>
+      <div class="discovery-dates" role="group" aria-label="Event date filters (America/New_York)">
+        {dateWindowStats.map(item => <button type="button" class="date-window-filter" data-filter-date-window={item.window} aria-pressed="false" title={item.help}>{item.label} <span data-count-date-window={item.window}>0</span></button>)}
+        <button type="button" id="filter-clear-all" hidden>Reset</button>
       </div>
     </section>
-
-    <section class="wrap homepage-section tile-section" id="latest-feed" aria-label="Upcoming events and local updates">
-      <div class="section-heading feed-heading">
-        <div>
-          <p class="eyebrow">Latest</p>
-          <h2>Latest around Lee County</h2>
-          <p class="section-deck">News and events in one dated feed, sorted by when they matter.</p>
-        </div>
-      </div>
+    <section id="latest-feed" class="discovery-feed" aria-label="Upcoming events and local updates" tabindex="-1">
+      <div class="discovery-feed-status"><p id="feed-result" role="status">Explore Lee County</p><span>Scroll for your next outing ↓</span></div>
+      <p id="action-status" role="status" class="discovery-action-status"></p>
+      <noscript>JavaScript is off: browse all listings below. Event details and calendar downloads still work.</noscript>
       <div class="home-tile-grid" id="home-tile-grid">
-        {cardFeed.map((article) => {
-          const hasCover = Boolean(article.data.coverImage);
+        {cardFeed.map((article, index) => {
           const cardDate = displayDate(article);
-          const cardDateParts = badgeParts(article);
-          return (
-            <article class={`home-tile ${hasCover ? 'has-cover' : 'no-cover'}`} data-category={areaFor(article)} data-kind={article.data.contentKind === 'news' ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={homepageDateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={article.data.contentKind === 'event' ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
-              <a class="home-tile-stretch" href={articlePath(article)} aria-label={article.data.title}></a>
-
-              {hasCover && (
-                <div class="home-tile-media">
-                  <img class="home-tile-image" src={article.data.coverImage!} alt={`${article.data.title} cover image`} loading="lazy" decoding="async" />
-                  <button type="button" class="tile-category-pill" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
-                </div>
-              )}
-
-              <div class="home-tile-body">
-                <div class="tile-top-row">
-                  <div class="event-date-badge">
-                    <span>{cardDateParts.top}</span>
-                    <strong>{cardDateParts.bottom}</strong>
-                  </div>
-                  <div class="tile-label-stack">
-                    <span class={`timeline-kind-pill ${article.data.contentKind === 'news' ? 'is-news' : 'is-event'}`}>{article.data.contentKind === 'news' ? 'News' : 'Event'}</span>
-                    <button type="button" class="tile-category-pill tile-category-pill-static" data-filter-category={areaFor(article)}>{areaFor(article)}</button>
-                  </div>
-                </div>
-                <h2 class="home-tile-title" title={article.data.title}>{article.data.title}</h2>
-                <p class="home-tile-deck">{article.data.excerpt}</p>
-                <div class="tile-meta-row">
-                  <time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {timelineDateText(article)}</time>
-                  {article.data.eventTime && <span>{article.data.eventTime}</span>}
-                  {(article.data.venue || article.data.location || article.data.city) && <span>{article.data.venue ?? article.data.location ?? article.data.city}</span>}
-                </div>
+          const news = article.data.contentKind === 'news';
+          const destination = news && article.data.sourceUrl ? article.data.sourceUrl : articlePath(article);
+          return <article class="home-tile discovery-card" data-slug={article.slug} data-category={areaFor(article)} data-kind={news ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={homepageDateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={!news ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
+            {article.data.coverImage && <a class="discovery-image-link" href={destination} tabindex="-1" aria-hidden="true"><img src={article.data.coverImage} alt="" width="1216" height="704" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" /></a>}
+            <div class="discovery-card-body">
+              <div class="discovery-kicker"><span>{areaFor(article)}</span><span>{news ? 'Local news' : article.data.featured ? 'Scoop pick' : 'Go local'}</span></div>
+              <p class="discovery-date"><time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {timelineDateText(article)}</time></p>
+              <h2><a href={destination}>{article.data.title}</a></h2>
+              {!news && <p class="discovery-place">{article.data.venue ?? article.data.location ?? article.data.city}{article.data.eventTime && ` · ${article.data.eventTime}`}{article.data.cost && ` · ${article.data.cost}`}</p>}
+              <p class="discovery-excerpt">{article.data.excerpt.length > 180 ? article.data.excerpt.slice(0, 177) + '…' : article.data.excerpt}</p>
+              <div class="discovery-actions">
+                <a class="discovery-primary" href={destination}>{news ? `Read at ${article.data.sourceName || 'source'} ↗` : 'Details ↗'}</a>
+                <button type="button" data-save={article.slug} aria-pressed="false" aria-label={`Save ${article.data.title}`}>Save</button>
+                <button type="button" data-share={articlePath(article)} data-title={article.data.title} aria-label={`Share ${article.data.title}`}>Share</button>
+                {!news && article.data.eventDate && <a href={`/calendar/${article.slug}.ics`} download aria-label={`Download date reminder for ${article.data.title}`}>Calendar</a>}
               </div>
-            </article>
-          );
+            </div>
+          </article>;
         })}
       </div>
-
-      <div class="home-empty-state" id="home-empty-state" role="status" hidden>No updates match that filter right now.</div>
+      <div class="home-empty-state" id="home-empty-state" role="status" hidden>No matches. Try another date, area, or reset your filters.</div>
+      <p id="saved-empty" role="status" hidden>No saved items in this view. Save a few plans, or reset your filters.</p>
+      <p class="discovery-footnote">Saved on this browser, no account needed. Calendar downloads are date reminders, not tickets; confirm times with the organizer.</p>
     </section>
   </main>
   <Footer tags={topTags} />
-
+  </div>
   <script is:inline>
     (() => {
       const tiles = Array.from(document.querySelectorAll('.home-tile'));
       const filterPills = Array.from(document.querySelectorAll('[data-filter-pill]'));
       const kindButtons = Array.from(document.querySelectorAll('[data-filter-kind]'));
-      const tileButtons = Array.from(document.querySelectorAll('.tile-category-pill, .hero-category-pill'));
       const searchInput = document.getElementById('home-filter-input');
       const searchForm = document.getElementById('filter-search-form');
       const clearAll = document.getElementById('filter-clear-all');
       const emptyState = document.getElementById('home-empty-state');
       const dateButtons = Array.from(document.querySelectorAll('[data-filter-date-window]'));
       const feature = document.querySelector('[data-expirable-feature]');
-      const state = { category: '', kind: '', dateWindow: '', query: '' };
+      const state = { category: '', kind: 'event', dateWindow: '', query: '' };
 
       const leeCountyDateKey = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
       const addDays = (date, days) => {
@@ -459,9 +303,12 @@ function tileSearch(article: typeof visible[number]) {
           tile.hidden = !shouldShow;
           if (shouldShow) visibleCount += 1;
         });
+        const result = document.getElementById('feed-result');
+        if (result) result.textContent = `${visibleCount} ${state.kind === 'news' ? 'local updates' : 'events'} · Lee County time`;
+        document.dispatchEvent(new Event('leescoop:filtered'));
         updateCounts();
         updateDateCounts();
-        clearAll.hidden = !(state.category || state.kind || state.dateWindow || state.query.trim());
+        clearAll.hidden = !(state.category || state.kind !== 'event' || state.dateWindow || state.query.trim());
         emptyState.hidden = visibleCount > 0;
       };
 
@@ -480,7 +327,7 @@ function tileSearch(article: typeof visible[number]) {
         if (kindButton instanceof HTMLElement) {
           event.preventDefault();
           const kind = kindButton.getAttribute('data-filter-kind') || '';
-          state.kind = state.kind === kind ? '' : kind;
+          state.kind = kind;
           if (state.kind === 'news') state.dateWindow = '';
           applyFilters();
           return;
@@ -496,7 +343,7 @@ function tileSearch(article: typeof visible[number]) {
         }
         if (target.closest('#filter-clear-all') === clearAll) {
           state.category = '';
-          state.kind = '';
+          state.kind = 'event';
           state.dateWindow = '';
           state.query = '';
           searchInput.value = '';
@@ -510,16 +357,10 @@ function tileSearch(article: typeof visible[number]) {
         applyFilters();
       });
 
-      searchForm.addEventListener('submit', () => {
+      searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
         state.query = searchInput.value;
-      });
-
-      tileButtons.forEach((button) => {
-        if (!(button instanceof HTMLElement)) return;
-        button.addEventListener('click', () => {
-          const filterTile = document.querySelector('[data-filter-tile]');
-          if (filterTile) filterTile.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+        applyFilters();
       });
 
       applyFilters();
@@ -528,4 +369,8 @@ function tileSearch(article: typeof visible[number]) {
       document.addEventListener('visibilitychange', () => { if (!document.hidden) applyFilters(); });
     })();
   </script>
+
+<script>
+import "@/lib/discoveryActions";
+</script>
 </BaseLayout>
