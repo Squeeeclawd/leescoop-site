@@ -54,7 +54,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(first, w.plan(self.config, self.now.date()))
         self.assertNotEqual(first["sources"], w.plan(self.config, (self.now + timedelta(days=1)).date())["sources"])
         self.assertFalse(any(source["lane"] == "nearby" for source in first["sources"]))
-        self.assertFalse(first["automaticFetchAdapter"])
+        self.assertTrue(first["automaticFetchAdapter"])
 
     def test_date_only_and_today_event_semantics(self):
         w.validate(self.item, self.config, self.now)

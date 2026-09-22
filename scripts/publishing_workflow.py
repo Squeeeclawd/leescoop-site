@@ -303,7 +303,7 @@ def plan(config, day):
         "date": str(day), "sources": selected, "limits": config["network"],
         "windowsDays": [0, 14, 45, 180], "goals": config["goals"],
         "queries": [f"{city} public events this weekend {day:%B %Y}" for city in config["cities"]],
-        "fetchMode": "agent_tools_only", "automaticFetchAdapter": False,
+        "fetchMode": "bounded_source_fetch_script", "automaticFetchAdapter": True,
     }
 
 
