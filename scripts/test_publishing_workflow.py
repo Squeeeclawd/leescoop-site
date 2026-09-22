@@ -215,8 +215,8 @@ class WorkflowTests(unittest.TestCase):
             state = Path(directory); item = dict(self.item, coverImage="/covers/fixture.png")
             checkpoint = w.checkpoint_value("input", [item], {"fixture-only": "a" * 64}, {"routine": {}, "review": {}})
             w.save(state / "checkpoints/run.json", checkpoint)
-            w.save(state / "active-release.json", {"run": "run", "inputHash": "input", "releaseHead": "base", "status": "pushed", "commit": "c" * 40})
-            w.save(state / "ledger.json", {"candidate": {"run": "run", "state": "selected", "published": False, "keys": w.keys(item)}})
+            w.save(state / "active-release.json", {"run": "run", "inputHash": "input", "releaseHead": "base", "status": "pushed", "commit": "c" * 40, "checkpointHash": w.digest(checkpoint)})
+            w.save(state / "ledger.json", {w.digest(item): {"run": "run", "slug": item["slug"], "kind": item["kind"], "day": "2026-09-18", "state": "selected", "published": False, "keys": w.keys(item)}})
             receipt_path = state / "receipt.json"
             incomplete = {"run": "run", "commit": "c" * 40}
             receipt_path.write_text(json.dumps(incomplete))
@@ -245,19 +245,61 @@ class WorkflowTests(unittest.TestCase):
                 }],
             }
             receipt_path.write_text(json.dumps(receipt))
+            for mutation in (lambda r: r["articles"].append(copy.deepcopy(r["articles"][0])),
+                             lambda r: r["articles"][0].pop("coverDecoded")):
+                bad = copy.deepcopy(receipt); mutation(bad); w.save(receipt_path, bad)
+                with self.assertRaises(ValueError):
+                    w.finalize(args, self.config)
+            w.save(receipt_path, receipt)
+            original_ledger = w.load_json(state / "ledger.json")
+            for bad in ({}, {**original_ledger, "extra": next(iter(original_ledger.values()))}):
+                w.save(state / "ledger.json", bad)
+                with self.assertRaises(ValueError):
+                    w.finalize(args, self.config)
+            for field, value in (("slug", "wrong"), ("kind", "news"), ("keys", [])):
+                bad = copy.deepcopy(original_ledger); bad[w.digest(item)][field] = value
+                w.save(state / "ledger.json", bad)
+                with self.assertRaises(ValueError):
+                    w.finalize(args, self.config)
+            w.save(state / "ledger.json", original_ledger)
+            changed = copy.deepcopy(checkpoint); changed["selected"][0]["title"] = "changed"
+            w.save(state / "checkpoints/run.json", changed)
+            with self.assertRaisesRegex(ValueError, "checkpoint changed"):
+                w.finalize(args, self.config)
+            w.save(state / "checkpoints/run.json", checkpoint)
+            real_save = w.save
+            def crash(path, value):
+                if path == state / "receipts/run.json":
+                    raise OSError("crash after ledger")
+                real_save(path, value)
+            with patch.object(w, "save", side_effect=crash), self.assertRaises(OSError):
+                w.finalize(args, self.config)
             result = w.finalize(args, self.config)
             self.assertEqual(result["status"], "published")
             ledger = w.load_json(state / "ledger.json")
-            self.assertTrue(ledger["candidate"]["published"])
+            ledger["rejected"] = {"run": "run", "state": "rejected_or_reserve", "published": False}
+            w.save(state / "ledger.json", ledger)
+            w.save(state / "runs/run.json", {"run": "run", "status": "blocked"})
+            self.assertEqual(w.workflow_status(state)["runs"][0]["status"], "published")
+            ledger = w.load_json(state / "ledger.json")
+            self.assertTrue(ledger[w.digest(item)]["published"])
             self.assertFalse((state / "active-release.json").exists())
             self.assertTrue(w.finalize(args, self.config)["idempotent"])
+            w.save(w.active_path(state), {"run": "another", "status": "preparing"})
+            self.assertTrue(w.finalize(args, self.config)["idempotent"])
+            self.assertEqual(w.load_json(w.active_path(state))["run"], "another")
+            broken = w.load_json(state / "ledger.json"); broken[w.digest(item)]["receiptHash"] = "wrong"
+            w.save(state / "ledger.json", broken)
+            with self.assertRaises(ValueError):
+                w.finalize(args, self.config)
+            self.assertNotEqual(w.workflow_status(state)["runs"][0]["status"], "published")
 
     def test_finalize_rejects_cf_ray_as_deployment_identity(self):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory); item = dict(self.item, coverImage="/covers/fixture.png")
             checkpoint = w.checkpoint_value("input", [item], {"fixture-only": "a" * 64}, {"routine": {}, "review": {}})
             w.save(state / "checkpoints/run.json", checkpoint)
-            w.save(state / "active-release.json", {"run": "run", "inputHash": "input", "releaseHead": "base", "status": "pushed", "commit": "c" * 40})
+            w.save(state / "active-release.json", {"run": "run", "inputHash": "input", "releaseHead": "base", "status": "pushed", "commit": "c" * 40, "checkpointHash": w.digest(checkpoint)})
             receipt_path = state / "receipt.json"
             receipt_path.write_text(json.dumps({
                 "run": "run", "commit": "c" * 40, "productionCommit": "c" * 40,
@@ -265,6 +307,7 @@ class WorkflowTests(unittest.TestCase):
                 "deploymentReceipt": "cloudflare:cf-ray:not-a-deployment", "verifiedBy": "parent-liveverify",
                 "articles": [],
             }))
+            w.save(state / "ledger.json", {w.digest(item): {"run": "run", "slug": item["slug"], "kind": item["kind"], "state": "selected", "keys": w.keys(item)}})
             with self.assertRaisesRegex(ValueError, "live-verification evidence"):
                 w.finalize(SimpleNamespace(state=state, run="run", receipt=receipt_path), self.config)
 
@@ -280,10 +323,7 @@ class WorkflowTests(unittest.TestCase):
                 "commit": "c" * 40, "receiptHash": receipt_hash,
             }})
             result = w.workflow_status(state)
-            self.assertEqual(result["runs"][0]["status"], "published")
-            self.assertEqual(result["runs"][0]["reconciledFromStatus"], "blocked")
-            self.assertNotIn("error", result["runs"][0])
-            self.assertEqual(result["runs"][0]["priorError"], "stale dirt")
+            self.assertEqual(result["runs"][0]["status"], "blocked")
 
     def test_legacy_writer_requires_gate_contract(self):
         result = subprocess.run([sys.executable, str(w.ROOT / "scripts/leescoop_posts.py"), "write", "--input", "missing.json"], capture_output=True)
@@ -341,8 +381,14 @@ class WorkflowTests(unittest.TestCase):
                 if path == state / "active-release.json" and value.get("status") == "committed":
                     raise OSError("fixture crash after git commit")
                 real_save(path, value)
-            with patch.object(w, "save", side_effect=interrupted_save), self.assertRaises(OSError):
-                w.commit_release(args)
+            with patch.object(w, "datetime", wraps=datetime) as clock:
+                clock.now.return_value = self.now + timedelta(days=1)
+                with self.assertRaisesRegex(ValueError, "midnight"):
+                    w.commit_release(args)
+            with patch.object(w, "datetime", wraps=datetime) as clock:
+                clock.now.return_value = self.now
+                with patch.object(w, "save", side_effect=interrupted_save), self.assertRaises(OSError):
+                    w.commit_release(args)
             committed = w.commit_release(args)
             self.assertTrue(committed["recovered"])
             self.assertEqual(git("show", "--format=", "--name-only", "HEAD"), "src/content/articles/fixture-only.md")
@@ -350,6 +396,7 @@ class WorkflowTests(unittest.TestCase):
                 if path == state / "active-release.json" and value.get("status") == "pushed":
                     raise OSError("fixture crash after git push")
                 real_save(path, value)
+            active = w.load_json(w.active_path(state)); active["day"] = str(datetime.now(w.NY).date()); w.save(w.active_path(state), active)
             with patch.object(w, "save", side_effect=interrupted_push_save), self.assertRaises(OSError):
                 w.push_release(args, self.config)
             self.assertTrue(w.push_release(args, self.config)["recovered"])
@@ -374,6 +421,89 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue(w.finalize(args, self.config)["idempotent"])
             self.assertFalse(w.active_path(state).exists())
             self.assertEqual(git("status", "--porcelain"), "")
+
+    def test_daily_caps_across_runs_rollover_and_unknown_legacy(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory)
+            ledger = {str(i): {"run": "older", "state": "selected", "kind": "event", "day": "2026-09-18"} for i in range(3)}
+            ledger["news"] = {"run": "older", "state": "published", "published": True, "kind": "news", "day": "2026-09-18"}
+            counts = w.daily_counts(state, ledger, "2026-09-18", "new")
+            self.assertEqual(counts, {"event": 3, "news": 1})
+            self.assertEqual(w.daily_counts(state, ledger, "2026-09-19", "new"), {"event": 0, "news": 0})
+            self.assertEqual(w.daily_counts(state, ledger, "2026-09-18", "older"), {"event": 0, "news": 0})
+            with patch.object(w, "cover", return_value="hash"):
+                self.assertEqual(w.evaluate([self.item], self.config, self.now, w.ROOT, {}, counts)[0], [])
+            ledger["unknown"] = {"run": "legacy", "state": "selected"}
+            with self.assertRaises((ValueError, OSError)):
+                w.daily_counts(state, ledger, "2026-09-18", "new")
+
+    def test_prepare_retry_abort_and_midnight(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(w, "cover", return_value="hash"):
+            state = Path(directory); source = state / "input.json"; w.save(source, self.payload)
+            args = SimpleNamespace(state=state, run="run", input=source, reason="test")
+            w.prepare_or_gate(args, self.config, self.now, "prepare")
+            before = w.load_json(state / "ledger.json")
+            w.prepare_or_gate(args, self.config, self.now, "prepare")
+            self.assertEqual(before, w.load_json(state / "ledger.json"))
+            active = w.load_json(w.active_path(state)); active["day"] = "2026-09-17"; w.save(w.active_path(state), active)
+            with self.assertRaisesRegex(ValueError, "midnight"):
+                w.prepare_or_gate(args, self.config, self.now, "gate")
+            w.abort(args)
+            self.assertEqual(w.daily_counts(state, w.load_json(state / "ledger.json"), "2026-09-18", "next"), {"event": 0, "news": 0})
+            with self.assertRaisesRegex(ValueError, "terminal"):
+                w.prepare_or_gate(args, self.config, self.now, "prepare")
+            self.assertFalse(w.active_path(state).exists())
+            args.run = "final"
+            w.save(state / "receipts/final.json", {})
+            with self.assertRaisesRegex(ValueError, "terminal"):
+                w.prepare_or_gate(args, self.config, self.now, "prepare")
+            self.assertFalse(w.active_path(state).exists())
+
+    def test_actual_multiple_prepares_share_hard_daily_cap(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(w, "cover", return_value="hash"):
+            state = Path(directory); source = state / "input.json"
+            self.config["goals"]["event"] = 99
+            for index in range(5):
+                item = copy.deepcopy(self.item)
+                item.update(slug=f"fixture-{index}", title=f"Fixture number {index}",
+                            venue=f"Hall {index}", organizer=f"Organizer {index}",
+                            sourceUrl=f"https://www.capecoral.gov/fixture-{index}")
+                item["eventVerification"]["observedTitle"] = item["title"]
+                payload = copy.deepcopy(self.payload); payload["items"] = [item]
+                w.save(source, payload)
+                args = SimpleNamespace(state=state, run=f"run-{index}", input=source)
+                report = w.prepare_or_gate(args, self.config, self.now, "prepare")
+                self.assertEqual(len(report["selected"]), 1 if index < 3 else 0)
+                # Simulate completed prior ownership while retaining its reservation.
+                w.active_path(state).unlink()
+            self.assertEqual(w.daily_counts(state, w.load_json(state / "ledger.json"), "2026-09-18", "next")["event"], 3)
+
+    def test_legacy_inference_preserves_and_missing_checkpoint_record_blocks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory); item = self.item
+            checkpoint = w.checkpoint_value("input", [item], {}, {})
+            w.save(state / "checkpoints/old.json", checkpoint)
+            w.save(state / "runs/old.json", {"at": "2026-09-19T02:00:00+00:00"})
+            ledger = {w.digest(item): {"run": "old", "slug": item["slug"], "state": "selected"}}
+            self.assertEqual(w.daily_counts(state, ledger, "2026-09-18", "next")["event"], 1)
+            self.assertEqual(ledger[w.digest(item)]["day"], "2026-09-18")
+            self.assertEqual(ledger[w.digest(item)]["kind"], "event")
+            with self.assertRaisesRegex(ValueError, "missing"):
+                w.daily_counts(state, {}, "2026-09-18", "next")
+
+    def test_midnight_push_and_commit_intent_abort_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory)
+            active = {"run": "run", "status": "committed", "commit": "c" * 40, "releaseHead": "b" * 40, "day": "2020-01-01"}
+            w.save(w.active_path(state), active)
+            args = SimpleNamespace(state=state, run="run", remote="origin", branch="main", release_root=state, reason="test")
+            with patch.object(w, "git", return_value="b" * 40 + " refs/heads/main"), patch.object(w.subprocess, "run") as command:
+                with self.assertRaisesRegex(ValueError, "midnight"):
+                    w.push_release(args, self.config)
+                command.assert_not_called()
+            active.update(status="quality_passed", commitTree="tree"); w.save(w.active_path(state), active)
+            with self.assertRaises(ValueError):
+                w.abort(args)
 
     def test_empty_pool_noop(self):
         self.assertEqual(w.evaluate([], self.config, self.now, w.ROOT, {}), ([], [], {}))

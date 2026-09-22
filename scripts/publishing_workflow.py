@@ -91,42 +91,103 @@ def load_json(path):
 
 
 def workflow_status(state):
-    """Report final receipts as authoritative over stale pre-finalize attempt files."""
-    ledger_file = state / "ledger.json"
-    ledger = load_json(ledger_file) if ledger_file.exists() else {}
     runs = []
+    config = load_json(ROOT / "docs/workflow/sources.json")
     for path in sorted((state / "runs").glob("*.json")):
         report = load_json(path)
         run = report.get("run") or path.stem
-        final_file = state / "receipts" / f"{run}.json"
-        records = [record for record in ledger.values() if record.get("run") == run]
-        if final_file.exists() and records:
-            receipt = load_json(final_file)
-            receipt_hash = digest(receipt)
-            if all(
-                record.get("published") is True
-                and record.get("state") == "published"
-                and record.get("commit") == receipt.get("commit")
-                and record.get("receiptHash") == receipt_hash
-                for record in records
-            ):
-                prior_status = report.get("status")
-                prior_error = report.pop("error", None)
-                report = {
-                    **report,
-                    "status": "published",
-                    "commit": receipt.get("commit"),
-                    "receiptHash": receipt_hash,
-                }
-                if prior_status != "published":
-                    report["reconciledFromStatus"] = prior_status
-                if prior_error:
-                    report["priorError"] = prior_error
+        try:
+            final = state / "receipts" / f"{run}.json"
+            if not final.exists():
+                raise ValueError("no final receipt")
+            receipt = load_json(final)
+            checkpoint = load_json(state / "checkpoints" / f"{run}.json")
+            proof = load_json(state / "finalizations" / f"{run}.json")
+            verify_final_identity(state, run, checkpoint, proof)
+            if proof.get("receiptHash") != digest(receipt) or proof.get("status") not in ("pushed", "published"):
+                raise ValueError("finalization journal inconsistent")
+            validate_receipt(receipt, checkpoint, proof, run, config, fresh=False)
+            records = selected_records(load_json(state / "ledger.json"), run, checkpoint)
+            if any(r.get("published") is not True or r.get("state") != "published"
+                   or r.get("commit") != receipt["commit"] or r.get("receiptHash") != digest(receipt)
+                   for r in records):
+                raise ValueError("incomplete ledger publication")
+            old = report.get("status")
+            error = report.pop("error", None)
+            report.update(status="published", commit=receipt["commit"], receiptHash=digest(receipt))
+            if old != "published":
+                report["reconciledFromStatus"] = old
+            if error:
+                report["priorError"] = error
+        except (ValueError, OSError, KeyError, TypeError, AttributeError):
+            if report.get("status") == "published":
+                report.update(status="blocked", error="publication proof incomplete or corrupt")
         runs.append(report)
-    return {
-        "active": load_json(active_path(state)) if active_path(state).exists() else None,
-        "runs": runs,
-    }
+    return {"active": load_json(active_path(state)) if active_path(state).exists() else None, "runs": runs}
+
+
+def selected_records(ledger, run, checkpoint):
+    selected = checkpoint["selected"]
+    expected = {digest(item): item for item in selected}
+    if not expected or len(expected) != len(selected) or len({i["slug"] for i in selected}) != len(selected):
+        raise ValueError("empty or duplicate checkpoint selection")
+    actual = {key: value for key, value in ledger.items()
+              if value.get("run") == run and (value.get("state") in ("selected", "published") or value.get("published"))}
+    if set(actual) != set(expected):
+        raise ValueError("selected ledger digest set differs from checkpoint")
+    for key, record in actual.items():
+        item = expected[key]
+        if record.get("slug") != item["slug"] or record.get("keys") != keys(item) or record.get("kind") != item["kind"]:
+            raise ValueError("selected ledger item identity differs from checkpoint")
+    return list(actual.values())
+
+
+def daily_counts(state, ledger, day, run):
+    counts = {"event": 0, "news": 0}
+    for path in (state / "checkpoints").glob("*.json"):
+        if path.stem == run or (state / "aborted" / path.name).exists():
+            continue
+        checkpoint = load_json(path)
+        for item in checkpoint["selected"]:
+            if digest(item) not in ledger or ledger[digest(item)].get("run") != path.stem:
+                raise ValueError("checkpoint reservation missing from ledger")
+    for key, record in ledger.items():
+        if not isinstance(record, dict):
+            raise ValueError("malformed ledger record")
+        if record.get("state") in ("rejected_or_reserve", "aborted") and not record.get("published"):
+            continue
+        if record.get("state") not in ("selected", "published") and not record.get("published"):
+            raise ValueError("unknown legacy ledger state")
+        kind, reserved_day = record.get("kind"), record.get("day")
+        if kind is None or reserved_day is None:
+            # Infer only from exact immutable candidate identity and dated run evidence.
+            legacy_run = record.get("run")
+            if not isinstance(legacy_run, str) or not RUN_RE.fullmatch(legacy_run):
+                raise ValueError("unknown legacy run")
+            cp = load_json(state / "checkpoints" / f"{legacy_run}.json")
+            matches = [i for i in cp["selected"] if digest(i) == key and i["slug"] == record.get("slug")]
+            if len(matches) != 1:
+                raise ValueError("unknown legacy candidate identity")
+            kind = matches[0]["kind"]
+            reserved_day = cp.get("day")
+            if reserved_day is None:
+                receipt = state / "receipts" / f"{legacy_run}.json"
+                report = load_json(receipt if receipt.exists() else run_path(state, legacy_run))
+                reserved_day = str(timestamp(report.get("checkedAt") if receipt.exists() else report.get("at")).astimezone(NY).date())
+        if kind not in counts or str(date.fromisoformat(reserved_day)) != reserved_day:
+            raise ValueError("invalid ledger kind/day")
+        record.update(kind=kind, day=reserved_day)
+        if record.get("run") != run and reserved_day == day:
+            counts[kind] += 1
+    return counts
+
+
+def verify_final_identity(state, run, checkpoint, active):
+    if active.get("run") != run or digest(checkpoint) != active.get("checkpointHash") or checkpoint.get("inputHash") != active.get("inputHash"):
+        raise ValueError("checkpoint changed after gate")
+    records = selected_records(load_json(state / "ledger.json"), run, checkpoint)
+    if checkpoint.get("day") and any(r.get("day") != checkpoint["day"] for r in records):
+        raise ValueError("selected ledger day differs from checkpoint")
 
 
 def timestamp(value):
@@ -388,7 +449,7 @@ def cover(item, root, config, now):
     return file_hash(path)
 
 
-def evaluate(items, config, now, root, ledger):
+def evaluate(items, config, now, root, ledger, counts=None):
     if not isinstance(items, list):
         raise ValueError("items must be an array")
     accepted, rejected, seen = [], [], set()
@@ -407,11 +468,11 @@ def evaluate(items, config, now, root, ledger):
         except (ValueError, KeyError, TypeError) as exc:
             rejected.append({"slug": item.get("slug") if isinstance(item, dict) else None, "reason": str(exc)})
     accepted.sort(key=lambda item: (item["kind"] != "event", 0 if item["kind"] == "event" and parse_event_value(item["eventDate"]) <= now + timedelta(days=14) else 1, -item["score"], item["slug"]))
-    selected, counts, organizers = [], {"event": 0, "news": 0}, set()
+    selected, counts, organizers = [], dict(counts or {"event": 0, "news": 0}), set()
     for item in accepted:
         kind = item["kind"]
         organizer = posts.norm_text(item.get("organizer", ""))
-        if counts[kind] >= config["goals"][kind] or (kind == "event" and organizer in organizers):
+        if counts[kind] >= min(config["goals"][kind], {"event": 3, "news": 1}[kind]) or (kind == "event" and organizer in organizers):
             rejected.append({"slug": item["slug"], "reason": "reserve: cap/organizer diversity"})
             continue
         selected.append(item)
@@ -531,6 +592,8 @@ def exclusive_write(path, content):
 
 
 def prepare_or_gate(args, config, now, command):
+    if any((args.state / folder / f"{args.run}.json").exists() for folder in ("receipts", "finalizations", "aborted", "no-ops")):
+        raise ValueError("run already terminal; use a new run id")
     data = load_json(args.input)
     fingerprint = digest(data)
     routine = route_evidence(data, config, "routine", now)
@@ -545,9 +608,15 @@ def prepare_or_gate(args, config, now, command):
         raise ValueError("release checkout HEAD changed during active release")
     ledger_file = args.state / "ledger.json"
     ledger = load_json(ledger_file) if ledger_file.exists() else {}
-    selected, rejected, assets = evaluate(data["items"], config, now, ROOT, ledger)
+    day = str(now.astimezone(NY).date())
+    if active.get("day", day) != day:
+        raise ValueError("release crossed America/New_York midnight; abort/rebuild")
+    active["day"] = day
+    save(active_path(args.state), active)
+    counts = daily_counts(args.state, ledger, day, args.run)
+    selected, rejected, assets = evaluate(data["items"], config, now, ROOT, ledger, counts)
     routes = {"routine": routine, "review": review}
-    checkpoint = checkpoint_value(fingerprint, selected, assets, routes)
+    checkpoint = {**checkpoint_value(fingerprint, selected, assets, routes), "day": day}
     checkpoint_file = args.state / "checkpoints" / f"{args.run}.json"
     if command == "prepare":
         if checkpoint_file.exists() and load_json(checkpoint_file) != checkpoint:
@@ -557,7 +626,11 @@ def prepare_or_gate(args, config, now, command):
             if isinstance(item, dict) and item.get("slug"):
                 key = digest(item)
                 prior = ledger.get(key, {})
-                ledger[key] = {**prior, "slug": item["slug"], "keys": keys(item) if item in selected else [], "run": args.run, "published": prior.get("published", False), "state": "selected" if item in selected else "rejected_or_reserve"}
+                if prior and prior.get("run") != args.run:
+                    if item in selected:
+                        raise ValueError("candidate already journaled by another run")
+                    continue
+                ledger[key] = {**prior, "kind": item.get("kind"), "day": day, "slug": item["slug"], "keys": keys(item) if item in selected else [], "run": args.run, "published": prior.get("published", False), "state": "selected" if item in selected else "rejected_or_reserve"}
         save(ledger_file, ledger)
     else:
         if not checkpoint_file.exists() or load_json(checkpoint_file) != checkpoint:
@@ -702,6 +775,8 @@ def commit_release(args):
                 save(active_path(args.state), active)
                 return {"run": args.run, "status": "committed", "commit": head, "recovered": True}
             raise ValueError("checkout HEAD changed to an unrecognized commit")
+    if active.get("day") != str(datetime.now(NY).date()):
+        raise ValueError("release crossed America/New_York midnight; abort before commit and rebuild")
     verify_checkpoint_assets(checkpoint, args.release_root)
     _, covers = selected_paths(checkpoint)
     allow = set(manifest["files"]) | covers
@@ -738,6 +813,8 @@ def push_release(args, config):
         return {"run": args.run, "status": "pushed", "commit": active["commit"], "published": False, "recovered": True}
     if not remote_before or remote_before[0] != active["releaseHead"]:
         raise ValueError("remote production branch moved since prepare; rebuild from current base")
+    if active.get("day") != str(datetime.now(NY).date()):
+        raise ValueError("release crossed America/New_York midnight; refusing push")
     subprocess.run(["git", "push", args.remote, f"{active['commit']}:{args.branch}"], cwd=args.release_root, check=True)
     remote_after = git(args.release_root, "ls-remote", "--heads", args.remote, f"refs/heads/{args.branch}").split()
     if not remote_after or remote_after[0] != active["commit"]:
@@ -750,23 +827,52 @@ def push_release(args, config):
 def finalize(args, config):
     receipt = load_json(args.receipt)
     final_file = args.state / "receipts" / f"{args.run}.json"
-    if not active_path(args.state).exists() and final_file.exists():
-        existing = load_json(final_file)
-        if existing == receipt:
-            return {"run": args.run, "status": "published", "commit": receipt.get("commit"), "receiptHash": digest(receipt), "idempotent": True}
-        raise ValueError("release already finalized with a different receipt")
-    active = require_release(args.state, args.run)
+    journal = args.state / "finalizations" / f"{args.run}.json"
+    current = load_json(active_path(args.state)) if active_path(args.state).exists() else None
+    active = current if current and current.get("run") == args.run else load_json(journal)
     if active.get("status") not in ("pushed", "published") or not active.get("commit"):
         raise ValueError("live verification receipt requires a confirmed push")
     checkpoint = load_json(args.state / "checkpoints" / f"{args.run}.json")
+    verify_final_identity(args.state, args.run, checkpoint, active)
+    validate_receipt(receipt, checkpoint, active, args.run, config, fresh=not journal.exists())
+    receipt_hash = digest(receipt)
+    if journal.exists():
+        proof = load_json(journal)
+        verify_final_identity(args.state, args.run, checkpoint, proof)
+        if proof.get("receiptHash") != receipt_hash or proof.get("commit") != active["commit"]:
+            raise ValueError("different final receipt already recorded")
+    if final_file.exists() and load_json(final_file) != receipt:
+        raise ValueError("different final receipt already recorded")
+    ledger_file = args.state / "ledger.json"
+    ledger = load_json(ledger_file)
+    records = selected_records(ledger, args.run, checkpoint)
+    for record in records:
+        if final_file.exists() and (record.get("published") is not True or record.get("state") != "published"):
+            raise ValueError("final receipt exists without completed ledger publication")
+        if record.get("published") or record.get("state") == "published":
+            if record.get("published") is not True or record.get("state") != "published" or record.get("commit") != active["commit"] or record.get("receiptHash") != receipt_hash:
+                raise ValueError("inconsistent published ledger replay")
+    replay = journal.exists()
+    proof = {**active, "receiptHash": receipt_hash}
+    save(journal, proof)
+    for record in records:
+        record.update(published=True, state="published", commit=active["commit"], receiptHash=receipt_hash)
+    save(ledger_file, ledger)
+    save(final_file, receipt)
+    if current and current.get("run") == args.run:
+        active_path(args.state).unlink()
+    return {"run": args.run, "status": "published", "commit": active["commit"], "receiptHash": receipt_hash, "idempotent": replay}
+
+
+def validate_receipt(receipt, checkpoint, active, run, config, *, fresh=True):
     expected = {item["slug"]: item for item in checkpoint["selected"]}
-    if receipt.get("run") != args.run or receipt.get("commit") != active["commit"]:
+    if receipt.get("run") != run or receipt.get("commit") != active["commit"]:
         raise ValueError("receipt run/commit does not match pushed release")
     if receipt.get("canonicalOrigin") != config["publication"]["canonicalOrigin"] or receipt.get("productionCommit") != active["commit"]:
         raise ValueError("receipt lacks production deployment proof for exact commit")
     checked = timestamp(receipt.get("checkedAt"))
     now = datetime.now(NY)
-    if not now - timedelta(hours=24) <= checked <= now + timedelta(minutes=2):
+    if fresh and not now - timedelta(hours=24) <= checked <= now + timedelta(minutes=2):
         raise ValueError("live verification receipt is stale or future-dated")
     deployment_match = CF_DEPLOYMENT_RECEIPT_RE.fullmatch(str(receipt.get("deploymentReceipt", "")))
     deployment_proof = receipt.get("deploymentProof")
@@ -793,7 +899,7 @@ def finalize(args, config):
     ):
         raise ValueError("deployment proof URLs do not match the Cloudflare Pages deployment")
     articles = receipt.get("articles")
-    if not isinstance(articles, list) or {entry.get("slug") for entry in articles if isinstance(entry, dict)} != set(expected):
+    if not isinstance(articles, list) or len(articles) != len(expected) or any(not isinstance(e, dict) for e in articles) or {entry.get("slug") for entry in articles if isinstance(entry, dict)} != set(expected):
         raise ValueError("receipt article set differs from checkpoint")
     canonical_host = public_https_url(config["publication"]["canonicalOrigin"], "canonical origin").hostname
     for entry in articles:
@@ -813,28 +919,19 @@ def finalize(args, config):
             raise ValueError(f"live title/source mismatch for {entry['slug']}")
         if entry.get("coverSha256") != checkpoint["assets"][entry["slug"]]:
             raise ValueError(f"live cover hash mismatch for {entry['slug']}")
-    receipt_hash = digest(receipt)
-    if final_file.exists() and digest(load_json(final_file)) != receipt_hash:
-        raise ValueError("different final receipt already recorded")
-    ledger_file = args.state / "ledger.json"
-    ledger = load_json(ledger_file) if ledger_file.exists() else {}
-    for record in ledger.values():
-        if record.get("run") == args.run and record.get("state") == "selected":
-            record.update(published=True, state="published", commit=active["commit"], receiptHash=receipt_hash)
-    save(ledger_file, ledger)
-    save(final_file, receipt)
-    active.update(status="published", receiptHash=receipt_hash)
-    save(active_path(args.state), active)
-    active_path(args.state).unlink()
-    return {"run": args.run, "status": "published", "commit": active["commit"], "receiptHash": receipt_hash}
-
 
 def abort(args):
     active = require_release(args.state, args.run)
-    if active.get("status") in ("committed", "pushed", "published"):
+    if active.get("commitTree") or active.get("status") in ("committed", "pushed", "published"):
         raise ValueError("cannot abort after commit; reconcile or finalize the release")
     record = {**active, "status": "aborted", "reason": args.reason, "abortedAt": datetime.now(NY).isoformat()}
     save(args.state / "aborted" / f"{args.run}.json", record)
+    ledger_file = args.state / "ledger.json"
+    ledger = load_json(ledger_file) if ledger_file.exists() else {}
+    for value in ledger.values():
+        if value.get("run") == args.run and value.get("state") == "selected" and not value.get("published"):
+            value["state"] = "aborted"
+    save(ledger_file, ledger)
     active_path(args.state).unlink()
     return record
 

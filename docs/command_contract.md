@@ -115,3 +115,13 @@ python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" abort --run "$L
 ## Parent-run schedule plan (not installed here)
 
 America/New_York: daily 06:15 discovery; daily 08:15 review/image/gate/materialize/release; Thursday 16:00 weekend-gap discovery; daily 20:30 status/reconciliation. Keep each scheduled payload on this exact CLI contract, refresh route attestations with secret-free config metadata plus a successful inference, and never overlap release runs. Parent owns scheduler creation, first live execution and final deployment verification.
+
+## Daily reservations and recovery integrity
+
+The hard daily ceilings are **three events and one news item per America/New_York civil day**, shared across runs. Configuration may lower, never raise, these ceilings. Persisted selected reservations and published records both count; same-run retries do not consume another slot. Each new ledger record carries its kind and reservation day. Rejected candidates do not consume slots. Explicit pre-commit abort preserves records as aborted and frees their reservations; terminal run IDs cannot be reused.
+
+Legacy records are never discarded: missing kind/day requires exact candidate-digest checkpoint identity and dated checkpoint/run or receipt evidence. Unknown, malformed or missing reservation evidence blocks selection. A release crossing New York midnight must abort/rebuild before commit; the push boundary refuses a stale or missing reservation day. `--now` is for deterministic prepare/gate testing only and cannot override the push clock.
+
+Finalize checks the lease-bound checkpoint hash and exact selected ledger digest, slug, keys, kind and day, excluding rejects. Receipt entries must be unique and complete. A durable finalization journal is written before ledger mutation; retry validates the same proof and repairs interrupted writes. Status revalidates complete checkpoint/journal/receipt/selected-ledger consistency rather than trusting a published label or a minimal receipt. Historical reconciliation does not require a still-fresh receipt. Evidence authenticity remains parent-owned; local JSON structure is not an independent remote attestation.
+
+**Committed remote-moved recovery remains blocked.** No automated reset, rebase, lease deletion or reservation release is provided: remote-tip inequality alone cannot prove the release was never pushed or is not an ancestor. Preserve all journals and have the parent independently establish remote history and a safe superseding release. Abort also refuses a commit-intent journal, including a crash after Git commit but before recording its hash.

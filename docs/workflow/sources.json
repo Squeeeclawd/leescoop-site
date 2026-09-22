@@ -75,7 +75,16 @@
       "anchor": true,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "seedUrls": [
+        "https://www.visitfortmyers.com/events",
+        "https://www.visitfortmyers.com/lee-vcb/news-updates/news-releases"
+      ],
+      "seedEvidence": {
+        "checkedAt": "2026-09-22T20:00:27Z",
+        "evidence": "Official calendar/navigation links observed via parent web_fetch; seeds only, not event verification",
+        "currentEventsVerified": false
+      }
     },
     {
       "id": "county",
@@ -184,7 +193,15 @@
       "anchor": false,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "seedUrls": [
+        "https://www.artinlee.org/calendar/"
+      ],
+      "seedEvidence": {
+        "checkedAt": "2026-09-22T20:00:27Z",
+        "evidence": "Official calendar/navigation links observed via parent web_fetch; seeds only, not event verification",
+        "currentEventsVerified": false
+      }
     },
     {
       "id": "hertz",
@@ -195,7 +212,15 @@
       "anchor": false,
       "lane": "lee",
       "access": "manual_review",
-      "verifiedEndpoint": false
+      "verifiedEndpoint": false,
+      "seedUrls": [
+        "https://hertzarena.com/events-tickets/upcoming-events/"
+      ],
+      "seedEvidence": {
+        "checkedAt": "2026-09-22T20:00:27Z",
+        "evidence": "Official calendar/navigation links observed via parent web_fetch; seeds only, not event verification",
+        "currentEventsVerified": false
+      }
     },
     {
       "id": "mann",

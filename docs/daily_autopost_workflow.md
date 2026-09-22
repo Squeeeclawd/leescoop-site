@@ -11,3 +11,6 @@ Quality over fill: publish up to three strong events and one consequential news 
 7. Parent verifies production title, direct source link and decoded cover hash for every selected item. `finalize` updates the ledger only from the exact deployment/live receipt.
 
 Do not bypass the lease, checkpoint writer, source registry, cover policy or receipt finalizer. Do not add shell/model callbacks to the workflow script. Parent owns scheduler installation, first live release and production verification.
+
+
+The daily 3-event/1-news cap is shared across runs and reservations. See the daily reservation, finalization, and recovery integrity rules in `command_contract.md`.

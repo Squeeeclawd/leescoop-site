@@ -49,6 +49,22 @@ def norm_url(value: str | None) -> str:
         return value.strip().lower()
 
 
+def recurring_event_url(value: str | None) -> str:
+    """Identify dated occurrences of one /event/<series>/ page, not calendars.
+
+    Cross-source identities and materially new programs still need editorial review.
+    """
+    parts = urlsplit(norm_url(value))
+    match = re.fullmatch(r"(/events?/[^/]+)/([0-9]{4}-[0-9]{2}-[0-9]{2})", parts.path)
+    if not match:
+        return ""
+    try:
+        datetime.strptime(match[2], "%Y-%m-%d")
+    except ValueError:
+        return ""
+    return urlunsplit((parts.scheme, parts.netloc, match[1], parts.query, ""))
+
+
 def registrable_domain(value: str | None) -> str:
     """Small dependency-free domain comparison for source-image sanity checks."""
     if not value:
@@ -151,7 +167,7 @@ def parse_frontmatter(path: Path) -> dict[str, Any]:
 
 
 def existing_index(articles: Path = ARTICLES) -> dict[str, Any]:
-    idx = {"titles": {}, "urls": {}, "slugs": {}, "event_keys": {}}
+    idx = {"titles": {}, "urls": {}, "slugs": {}, "event_keys": {}, "event_series": {}}
     articles.mkdir(parents=True, exist_ok=True)
     for path in articles.glob("*.md"):
         fm = parse_frontmatter(path)
@@ -168,6 +184,12 @@ def existing_index(articles: Path = ARTICLES) -> dict[str, Any]:
             venue_key = norm_text(str(fm.get("venue", "")))
             if event_date and venue_key:
                 idx["event_keys"][(event_date, venue_key)] = str(path)
+            series = recurring_event_url(str(fm.get("sourceUrl", "")))
+            if series:
+                idx["event_series"].setdefault(series, []).append({
+                    "path": str(path), "start": fm.get("eventDate"),
+                    "end": fm.get("eventEndDate") or fm.get("eventDate"),
+                })
     return idx
 
 
@@ -197,6 +219,18 @@ def duplicate_reason(kind: str, item: dict[str, Any], idx: dict[str, Any]) -> st
         venue_key = norm_text(str(item.get("venue", "")))
         if event_date and venue_key and (event_date, venue_key) in idx["event_keys"]:
             return f"same event start time + venue as {idx['event_keys'][(event_date, venue_key)]}"
+        series = recurring_event_url(str(item.get("sourceUrl", "")))
+        candidate_start = parse_dt(str(item.get("eventDate", "")))
+        candidate_end = parse_dt(str(item.get("eventEndDate") or item.get("eventDate", "")))
+        for prior in idx.get("event_series", {}).get(series, []):
+            prior_start = parse_dt(str(prior.get("start", "")))
+            prior_end = parse_dt(str(prior.get("end", "")))
+            if all((candidate_start, candidate_end, prior_start, prior_end)):
+                # Calendar-day comparison also supports date-only source values.
+                lo, hi = sorted((candidate_start.date(), candidate_end.date()))
+                old_lo, old_hi = sorted((prior_start.date(), prior_end.date()))
+                if lo <= old_hi + timedelta(days=30) and old_lo <= hi + timedelta(days=30):
+                    return f"same recurring event series within 30 days as {prior['path']}"
     return None
 
 
