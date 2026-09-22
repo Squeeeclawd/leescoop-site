@@ -64,6 +64,37 @@ def receipt_summary(receipt, checkpoint, ledger, now):
     return {'run': run, 'commit': commit, 'checkedAt': checked.isoformat(), 'contentCount': len(articles), 'contentDates': sorted({item['date'] for item in selected}), 'verification': 'legacy_ledger_hash_matched_checkpoint_unbound' if legacy else 'complete_checkpoint_and_ledger_bound', 'timedUnattendedPublication': 'unproven'}
 
 
+def discovery_shape(value, state):
+    """Recognize the observed nested producer format only with a bound source journal."""
+    if value is None or value.get('schema') == 'leescoop.discovery.report.v1':
+        return value
+    run = value.get('run')
+    if 'schema' in value or not isinstance(run, dict) or 'sourceAccess' not in value:
+        return value
+    require(run.get('model') == 'openai/gpt-5.6-luna', 'nested discovery model mismatch')
+    access = value['sourceAccess']
+    path = Path(access['requestJournal']).resolve()
+    require(path.is_relative_to((state / 'source-access' / 'runs').resolve()), 'discovery journal outside state')
+    raw = path.read_bytes()
+    require(hashlib.sha256(raw).hexdigest() == access['requestJournalSha256'], 'discovery journal hash mismatch')
+    journal = json.loads(raw)
+    require(journal['run'] == run['runId'], 'discovery source run mismatch')
+    stamp = timestamp(run['completedAt'])
+    require(run['currentDate'] == stamp.astimezone(NY).date().isoformat(), 'discovery date mismatch')
+    requests = journal['requests']
+    require(len(requests) <= 24, 'discovery request cap exceeded')
+    hosts, starts = {}, {}
+    for record in requests:
+        host = record['host']
+        start = record['startedEpoch']
+        hosts[host] = hosts.get(host, 0) + 1
+        require(hosts[host] <= 3 and (host not in starts or start - starts[host] >= 5), 'discovery host cap/pacing violation')
+        require(timestamp(record['fetchedAt']) <= stamp, 'discovery completed before source access')
+        starts[host] = start
+    return {**value, 'schema': 'leescoop.discovery.report.v1', 'runDate': run['currentDate'],
+            'completedAt': run['completedAt'], 'model': run['model'], 'mode': 'discovery_journal_bound_compatibility'}
+
+
 def health(state, now):
     now = now.astimezone(NY)
     issues = []
@@ -80,7 +111,15 @@ def health(state, now):
     def latest(folder, schema, fields, due, strong=False):
         found = []
         for path, value in documents(folder):
+            if not strong:
+                try:
+                    value = discovery_shape(value, state)
+                except (ValueError, KeyError, TypeError, OSError) as exc:
+                    issues.append(f'invalid_report:{path.name}:{exc}')
+                    continue
             if value is None or value.get('schema') != schema:
+                if not strong and path.name == now.date().isoformat() + '-discovery-report.json':
+                    issues.append(f'invalid_report:{path.name}:unrecognized current discovery format')
                 continue
             try:
                 stamp = timestamp(next(value[k] for k in fields if k in value))

@@ -40,6 +40,19 @@ class HealthTests(unittest.TestCase):
         with self.assertRaises(ValueError):h.receipt_summary(receipt,cp,ledger,now)
         ledger.pop('reserve');ledger.clear()
         with self.assertRaises(ValueError):h.receipt_summary(receipt,cp,ledger,now)
+    def test_nested_discovery_requires_bound_source_journal(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);now,put=self.fixture(root)
+            journal={'run':'fresh','requests':[{'host':'example.com','startedEpoch':now.timestamp()-10,'fetchedAt':(now-timedelta(seconds=10)).isoformat()}]}
+            put('source-access/runs/fresh.json',journal)
+            path=root/'source-access/runs/fresh.json'
+            report={'run':{'runId':'fresh','model':'openai/gpt-5.6-luna','completedAt':now.isoformat(),'currentDate':'2026-09-22'},'sourceAccess':{'requestJournal':str(path),'requestJournalSha256':h.hashlib.sha256(path.read_bytes()).hexdigest()}}
+            put('discovery/today.json',report)
+            self.assertEqual(h.health(root,now)['discovery']['status'],'current')
+            self.assertEqual(h.health(root,now)['issues'],[])
+            report['sourceAccess']['requestJournalSha256']='wrong'
+            put('discovery/today.json',report)
+            self.assertTrue(any('journal hash mismatch' in x for x in h.health(root,now)['issues']))
     def test_current_day_before_due_time_accepts_yesterday(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);now,put=self.fixture(root)

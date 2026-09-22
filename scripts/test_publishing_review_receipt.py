@@ -24,6 +24,17 @@ class ReviewReceiptTests(unittest.TestCase):
             proof=r.extract(root,report,'session',now)
             self.assertEqual(proof['responseId'],'fixture-response')
             self.assertIn('not-terminal',proof['receiptType'])
+    def test_active_export_without_terminal_metadata_still_requires_response_model(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);now,report,source,events=self.fixture(root)
+            metadata=json.loads((root/'metadata.json').read_text())
+            (root/'manifest.json').write_text(json.dumps({k:metadata[k] for k in ('sessionKey','sessionId')}))
+            (root/'metadata.json').unlink()
+            self.assertEqual(r.extract(root,report,'session',now)['responseId'],'fixture-response')
+            events[0]['data']['message']['model']='gpt-5.6-luna'
+            (root/'events.jsonl').write_text('\n'.join(map(json.dumps,events)))
+            with self.assertRaisesRegex(ValueError,'no actual successful'):
+                r.extract(root,report,'session',now)
     def test_wrong_session_and_changed_input_fail(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);now,report,source,events=self.fixture(root)

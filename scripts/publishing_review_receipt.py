@@ -14,10 +14,14 @@ MODEL = 'openai/gpt-5.6-sol'
 
 
 def extract(export, report, expected_session_id, now):
-    metadata = load_json(export / 'metadata.json')
+    metadata_path = export / 'metadata.json'
+    # Active-turn exports have a manifest/transcript but no terminal runtime metadata.
+    # Identity comes from the manifest; exact provider/model remains mandatory on
+    # the actual successful assistant response below, not inferred from config.
+    metadata = load_json(metadata_path) if metadata_path.exists() else load_json(export / 'manifest.json')
     if metadata.get('sessionKey') != REVIEW_KEY or metadata.get('sessionId') != expected_session_id:
         raise ValueError('export belongs to a different reviewer session')
-    if metadata.get('model', {}).get('provider') != 'openai' or metadata['model'].get('name') != 'gpt-5.6-sol':
+    if metadata_path.exists() and (metadata.get('model', {}).get('provider') != 'openai' or metadata['model'].get('name') != 'gpt-5.6-sol'):
         raise ValueError('export does not identify the exact strong reviewer')
     report_hash = hashlib.sha256(report.read_bytes()).hexdigest()
     value = load_json(report)
