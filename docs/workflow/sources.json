@@ -52,7 +52,8 @@
       "verifiedAt": "2026-09-18T14:40:00-04:00",
       "expiresAt": "2026-09-25T14:40:00-04:00",
       "evidence": "parent-provided configured and successful reviewer inference; refresh from secret-free config metadata plus a successful job before use",
-      "successfulInferenceReceipt": "parent-live-proof-2026-09-18-review"
+      "successfulInferenceReceipt": "parent-live-proof-2026-09-18-review",
+      "sessionKey": "agent:main:cron:446df669-f123-431d-a740-eb3dad2aec03"
     },
     "image": {
       "model": "openai/gpt-image-2",
@@ -486,16 +487,11 @@
       "UI tests"
     ]
   },
-  "availableConfiguredModels": [
-    "openai/gpt-5.6-luna",
-    "openai/gpt-5.6-terra",
-    "openai/gpt-5.6-sol",
-    "openai/gpt-5.5"
-  ],
   "publication": {
     "remote": "origin",
     "branch": "main",
-    "canonicalOrigin": "https://leescoop.com"
+    "canonicalOrigin": "https://leescoop.com",
+    "selectionPolicy": "unlimited-reviewed"
   },
   "sourceAudit": {
     "checkedAt": "2026-09-18T14:51:27-04:00",

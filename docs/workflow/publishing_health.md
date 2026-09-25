@@ -9,3 +9,5 @@ Historical receipts lacking checkpointHash are labelled `legacy_ledger_hash_matc
 This command does not repair state, contact sources, use models, or trigger publication. Committed/pushed recovery requires the guarded parent procedure, not deletion of a lock or lease.
 
 The observed nested discovery report format (`run` plus `sourceAccess`) is recognized only when its source journal is inside canonical state, hash-matched, run-matched, dated consistently, and within per-run/per-host pacing limits. Unknown archived report shapes are not fresh evidence; an unrecognized current canonical report is actionable.
+
+Routine/review report models are compared against `routes.routine.model` and `routes.review.model` in the default source config (or `--config`). This is a shape/model-consistency check, not successful-inference proof. A changed route can mark older reports mismatched; retain those records and produce fresh reports instead of rewriting their model fields.

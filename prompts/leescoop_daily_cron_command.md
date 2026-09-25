@@ -12,3 +12,5 @@ Return source-backed candidate JSON per prompts/leescoop_candidates.md, never
 fabricate verification. Execute only the fixed checkpoint/materialize/quality/release
 contract in docs/command_contract.md. Push is not publication; parent live evidence
 and `finalize` are mandatory before the ledger can say published.
+
+Read routine/review models from the same current route config; never pin retired model names in automation payloads. Publication has no count cap. Plan goals are optional editorial targets, not limits; source-access budgets remain hard limits.

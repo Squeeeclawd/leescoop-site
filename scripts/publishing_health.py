@@ -64,14 +64,14 @@ def receipt_summary(receipt, checkpoint, ledger, now):
     return {'run': run, 'commit': commit, 'checkedAt': checked.isoformat(), 'contentCount': len(articles), 'contentDates': sorted({item['date'] for item in selected}), 'verification': 'legacy_ledger_hash_matched_checkpoint_unbound' if legacy else 'complete_checkpoint_and_ledger_bound', 'timedUnattendedPublication': 'unproven'}
 
 
-def discovery_shape(value, state):
+def discovery_shape(value, state, config):
     """Recognize the observed nested producer format only with a bound source journal."""
     if value is None or value.get('schema') == 'leescoop.discovery.report.v1':
         return value
     run = value.get('run')
     if 'schema' in value or not isinstance(run, dict) or 'sourceAccess' not in value:
         return value
-    require(run.get('model') == 'openai/gpt-5.6-luna', 'nested discovery model mismatch')
+    require(run.get('model') == config['routes']['routine']['model'], 'nested discovery model mismatch')
     access = value['sourceAccess']
     path = Path(access['requestJournal']).resolve()
     require(path.is_relative_to((state / 'source-access' / 'runs').resolve()), 'discovery journal outside state')
@@ -95,7 +95,9 @@ def discovery_shape(value, state):
             'completedAt': run['completedAt'], 'model': run['model'], 'mode': 'discovery_journal_bound_compatibility'}
 
 
-def health(state, now):
+def health(state, now, config=None):
+    if config is None:
+        config = json.loads((Path(__file__).resolve().parents[1] / 'docs/workflow/sources.json').read_text())
     now = now.astimezone(NY)
     issues = []
     def load(path):
@@ -113,7 +115,7 @@ def health(state, now):
         for path, value in documents(folder):
             if not strong:
                 try:
-                    value = discovery_shape(value, state)
+                    value = discovery_shape(value, state, config)
                 except (ValueError, KeyError, TypeError, OSError) as exc:
                     issues.append(f'invalid_report:{path.name}:{exc}')
                     continue
@@ -125,8 +127,8 @@ def health(state, now):
                 stamp = timestamp(next(value[k] for k in fields if k in value))
                 require(stamp <= now, 'future report')
                 require(value['runDate'] == stamp.astimezone(NY).date().isoformat(), 'runDate mismatch')
-                if strong:
-                    require(value.get('model', value.get('reviewModel')) == 'openai/gpt-5.6-sol', 'not strong review model')
+                tier = 'review' if strong else 'routine'
+                require(value.get('model', value.get('reviewModel')) == config['routes'][tier]['model'], 'report model differs from configured route')
                 found.append((stamp, str(path.relative_to(state)), value))
             except (ValueError, KeyError, StopIteration, TypeError) as exc:
                 issues.append(f'invalid_report:{path.name}:{exc}')
@@ -186,11 +188,12 @@ def health(state, now):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--config', type=Path, default=Path(__file__).resolve().parents[1] / 'docs/workflow/sources.json')
     parser.add_argument('--state', required=True, type=Path)
     parser.add_argument('--now', help='Timezone-aware ISO time; defaults to current time')
     args = parser.parse_args()
     try:
-        result = health(args.state, timestamp(args.now) if args.now else datetime.now(NY))
+        result = health(args.state, timestamp(args.now) if args.now else datetime.now(NY), json.loads(args.config.read_text()))
     except (ValueError, OSError, TypeError, KeyError, AttributeError) as exc:
         result = {'status': 'action_required', 'schedulerState': 'not_inspected', 'timedUnattendedPublication': 'unproven', 'issues': [f'invalid_state:{exc}']}
     print(json.dumps(result, sort_keys=True, separators=(',', ':')))

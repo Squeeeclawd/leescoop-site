@@ -346,6 +346,14 @@ class WorkflowTests(unittest.TestCase):
             subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
             git("remote", "add", "origin", str(remote)); git("push", "origin", "main")
             self.item.update(coverImage="/covers/fixture.png", coverOrigin="existing", coverReviewed=True, coverPreservationEvidence="fixture only")
+            items = [self.item]
+            for index in range(1, 10):
+                item = copy.deepcopy(self.item)
+                item.update(slug=f'fixture-{index}', title=f'Fixture number {index}', venue=f'Hall {index}',
+                            sourceUrl=f'https://www.capecoral.gov/fixture-{index}')
+                item['eventVerification']['observedTitle'] = item['title']
+                items.append(item)
+            self.payload['items'] = items
             source = base / "input.json"; w.save(source, self.payload)
             args = SimpleNamespace(state=state, run="run", input=source, release_root=root, dry_run=False, message="fixture release", remote="origin", branch="main")
             with patch.object(w, "ROOT", root):
@@ -353,6 +361,7 @@ class WorkflowTests(unittest.TestCase):
                 w.prepare_or_gate(args, self.config, self.now, "gate")
             checkpoint_path = state / "checkpoints/run.json"
             original = w.load_json(checkpoint_path)
+            self.assertEqual(len(original["selected"]), 10)
             changed = copy.deepcopy(original); changed["selected"][0]["title"] = "tamper"
             w.save(checkpoint_path, changed)
             with self.assertRaisesRegex(ValueError, "checkpoint changed"):
@@ -391,7 +400,7 @@ class WorkflowTests(unittest.TestCase):
                     w.commit_release(args)
             committed = w.commit_release(args)
             self.assertTrue(committed["recovered"])
-            self.assertEqual(git("show", "--format=", "--name-only", "HEAD"), "src/content/articles/fixture-only.md")
+            self.assertEqual(set(git("show", "--format=", "--name-only", "HEAD").splitlines()), {f"src/content/articles/{i['slug']}.md" for i in items})
             def interrupted_push_save(path, value):
                 if path == state / "active-release.json" and value.get("status") == "pushed":
                     raise OSError("fixture crash after git push")
@@ -414,7 +423,7 @@ class WorkflowTests(unittest.TestCase):
                     previewUrl="https://319c8d3a.leescoop-site.pages.dev",
                 ),
                 verifiedBy="parent-liveverify",
-                articles=[dict(slug=self.item["slug"], url="https://leescoop.com/fixture-only/", coverUrl="https://leescoop.com/covers/fixture.png", httpStatus=200, title=self.item["title"], sourceUrl=self.item["sourceUrl"], coverSha256=w.file_hash(cover), titleVerified=True, sourceLinkVerified=True, coverHashVerified=True, coverDecoded=True)],
+                articles=[dict(slug=item["slug"], url=f"https://leescoop.com/{item['slug']}/", coverUrl="https://leescoop.com/covers/fixture.png", httpStatus=200, title=item["title"], sourceUrl=item["sourceUrl"], coverSha256=w.file_hash(cover), titleVerified=True, sourceLinkVerified=True, coverHashVerified=True, coverDecoded=True) for item in items],
             )
             args.receipt = base / "receipt.json"; w.save(args.receipt, receipt)
             self.assertEqual(w.finalize(args, self.config)["status"], "published")
@@ -422,7 +431,7 @@ class WorkflowTests(unittest.TestCase):
             self.assertFalse(w.active_path(state).exists())
             self.assertEqual(git("status", "--porcelain"), "")
 
-    def test_daily_caps_across_runs_rollover_and_unknown_legacy(self):
+    def test_daily_audit_across_runs_rollover_and_unknown_legacy(self):
         with tempfile.TemporaryDirectory() as directory:
             state = Path(directory)
             ledger = {str(i): {"run": "older", "state": "selected", "kind": "event", "day": "2026-09-18"} for i in range(3)}
@@ -432,7 +441,7 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(w.daily_counts(state, ledger, "2026-09-19", "new"), {"event": 0, "news": 0})
             self.assertEqual(w.daily_counts(state, ledger, "2026-09-18", "older"), {"event": 0, "news": 0})
             with patch.object(w, "cover", return_value="hash"):
-                self.assertEqual(w.evaluate([self.item], self.config, self.now, w.ROOT, {}, counts)[0], [])
+                self.assertEqual(w.evaluate([self.item], self.config, self.now, w.ROOT, {}, counts)[0], [self.item])
             ledger["unknown"] = {"run": "legacy", "state": "selected"}
             with self.assertRaises((ValueError, OSError)):
                 w.daily_counts(state, ledger, "2026-09-18", "new")
@@ -459,7 +468,7 @@ class WorkflowTests(unittest.TestCase):
                 w.prepare_or_gate(args, self.config, self.now, "prepare")
             self.assertFalse(w.active_path(state).exists())
 
-    def test_actual_multiple_prepares_share_hard_daily_cap(self):
+    def test_multiple_prepares_have_no_daily_cap(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(w, "cover", return_value="hash"):
             state = Path(directory); source = state / "input.json"
             self.config["goals"]["event"] = 99
@@ -473,10 +482,10 @@ class WorkflowTests(unittest.TestCase):
                 w.save(source, payload)
                 args = SimpleNamespace(state=state, run=f"run-{index}", input=source)
                 report = w.prepare_or_gate(args, self.config, self.now, "prepare")
-                self.assertEqual(len(report["selected"]), 1 if index < 3 else 0)
+                self.assertEqual(len(report["selected"]), 1)
                 # Simulate completed prior ownership while retaining its reservation.
                 w.active_path(state).unlink()
-            self.assertEqual(w.daily_counts(state, w.load_json(state / "ledger.json"), "2026-09-18", "next")["event"], 3)
+            self.assertEqual(w.daily_counts(state, w.load_json(state / "ledger.json"), "2026-09-18", "next")["event"], 5)
 
     def test_legacy_inference_preserves_and_missing_checkpoint_record_blocks(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -504,6 +513,26 @@ class WorkflowTests(unittest.TestCase):
             active.update(status="quality_passed", commitTree="tree"); w.save(w.active_path(state), active)
             with self.assertRaises(ValueError):
                 w.abort(args)
+
+    def test_unlimited_ten_events_and_multiple_news_with_low_targets(self):
+        self.config['goals'] = {'event': 0, 'news': 0}
+        items = []
+        for index in range(12):
+            item = copy.deepcopy(self.item)
+            item.update(slug=f'unlimited-{index}', title=f'Fixture number {index}',
+                        venue=f'Hall {index}', sourceUrl=f'https://www.capecoral.gov/item-{index}')
+            item['eventVerification']['observedTitle'] = item['title']
+            if index >= 10:
+                item['kind'] = 'news'
+            items.append(item)
+        with patch.object(w, 'cover', return_value='hash'):
+            selected, rejected, assets = w.evaluate(items, self.config, self.now, w.ROOT, {}, {'event': 100, 'news': 100})
+        self.assertEqual(len(selected), 12)
+        self.assertEqual(rejected, [])
+        self.assertEqual(len(assets), 12)
+        plan = w.plan(self.config, self.now.date())
+        self.assertEqual(plan['selectionPolicy'], 'unlimited-reviewed')
+        self.assertEqual(plan['limits'], self.config['network'])
 
     def test_empty_pool_noop(self):
         self.assertEqual(w.evaluate([], self.config, self.now, w.ROOT, {}), ([], [], {}))

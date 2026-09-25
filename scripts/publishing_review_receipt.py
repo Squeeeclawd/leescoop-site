@@ -7,25 +7,24 @@ import json
 from pathlib import Path
 import subprocess
 
-from publishing_workflow import load_json, save, timestamp
+from publishing_workflow import ROOT, load_json, save, timestamp, route
 
-REVIEW_KEY = 'agent:main:cron:446df669-f123-431d-a740-eb3dad2aec03'
-MODEL = 'openai/gpt-5.6-sol'
-
-
-def extract(export, report, expected_session_id, now):
+def extract(export, report, expected_session_id, now, config):
+    model = route(config, 'review', now)
+    provider, model_name = model.split('/', 1)
+    review_key = config['routes']['review']['sessionKey']
     metadata_path = export / 'metadata.json'
     # Active-turn exports have a manifest/transcript but no terminal runtime metadata.
     # Identity comes from the manifest; exact provider/model remains mandatory on
     # the actual successful assistant response below, not inferred from config.
     metadata = load_json(metadata_path) if metadata_path.exists() else load_json(export / 'manifest.json')
-    if metadata.get('sessionKey') != REVIEW_KEY or metadata.get('sessionId') != expected_session_id:
+    if metadata.get('sessionKey') != review_key or metadata.get('sessionId') != expected_session_id:
         raise ValueError('export belongs to a different reviewer session')
-    if metadata_path.exists() and (metadata.get('model', {}).get('provider') != 'openai' or metadata['model'].get('name') != 'gpt-5.6-sol'):
+    if metadata_path.exists() and (metadata.get('model', {}).get('provider') != provider or metadata['model'].get('name') != model_name):
         raise ValueError('export does not identify the exact strong reviewer')
     report_hash = hashlib.sha256(report.read_bytes()).hexdigest()
     value = load_json(report)
-    if value.get('model') != MODEL or not value.get('inputSha256'):
+    if value.get('model') != model or not value.get('inputSha256'):
         raise ValueError('review report lacks model/input binding')
     completed = timestamp(value['completedAt'])
     if not now - timedelta(hours=24) <= completed <= now:
@@ -55,13 +54,13 @@ def extract(export, report, expected_session_id, now):
         if not pair:
             continue
         assistant_event, assistant = pair
-        if assistant.get('provider') != 'openai' or assistant.get('model') != 'gpt-5.6-sol' or assistant.get('stopReason') != 'toolUse' or not assistant.get('responseId'):
+        if assistant.get('provider') != provider or assistant.get('model') != model_name or assistant.get('stopReason') != 'toolUse' or not assistant.get('responseId'):
             continue
         step_time = timestamp(event['ts'])
         if not completed <= step_time <= now:
             continue
-        return {'schema': 'leescoop.review.model-step-receipt.v1', 'model': MODEL,
-                'provider': 'openai', 'sessionKey': REVIEW_KEY, 'sessionId': expected_session_id,
+        return {'schema': 'leescoop.review.model-step-receipt.v1', 'model': model,
+                'provider': provider, 'sessionKey': review_key, 'sessionId': expected_session_id,
                 'receipt': f"openclaw-response:{assistant['responseId']};message:{assistant_event['entryId']}",
                 'responseId': assistant['responseId'], 'messageId': assistant_event['entryId'],
                 'toolCallId': message['toolCallId'], 'completedAt': step_time.isoformat(),
@@ -74,12 +73,16 @@ def extract(export, report, expected_session_id, now):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--config', type=Path, default=ROOT / 'docs/workflow/sources.json')
     p.add_argument('--state', type=Path, required=True)
     p.add_argument('--report', type=Path, required=True)
     p.add_argument('--session-id', required=True)
     p.add_argument('--export', type=Path, help='Inspect an existing supported export instead of creating one')
     args = p.parse_args()
     try:
+        config = load_json(args.config)
+        route(config, 'review', datetime.now(timezone.utc))
+        review_key = config['routes']['review']['sessionKey']
         state = args.state.resolve()
         report = args.report.resolve()
         if not report.is_relative_to(state / 'reports'):
@@ -87,14 +90,14 @@ def main():
         export = args.export
         if export is None:
             suffix = hashlib.sha256(report.read_bytes()).hexdigest()[:16]
-            result = subprocess.run(['openclaw', 'sessions', 'export-trajectory', '--session-key', REVIEW_KEY,
+            result = subprocess.run(['openclaw', 'sessions', 'export-trajectory', '--session-key', review_key,
                                      '--workspace', str(state / 'reports'), '--output', 'review-step-' + suffix, '--json'],
                                     check=True, capture_output=True, text=True, timeout=60)
             exported = json.loads(result.stdout)
             if exported.get('sessionId') != args.session_id:
                 raise ValueError('stored reviewer session changed during export')
             export = Path(exported['outputDir'])
-        result = extract(export, report, args.session_id, datetime.now(timezone.utc))
+        result = extract(export, report, args.session_id, datetime.now(timezone.utc), config)
         output = report.with_name(report.stem + '-model-receipt.json')
         save(output, result)
         print(json.dumps({'receiptPath': str(output), **result}, ensure_ascii=False))

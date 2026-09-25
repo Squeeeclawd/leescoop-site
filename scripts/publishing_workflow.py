@@ -143,6 +143,7 @@ def selected_records(ledger, run, checkpoint):
 
 
 def daily_counts(state, ledger, day, run):
+    """Validate/migrate legacy reservations; counts are audit data, never quotas."""
     counts = {"event": 0, "news": 0}
     for path in (state / "checkpoints").glob("*.json"):
         if path.stem == run or (state / "aborted" / path.name).exists():
@@ -293,6 +294,13 @@ def route_evidence(data, config, tier, now):
     return evidence
 
 
+def publication_policy(config):
+    policy = config["publication"].get("selectionPolicy")
+    if policy != "unlimited-reviewed":
+        raise ValueError("publication selectionPolicy must be unlimited-reviewed")
+    return policy
+
+
 def plan(config, day):
     sources = [s for s in config["sources"] if s["lane"] != "nearby" or config["nearbyEnabled"]]
     anchors = [s for s in sources if s.get("anchor")]
@@ -302,6 +310,7 @@ def plan(config, day):
     return {
         "date": str(day), "sources": selected, "limits": config["network"],
         "windowsDays": [0, 14, 45, 180], "goals": config["goals"],
+        "goalsAre": "editorial-targets-not-caps", "selectionPolicy": publication_policy(config),
         "queries": [f"{city} public events this weekend {day:%B %Y}" for city in config["cities"]],
         "fetchMode": "bounded_source_fetch_script", "automaticFetchAdapter": True,
     }
@@ -468,17 +477,9 @@ def evaluate(items, config, now, root, ledger, counts=None):
         except (ValueError, KeyError, TypeError) as exc:
             rejected.append({"slug": item.get("slug") if isinstance(item, dict) else None, "reason": str(exc)})
     accepted.sort(key=lambda item: (item["kind"] != "event", 0 if item["kind"] == "event" and parse_event_value(item["eventDate"]) <= now + timedelta(days=14) else 1, -item["score"], item["slug"]))
-    selected, counts, organizers = [], dict(counts or {"event": 0, "news": 0}), set()
-    for item in accepted:
-        kind = item["kind"]
-        organizer = posts.norm_text(item.get("organizer", ""))
-        if counts[kind] >= min(config["goals"][kind], {"event": 3, "news": 1}[kind]) or (kind == "event" and organizer in organizers):
-            rejected.append({"slug": item["slug"], "reason": "reserve: cap/organizer diversity"})
-            continue
-        selected.append(item)
-        counts[kind] += 1
-        if kind == "event":
-            organizers.add(organizer)
+    publication_policy(config)
+    # Review owns editorial diversity; neither goals nor historical counts cap release.
+    selected = accepted
     assets = {item["slug"]: cover(item, root, config, now) for item in selected}
     return selected, rejected, assets
 
