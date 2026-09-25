@@ -12,7 +12,7 @@ class HealthTests(unittest.TestCase):
         def put(name,v):
             p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(v))
         put('discovery/today.json',{'schema':'leescoop.discovery.report.v1','runDate':'2026-09-22','completedAt':now.isoformat(),'model':'openai/gpt-5.6-luna'})
-        put('reports/review.json',{'schema':'leescoop.review.report.v1','runDate':'2026-09-22','completedAt':now.isoformat(),'model':'openai/gpt-5.5','mode':'no_op','publishable':False})
+        put('reports/review.json',{'schema':'leescoop.review.report.v1','runDate':'2026-09-22','completedAt':now.isoformat(),'model':'openai/gpt-5.6-sol','mode':'no_op','publishable':False})
         return now,put
     def test_noop_is_not_preview(self):
         with tempfile.TemporaryDirectory() as d:

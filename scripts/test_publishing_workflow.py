@@ -16,7 +16,7 @@ class WorkflowTests(unittest.TestCase):
     def setUp(self):
         self.config = json.loads((w.ROOT / "docs/workflow/sources.json").read_text())
         self.now = datetime.fromisoformat("2026-09-18T14:00:00-04:00")
-        for tier, model in (("routine", "openai/gpt-5.6-luna"), ("review", "openai/gpt-5.5")):
+        for tier, model in (("routine", "openai/gpt-5.6-luna"), ("review", "openai/gpt-5.6-sol")):
             self.config["routes"][tier].update(
                 model=model, auth="oauth", evidence="fixture config attestation",
                 verifiedAt=self.now.isoformat(), expiresAt=(self.now + timedelta(hours=2)).isoformat(),
@@ -39,7 +39,7 @@ class WorkflowTests(unittest.TestCase):
         self.payload = {
             "workflowEvidence": {
                 "routine": {"model": "openai/gpt-5.6-luna", "completedAt": self.now.isoformat(), "receipt": "routine-job-ok"},
-                "review": {"model": "openai/gpt-5.5", "completedAt": self.now.isoformat(), "receipt": "review-job-ok"},
+                "review": {"model": "openai/gpt-5.6-sol", "completedAt": self.now.isoformat(), "receipt": "review-job-ok"},
             },
             "items": [self.item],
         }

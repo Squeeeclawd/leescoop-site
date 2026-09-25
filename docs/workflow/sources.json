@@ -47,11 +47,11 @@
       "successfulInferenceReceipt": "parent-live-proof-2026-09-18-routine"
     },
     "review": {
-      "model": "openai/gpt-5.5",
+      "model": "openai/gpt-5.6-sol",
       "auth": "oauth",
       "verifiedAt": "2026-09-18T14:40:00-04:00",
       "expiresAt": "2026-09-25T14:40:00-04:00",
-      "evidence": "parent-provided configured and successful reviewer inference; refresh from secret-free config metadata plus a successful job before use",
+      "evidence": "parent-provided successful reviewer inference and OAuth route attestation; refresh from secret-free config metadata plus a successful job before use",
       "successfulInferenceReceipt": "parent-live-proof-2026-09-18-review",
       "sessionKey": "agent:main:cron:446df669-f123-431d-a740-eb3dad2aec03"
     },
