@@ -41,3 +41,7 @@ python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" status
 ```
 
 Run commands sequentially and stop on any nonzero status. Do not continue from a partial selection just because prepare returned success. If midnight intervenes, preserve freshness guards and abort/rebuild safely before commit; never alter recorded days. Parent must update automation payloads to use configured routes, unlimited-reviewed selection, editorial targets (not caps), unchanged source budgets and the same release contract. Gateway/scheduler edits are outside this repair.
+
+## Async cover-generation recovery
+
+If an image task is accepted but the cover child exits before artifact edits, keep the accepted task ID with its slug/output path and wait for the original task completion. Resume the same visible child with `sessions_send`; do not generate a duplicate. Inspect, crop/format, hash and bind the completed artifact before candidate prepare/gate. Use the parent progress card for status; do not add dashboard widgets for this workflow.

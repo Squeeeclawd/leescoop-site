@@ -135,6 +135,15 @@ Before prepare, write the completed review report once (including inputPath/inpu
 
 Active-turn trajectory exports may contain only manifest.json, events.jsonl and session-branch.json. The resolver uses the manifest for session identity in that case and still requires the exact successful assistant response provider/model, response ID, tool-result success, and report/input hashes. Terminal metadata.json is optional, not a prerequisite for a completed model step.
 
+
+## Media generation continuation and child-session recovery
+
+Image/music/video generation can outlive the child turn that started it. A media-completion turn may resume with delivery-only tools and no repository edit capability; that is not a failed generation and must not trigger a duplicate request. The parent owns the generated task ID, destination slug, expected output path, and continuation route. Record those fields in the release notes or candidate work item as soon as the task is accepted.
+
+For every media task, bind `taskId -> slug -> outputPath -> model -> requested prompt/asset role` before leaving the turn. If the child exits after a successful async start, resume the same visible child with `sessions_send` when the completion event arrives and provide only the task ID, slug and expected path needed to finish inspection/crop/manifest edits. Do not start another generation unless the task is terminally failed and the parent explicitly authorizes a replacement. A running/queued media receipt is not a usable cover asset; publication remains blocked until the completed artifact is decoded, dimension-checked, hashed and referenced by the checkpoint input.
+
+Progress reporting uses the existing progress card owned by the parent/session. Do not create ad hoc dashboard widgets for this workflow. Do not recursively delegate a single drafting or cover-finishing deliverable; use one explicitly configured child model per configured route, then verify the actual assistant provider/model/API from session history before using any receipt. Requested model names are audit context only; actual response metadata is the gate.
+
 ## Model route maintenance
 
 `docs/workflow/sources.json` is the default route source of truth; the workflow, review receipt helper and health checker accept `--config /absolute/config.json` before their command options. Pass the same config to all tools when overriding. Model inventory snapshots and prompt filenames are not routing contracts. `prompts/leescoop_daily_gpt54mini.md` is only a retired compatibility pointer; it does not select GPT-5.4-mini.
