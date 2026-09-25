@@ -128,7 +128,10 @@ def health(state, now, config=None):
                 require(stamp <= now, 'future report')
                 require(value['runDate'] == stamp.astimezone(NY).date().isoformat(), 'runDate mismatch')
                 tier = 'review' if strong else 'routine'
-                require(value.get('model', value.get('reviewModel')) == config['routes'][tier]['model'], 'report model differs from configured route')
+                route_entry = config['routes'][tier]
+                require(value.get('model', value.get('reviewModel')) == route_entry['model'], 'report model differs from configured actual route')
+                if route_entry.get('api'):
+                    require(value.get('api') == route_entry['api'], 'report API differs from configured actual route')
                 found.append((stamp, str(path.relative_to(state)), value))
             except (ValueError, KeyError, StopIteration, TypeError) as exc:
                 issues.append(f'invalid_report:{path.name}:{exc}')

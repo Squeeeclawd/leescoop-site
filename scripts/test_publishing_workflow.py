@@ -156,6 +156,12 @@ class WorkflowTests(unittest.TestCase):
         stale["workflowEvidence"]["review"]["completedAt"] = (self.now - timedelta(days=2)).isoformat()
         with self.assertRaises(ValueError):
             w.route_evidence(stale, self.config, "review", self.now)
+        self.config["routes"]["review"]["api"] = "openai-chatgpt-responses"
+        with self.assertRaisesRegex(ValueError, "API"):
+            w.route_evidence(self.payload, self.config, "review", self.now)
+        routed = copy.deepcopy(self.payload)
+        routed["workflowEvidence"]["review"]["api"] = "openai-chatgpt-responses"
+        self.assertEqual(w.route_evidence(routed, self.config, "review", self.now)["api"], "openai-chatgpt-responses")
 
     def test_lock_concurrent_process(self):
         with tempfile.TemporaryDirectory() as directory:

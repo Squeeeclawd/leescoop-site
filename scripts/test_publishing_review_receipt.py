@@ -9,14 +9,14 @@ import publishing_review_receipt as r
 class ReviewReceiptTests(unittest.TestCase):
     def fixture(self, root):
         self.config=json.loads((r.ROOT/'docs/workflow/sources.json').read_text())
-        self.config['routes']['review'].update(model='openai/fixture-reviewer', verifiedAt='2026-09-22T20:00:00+00:00', expiresAt='2026-09-23T20:00:00+00:00')
+        self.config['routes']['review'].update(model='openai/gpt-6-astra', requestedModel='openai/gpt-5.5', api='openai-chatgpt-responses', verifiedAt='2026-09-22T20:00:00+00:00', expiresAt='2026-09-23T20:00:00+00:00')
         now=datetime(2026,9,22,21,0,tzinfo=timezone.utc)
         source=root/'leads.json';source.write_text('{"leads":[]}')
         input_hash=hashlib.sha256(source.read_bytes()).hexdigest()
-        report=root/'review.json';report.write_text(json.dumps({'model':self.config['routes']['review']['model'],'inputPath':str(source),'inputSha256':input_hash,'completedAt':now.isoformat()}))
+        report=root/'review.json';report.write_text(json.dumps({'model':self.config['routes']['review']['model'],'requestedModel':self.config['routes']['review']['requestedModel'],'api':self.config['routes']['review']['api'],'inputPath':str(source),'inputSha256':input_hash,'completedAt':now.isoformat()}))
         report_hash=hashlib.sha256(report.read_bytes()).hexdigest()
-        (root/'metadata.json').write_text(json.dumps({'sessionKey':self.config['routes']['review']['sessionKey'],'sessionId':'session','model':{'provider':'openai','name':'fixture-reviewer'}}))
-        events=[{'type':'assistant.message','sessionId':'session','entryId':'message','data':{'message':{'role':'assistant','provider':'openai','model':'fixture-reviewer','stopReason':'toolUse','responseId':'fixture-response','content':[{'type':'toolCall','id':'tool'}]}}},
+        (root/'metadata.json').write_text(json.dumps({'sessionKey':self.config['routes']['review']['sessionKey'],'sessionId':'session','model':{'provider':'openai','name':'gpt-5.5'}}))
+        events=[{'type':'assistant.message','sessionId':'session','entryId':'message','data':{'message':{'role':'assistant','provider':'openai','model':'gpt-6-astra','api':'openai-chatgpt-responses','stopReason':'toolUse','responseId':'fixture-response','content':[{'type':'toolCall','id':'tool'}]}}},
                 {'type':'tool.result','sessionId':'session','ts':now.isoformat(),'data':{'message':{'toolCallId':'tool','isError':False,'details':{'exitCode':0},'content':[{'text':f'review.json {report_hash} {input_hash}'}]}}}]
         (root/'events.jsonl').write_text('\n'.join(map(json.dumps,events)))
         return now,report,source,events
@@ -42,9 +42,20 @@ class ReviewReceiptTests(unittest.TestCase):
             root=Path(tmp);now,report,source,events=self.fixture(root)
             self.config['routes']['review']['model']='openai/replacement'
             with self.assertRaises(ValueError):r.extract(root,report,'session',now,self.config)
-            self.config['routes']['review']['model']='openai/fixture-reviewer'
+            self.config['routes']['review']['model']='openai/gpt-6-astra'
             self.config['routes']['review']['expiresAt']=now.isoformat()
             with self.assertRaisesRegex(ValueError,'expired'):r.extract(root,report,'session',now,self.config)
+
+    def test_actual_api_must_match_when_configured(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);now,report,source,events=self.fixture(root)
+            proof=r.extract(root,report,'session',now,self.config)
+            self.assertEqual(proof['model'],'openai/gpt-6-astra')
+            self.assertEqual(proof['api'],'openai-chatgpt-responses')
+            events[0]['data']['message']['api']='other-api'
+            (root/'events.jsonl').write_text('\n'.join(map(json.dumps,events)))
+            with self.assertRaisesRegex(ValueError,'no actual successful'):
+                r.extract(root,report,'session',now,self.config)
 
     def test_wrong_session_and_changed_input_fail(self):
         with tempfile.TemporaryDirectory() as tmp:

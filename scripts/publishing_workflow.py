@@ -265,7 +265,7 @@ def source_entry(item, config):
     return source
 
 
-def route(config, tier, now):
+def route_entry(config, tier, now):
     entry = config["routes"][tier]
     if not entry.get("model") or entry.get("auth") != "oauth" or not entry.get("evidence"):
         raise ValueError(f"{tier} OAuth route not verified")
@@ -280,14 +280,21 @@ def route(config, tier, now):
         or entry.get("liveGenerationTested") is not True
     ):
         raise ValueError("image route requires live exact-model Codex OAuth proof without direct override")
-    return entry["model"]
+    return entry
+
+
+def route(config, tier, now):
+    return route_entry(config, tier, now)["model"]
 
 
 def route_evidence(data, config, tier, now):
-    model = route(config, tier, now)
+    entry = route_entry(config, tier, now)
+    model = entry["model"]
     evidence = data.get("workflowEvidence", {}).get(tier)
     if not isinstance(evidence, dict) or evidence.get("model") != model or not evidence.get("receipt"):
-        raise ValueError(f"candidate input lacks matching {tier} job receipt")
+        raise ValueError(f"candidate input lacks matching {tier} actual-model job receipt")
+    if entry.get("api") and evidence.get("api") != entry["api"]:
+        raise ValueError(f"candidate input lacks matching {tier} API receipt")
     completed = timestamp(evidence.get("completedAt"))
     if not now - timedelta(hours=24) <= completed <= now:
         raise ValueError(f"{tier} job receipt is stale or future-dated")

@@ -7,8 +7,8 @@ The strong review route verifies each fact against accessible source evidence, t
 ```json
 {
   "workflowEvidence": {
-    "routine": {"model": "exact configured model", "completedAt": "offset timestamp", "receipt": "secret-free successful job reference"},
-    "review": {"model": "exact configured model", "completedAt": "offset timestamp", "receipt": "secret-free successful job reference"}
+    "routine": {"model": "exact actual configured runtime model", "api": "configured API if present", "completedAt": "offset timestamp", "receipt": "secret-free successful job reference"},
+    "review": {"model": "exact actual configured runtime model", "api": "configured API if present", "completedAt": "offset timestamp", "receipt": "secret-free successful job reference"}
   },
   "items": []
 }
@@ -24,4 +24,4 @@ Cover policy:
 - News source image: `coverOrigin:"source"`, `sourceImageUrl`, `sourceImageAttribution`, `sourceImageRightsEvidence`; its host must match the source or an explicit registry image host.
 - Arbitrary source images cannot bypass generated-event OAuth policy. News generated art is blocked.
 
-Keep news summaries at most 80 words and events at most 140. The materializer adds the direct source section. Never claim verification, rights, route success, image completion or fetch automation without evidence.
+Keep news summaries at most 80 words and events at most 140. The materializer adds the direct source section. Never claim verification, rights, route success, image completion or fetch automation without evidence. Requested model aliases are not evidence; use the actual provider/model/API observed in the successful step.
