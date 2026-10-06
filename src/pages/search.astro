@@ -1,15 +1,16 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SubpageLayout from '@/layouts/SubpageLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 ---
-<BaseLayout title="Search | LeeScoop">
+<SubpageLayout title="Search | LeeScoop">
   <Header />
   <main class="wrap page-shell">
     <div class="section-heading">
       <div>
         <p class="eyebrow">Search</p>
         <h1>Search LeeScoop</h1>
+        <p class="page-description">Find your next local outing, a favorite venue, or a useful Lee County update.</p>
       </div>
     </div>
     <div id="search"></div>
@@ -32,4 +33,4 @@ import Footer from '@/components/Footer.astro';
       }
     });
   </script>
-</BaseLayout>
+</SubpageLayout>

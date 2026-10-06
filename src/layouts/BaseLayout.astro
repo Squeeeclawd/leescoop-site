@@ -4,6 +4,7 @@ import { site } from '@/data/site';
 
 interface Props {
   title: string;
+  bodyClass?: string;
   description?: string;
   image?: string | null;
   imageWidth?: number | string;
@@ -14,6 +15,7 @@ interface Props {
 
 const {
   title,
+  bodyClass,
   description = site.description,
   image = '/branding/leescoop-logo.png',
   imageWidth = 1216,
@@ -50,7 +52,7 @@ const absoluteImage = image ? new URL(image, Astro.site ?? site.domain).toString
     {absoluteImage && <meta name="twitter:image" content={absoluteImage} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
-  <body>
+  <body class={bodyClass}>
     <slot />
   </body>
 </html>

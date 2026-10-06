@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SubpageLayout from '@/layouts/SubpageLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ArticleCard from '@/components/ArticleCard.astro';
@@ -20,13 +20,14 @@ export async function getStaticPaths() {
 const { tag } = Astro.props;
 const articles = activeArticles(await getCollection('articles')).filter((article) => article.data.tags.includes(tag));
 ---
-<BaseLayout title={`${tag} | LeeScoop`}>
+<SubpageLayout title={`${tag} | LeeScoop`}>
   <Header />
   <main class="wrap page-shell">
     <div class="section-heading">
       <div>
         <p class="eyebrow">Tag archive</p>
         <h1>{tag}</h1>
+        <p class="page-description">A closer look at the events and updates that interest you.</p>
       </div>
     </div>
     <div class="card-grid three">
@@ -34,4 +35,4 @@ const articles = activeArticles(await getCollection('articles')).filter((article
     </div>
   </main>
   <Footer />
-</BaseLayout>
+</SubpageLayout>

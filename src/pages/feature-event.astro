@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SubpageLayout from '@/layouts/SubpageLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 ---
-<BaseLayout title="Feature your event | LeeScoop" description="Submit a Lee County event for LeeScoop calendar consideration.">
+<SubpageLayout title="Feature your event | LeeScoop" description="Submit a Lee County event for LeeScoop calendar consideration.">
   <Header />
   <main class="wrap page-shell feature-event-page">
     <section class="feature-event-hero panel-glow">
@@ -182,4 +182,4 @@ import Footer from '@/components/Footer.astro';
   </main>
   <Footer />
   <script is:inline type="module" src="/scripts/feature-event.js"></script>
-</BaseLayout>
+</SubpageLayout>

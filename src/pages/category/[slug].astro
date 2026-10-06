@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SubpageLayout from '@/layouts/SubpageLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ArticleCard from '@/components/ArticleCard.astro';
@@ -14,13 +14,14 @@ export async function getStaticPaths() {
 const { category } = Astro.props;
 const articles = activeArticles(await getCollection('articles')).filter((article) => (article.data.city || article.data.category) === category);
 ---
-<BaseLayout title={`${category} | LeeScoop`}>
+<SubpageLayout title={`${category} | LeeScoop`}>
   <Header />
   <main class="wrap page-shell">
     <div class="section-heading">
       <div>
         <p class="eyebrow">Area archive</p>
         <h1>{category}</h1>
+        <p class="page-description">Local happenings, good finds, and useful updates from your neighborhood.</p>
       </div>
     </div>
     {articles.length > 0 ? (
@@ -32,4 +33,4 @@ const articles = activeArticles(await getCollection('articles')).filter((article
     )}
   </main>
   <Footer />
-</BaseLayout>
+</SubpageLayout>

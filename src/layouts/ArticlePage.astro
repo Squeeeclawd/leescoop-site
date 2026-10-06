@@ -1,0 +1,66 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import SubpageLayout from './SubpageLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import ShareButton from '@/components/ShareButton.astro';
+import Comments from '@/components/Comments.astro';
+import { LEE_COUNTY_TIME_ZONE, leeCountyDateKey } from '@/lib/content';
+
+interface Props { article: CollectionEntry<'articles'>; }
+const { article } = Astro.props;
+const { Content } = await render(article);
+const data = article.data;
+const isEvent = data.contentKind === 'event';
+const displayDate = isEvent ? data.eventDate : data.date;
+const formatDate = (value?: Date) => value?.toLocaleDateString('en-US', {
+  timeZone: LEE_COUNTY_TIME_ZONE, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+}) ?? 'Date TBA';
+const startDate = formatDate(displayDate);
+const endDate = isEvent && data.eventEndDate && displayDate && leeCountyDateKey(data.eventEndDate) !== leeCountyDateKey(displayDate)
+  ? formatDate(data.eventEndDate) : null;
+// Some source descriptions already include the full date. Don't print it twice.
+const eventTime = data.eventTime?.startsWith(`${startDate}, `) ? data.eventTime.slice(startDate.length + 2) : data.eventTime;
+const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com').toString();
+---
+<SubpageLayout title={`${data.title} | LeeScoop`} description={data.excerpt} image={data.coverImage} canonicalUrl={shareUrl} type="article">
+  <Header />
+  <main class="wrap story-shell">
+    <nav class="subpage-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a><span aria-hidden="true">/</span>
+      <a href={isEvent ? '/#browse' : '/archive/'}>{isEvent ? 'Local events' : 'Local updates'}</a>
+      {data.city && <><span aria-hidden="true">/</span><span>{data.city}</span></>}
+    </nav>
+    <article class="story" data-pagefind-body>
+      <header class:list={['story-hero', { 'story-hero-no-image': !data.coverImage }]}>
+        {data.coverImage && <div class="story-art"><img src={data.coverImage} alt={`${data.title} cover image`} loading="eager" fetchpriority="high" decoding="async" width="1216" height="704" /></div>}
+        <div class="story-heading">
+          <div class="story-kicker"><span>{data.category}</span><span class="story-kind">{isEvent ? 'Local event' : 'Local news'}</span></div>
+          <h1>{data.title}</h1>
+          <p class="story-deck">{data.excerpt}</p>
+          <div class="story-byline"><span>By {data.author}</span><time datetime={data.date.toISOString()}>{data.date.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' })}</time></div>
+        </div>
+      </header>
+      <div class="story-grid">
+        <aside class="story-facts" aria-labelledby="story-facts-heading">
+          <p class="eyebrow">{isEvent ? 'Plan your visit' : 'The essentials'}</p>
+          <h2 id="story-facts-heading">At a glance</h2>
+          <dl>
+            <div><dt>{isEvent ? 'When' : 'Published'}</dt><dd>{startDate}{endDate && <> – {endDate}</>}{isEvent && eventTime && <span class="fact-detail">{eventTime}</span>}</dd></div>
+            {(data.venue || data.location || data.city) && <div><dt>Where</dt><dd>{data.venue ?? data.location ?? data.city}{data.address && <span class="fact-detail">{data.address}</span>}</dd></div>}
+            {data.cost && <div><dt>Cost</dt><dd>{data.cost}</dd></div>}
+            {data.audience && <div><dt>Who it’s for</dt><dd>{data.audience}</dd></div>}
+          </dl>
+          {data.sourceUrl && <div class="story-source"><a class="story-source-button" href={data.sourceUrl}>{isEvent ? 'Visit event website' : 'Read the source'} <span aria-hidden="true">↗</span></a><p>{data.sourceName ?? 'Original source'}{isEvent && <span>Check the source for current details and availability.</span>}</p></div>}
+        </aside>
+        <div class="story-content">
+          <div class="story-prose"><Content /></div>
+          <div class="story-share"><p>Pass along the scoop</p><ShareButton title={data.title} url={shareUrl} /></div>
+          <a class="story-back" href="/#browse">← Explore more around Lee County</a>
+        </div>
+      </div>
+    </article>
+    <Comments articleSlug={article.slug} />
+  </main>
+  <Footer />
+</SubpageLayout>
