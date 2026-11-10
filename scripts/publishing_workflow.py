@@ -358,6 +358,9 @@ def verify_event_extraction(item, now):
     observed_words = set(posts.norm_text(evidence["observedTitle"]).split())
     if not title_words or len(title_words & observed_words) < min(2, len(title_words)):
         raise ValueError("observed event title does not identify the candidate")
+    if item.get("sourceUrlScope") == "collection":
+        if posts.norm_text(evidence.get("observedVenue", "")) != posts.norm_text(item["venue"]):
+            raise ValueError("collection source requires observed venue matching this event")
     return evidence
 
 
@@ -367,17 +370,30 @@ def validate(item, config, now):
     kind = item.get("kind")
     if kind not in ("event", "news"):
         raise ValueError("kind must be event or news")
-    required = ["slug", "title", "sourceId", "sourceUrl", "sourceName", "city", "category", "excerpt", "summary", "date", "evidence"]
+    required = ["slug", "title", "sourceId", "sourceUrl", "sourceName", "city", "category", "excerpt", "summary", "date"]
     if kind == "event":
         required += ["eventDate", "eventTime", "venue", "cost", "eventType", "organizer"]
     if any(not isinstance(item.get(key), str) or not item[key].strip() for key in required):
         raise ValueError("missing required string fields")
+    evidence = item.get("evidence")
+    if not ((isinstance(evidence, str) and evidence.strip()) or (
+        isinstance(evidence, dict) and isinstance(evidence.get("sources"), list) and evidence["sources"]
+        and isinstance(evidence.get("reviewRationale"), str) and evidence["reviewRationale"].strip()
+    )):
+        raise ValueError("source-backed evidence must be nonempty text or structured sources/reviewRationale")
+    if isinstance(evidence, dict):
+        for source in evidence["sources"]:
+            if not isinstance(source, dict) or not isinstance(source.get("url"), str) or not source["url"].strip():
+                raise ValueError("structured evidence sources require source URL objects")
+            public_https_url(source["url"], "evidence source URL")
     if posts.slugify(item["slug"]) != item["slug"]:
         raise ValueError("unsafe slug")
     public_https_url(item["sourceUrl"], "source URL")
     if item.get("verificationUrl"):
         public_https_url(item["verificationUrl"], "verification URL")
     source_entry(item, config)
+    if item.get("sourceUrlScope", "item") not in ("item", "collection") or (kind != "event" and item.get("sourceUrlScope") == "collection"):
+        raise ValueError("only verified events may use a collection source URL")
     if item.get("verified") is not True or item.get("reviewed") is not True:
         raise ValueError("requires source verification and strong editorial review")
     checked = timestamp(item["verifiedAt"])
@@ -411,7 +427,20 @@ def keys(item):
     values = ["slug:" + item["slug"], "title:" + posts.norm_text(item["title"]), "url:" + posts.norm_url(item["sourceUrl"])]
     if item["kind"] == "event":
         values.append("event:" + posts.event_start_key(item["eventDate"]) + ":" + posts.norm_text(item["venue"]))
+        identity = posts.collection_event_identity(item)
+        if identity:
+            values.append("collection:" + identity)
     return values
+
+
+def duplicate_keys(left, right):
+    """Only two evidenced collection identities can exempt a shared roundup URL."""
+    shared = set(left) & set(right)
+    left_collection = {key for key in left if key.startswith("collection:")}
+    right_collection = {key for key in right if key.startswith("collection:")}
+    if left_collection and right_collection and left_collection != right_collection:
+        shared = {key for key in shared if not key.startswith("url:")}
+    return bool(shared)
 
 
 def tracked_pristine(path, root):
@@ -437,7 +466,7 @@ def cover(item, root, config, now):
     if item["kind"] == "event":
         if origin == "generated":
             route(config, "image", now)
-            if not item.get("imageTaskId") or not item.get("imageEvidence"):
+            if not (item.get("imageTaskId") or item.get("imageReceiptId")) or not item.get("imageEvidence"):
                 raise ValueError("generated event cover needs completed OAuth task evidence")
         elif origin == "existing":
             if item.get("coverReviewed") is not True or not item.get("coverPreservationEvidence") or not tracked_pristine(path, root):
@@ -446,10 +475,24 @@ def cover(item, root, config, now):
             raise ValueError("new event covers must be generatedOAuth; only reviewed existing covers may be preserved")
     else:
         if origin == "generated":
-            raise ValueError("news AI art disabled by default")
-        if origin == "existing":
+            if config["publication"].get("newsArtPolicy") != "source-first-automatic-illustration-fallback":
+                raise ValueError("automatic news illustration fallback is not configured")
+            route(config, "image", now)
+            if not (item.get("imageTaskId") or item.get("imageReceiptId")) or not item.get("imageEvidence"):
+                raise ValueError("generated news cover needs completed OAuth task evidence")
+            if item.get("coverReviewed") is not True or not item.get("sourceImageFallbackReason"):
+                raise ValueError("generated news cover requires visual review and source-image fallback reason")
+            disclosure = str(item.get("coverDisclosure", "")).lower()
+            if "ai-generated" not in disclosure or "illustration" not in disclosure or "not a photograph" not in disclosure:
+                raise ValueError("generated news cover requires visible AI-illustration/non-photograph disclosure")
+            with Image.open(path) as image:
+                if image.format != "PNG" or image.size != (1216, 704):
+                    raise ValueError("generated news cover must decode as 1216x704 PNG")
+        elif origin == "existing":
             if item.get("coverReviewed") is not True or not item.get("coverPreservationEvidence") or not tracked_pristine(path, root):
                 raise ValueError("existing news cover must be reviewed, evidenced, and unchanged from HEAD")
+            if not item.get("coverDisclosure"):
+                raise ValueError("reused news cover requires a visible archive/illustration disclosure")
         elif origin == "source":
             source_url = item.get("sourceImageUrl")
             if not source_url or not item.get("sourceImageAttribution") or not item.get("sourceImageRightsEvidence"):
@@ -461,25 +504,25 @@ def cover(item, root, config, now):
             if image_host not in allowed:
                 raise ValueError("news source image host is outside attributable source policy")
         else:
-            raise ValueError("news cover must be attributable source or reviewed existing")
+            raise ValueError("news cover must be attributable source, reviewed existing, or disclosed generated illustration")
     return file_hash(path)
 
 
 def evaluate(items, config, now, root, ledger, counts=None):
     if not isinstance(items, list):
         raise ValueError("items must be an array")
-    accepted, rejected, seen = [], [], set()
+    accepted, rejected, seen = [], [], []
     index = posts.existing_index(root / "src/content/articles")
     for item in items:
         try:
             validate(item, config, now)
             identity = keys(item)
             duplicate = posts.duplicate_reason(item["kind"], item, index)
-            if duplicate or any(key in seen for key in identity):
+            if duplicate or any(duplicate_keys(identity, prior) for prior in seen):
                 raise ValueError(duplicate or "duplicate inside batch")
-            if any(set(identity) & set(value["keys"]) for value in ledger.values() if value.get("published")):
+            if any(duplicate_keys(identity, value["keys"]) for value in ledger.values() if value.get("published")):
                 raise ValueError("already published in ledger")
-            seen.update(identity)
+            seen.append(identity)
             accepted.append(item)
         except (ValueError, KeyError, TypeError) as exc:
             rejected.append({"slug": item.get("slug") if isinstance(item, dict) else None, "reason": str(exc)})
@@ -953,6 +996,7 @@ def parser():
     sub.add_parser("plan")
     sub.add_parser("status")
     route_parser = sub.add_parser("route"); route_parser.add_argument("tier", choices=["routine", "review", "image"])
+    route_parser.add_argument("--configured", action="store_true", help="Inspect requested route before real step/renewal; not inference or auth proof")
     for name in ("prepare", "gate"):
         command = sub.add_parser(name); command.add_argument("--run", required=True); command.add_argument("--input", required=True, type=Path)
     materialize_parser = sub.add_parser("materialize"); materialize_parser.add_argument("--run", required=True); materialize_parser.add_argument("--input", required=True, type=Path); materialize_parser.add_argument("--release-root", required=True, type=Path); materialize_parser.add_argument("--dry-run", action="store_true")
@@ -978,7 +1022,7 @@ def main(argv=None):
         if args.command == "plan":
             result = plan(config, now.astimezone(NY).date())
         elif args.command == "route":
-            result = {"tier": args.tier, "model": route(config, args.tier, now)}
+            result = {"tier": args.tier, "model": config["routes"][args.tier]["model"], "status": "configured-not-attested"} if args.configured else {"tier": args.tier, "model": route(config, args.tier, now)}
         elif args.command == "status":
             result = workflow_status(args.state)
         else:

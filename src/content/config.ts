@@ -37,6 +37,9 @@ const articles = defineCollection({
     sourceName: z.string().optional(),
     sourceUrl: z.string().url().optional(),
     sourceImageUrl: z.string().url().optional(),
+    sourceUrlScope: z.enum(['item', 'collection']).optional(),
+    sourceEventTitle: z.string().optional(),
+    sourceEventStart: z.string().optional(),
     verificationUrl: z.string().url().optional()
   })
 });

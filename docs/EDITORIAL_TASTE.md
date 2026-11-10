@@ -58,7 +58,8 @@ They should not be:
 Default to source images from the original article/page.
 - Prefer `og:image` or the main article image.
 - Use obvious first-party publisher/CDN images when they clearly belong to the outlet.
-- No AI art by default; missing source images require an explicit editorial decision, not automatic generation.
+- If a suitable source image is unavailable, blocked, or lacks usable attribution/access evidence, automatically use a relevant reviewed archived illustration or create a conceptual illustration through the verified `openai/gpt-image-2` OAuth route. No per-post permission is needed (standing owner instruction, November 10, 2026).
+- Clearly label generated/archived illustrations in the article. Do not represent them as photographs of a real incident, invent identifiable victims/suspects, or reuse an unrelated incident photograph. The fallback resolves an image gap, never a factual/source gap.
 
 ### Events
 Use coastal LeeScoop-style cover art only through verified Codex OAuth (openai/gpt-image-2); no API-key or ComfyUI fallback. Preserve existing covers. Incomplete covers block publishing.

@@ -113,6 +113,69 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(len(accepted), 1)
         self.assertIn("duplicate", rejected[0]["reason"])
 
+    def test_collection_url_requires_observed_identity_and_keeps_duplicate_guards(self):
+        first = copy.deepcopy(self.item)
+        first['sourceUrlScope'] = 'collection'
+        first['eventVerification']['observedVenue'] = first['venue']
+        second = copy.deepcopy(first)
+        second.update(slug='second-fixture',title='Second tournament',eventDate='2026-09-20T10:00:00-04:00')
+        second['eventVerification'].update(observedTitle='Second tournament',observedStart=second['eventDate'],observedDateText='September 20, 2026')
+        with patch.object(w, 'cover', return_value='hash'):
+            accepted,rejected,_=w.evaluate([first,second],self.config,self.now,w.ROOT,{})
+            self.assertEqual(len(accepted),2)
+            self.assertEqual(rejected,[])
+            # A legacy/dedicated source URL is not silently reclassified.
+            legacy=dict(first);legacy.pop('sourceUrlScope')
+            _,rejected,_=w.evaluate([legacy,second],self.config,self.now,w.ROOT,{})
+            self.assertIn('duplicate',rejected[0]['reason'])
+            # Exact observed event identity survives a headline/slug rewrite.
+            repeated=dict(first,slug='rewritten-event',title='Fixture only rewritten')
+            _,rejected,_=w.evaluate([first,repeated],self.config,self.now,w.ROOT,{})
+            self.assertIn('duplicate',rejected[0]['reason'])
+            ledger={w.digest(first):{'published':True,'keys':w.keys(first)}}
+            accepted,_,_=w.evaluate([second],self.config,self.now,w.ROOT,ledger)
+            self.assertEqual(len(accepted),1)
+        first['eventVerification'].pop('observedVenue')
+        with self.assertRaisesRegex(ValueError,'observed venue'):w.validate(first,self.config,self.now)
+
+    def test_collection_observed_venue_normalizes_apostrophes_not_different_places(self):
+        item=copy.deepcopy(self.item)
+        item.update(sourceUrlScope='collection',venue='FGCU’s Alico Arena')
+        item['eventVerification']['observedVenue']="FGCU's Alico Arena"
+        w.validate(item,self.config,self.now)
+        item['eventVerification']['observedVenue']='Suncoast Credit Union Arena'
+        with self.assertRaisesRegex(ValueError,'observed venue'):
+            w.validate(item,self.config,self.now)
+
+    def test_countywide_news_is_local(self):
+        w.validate(dict(self.item,kind='news',city='Lee County'),self.config,self.now)
+
+    def test_structured_source_evidence_retains_review_context(self):
+        w.validate(dict(self.item,evidence={'sources':[{'url':self.item['sourceUrl']}],'reviewRationale':'Observed dates and venue match the primary source.'}),self.config,self.now)
+        for evidence in ({},{'sources':[],'reviewRationale':'Empty sources'}, {'sources':[{}]}, ''):
+            with self.subTest(evidence=evidence),self.assertRaises(ValueError):w.validate(dict(self.item,evidence=evidence),self.config,self.now)
+        for sources in ([{}],[None],[self.item['sourceUrl']],[{'url':''}],[{'url':'https://localhost/private'}]):
+            evidence={'sources':sources,'reviewRationale':'Source review must identify actual public source URLs.'}
+            with self.subTest(sources=sources),self.assertRaises(ValueError):
+                w.validate(dict(self.item,evidence=evidence),self.config,self.now)
+
+    def test_generated_news_fallback_requires_disclosure_and_real_asset(self):
+        from PIL import Image
+        self.config['routes']['image'].update(verifiedAt=self.now.isoformat(),expiresAt=(self.now+timedelta(hours=1)).isoformat(),successfulInferenceReceipt='fixture-exact-oauth-generation',liveGenerationTested=True)
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);path=root/'public/covers/news.png';path.parent.mkdir(parents=True)
+            Image.new('RGB',(1216,704)).save(path)
+            item=dict(self.item,kind='news',coverImage='/covers/news.png',coverOrigin='generated',imageReceiptId='sha256:fixture-receipt',imageEvidence='completed exact-model OAuth result',coverReviewed=True,sourceImageFallbackReason='Source blocks image requests',coverDisclosure='AI-generated illustration; not a photograph of the reported event.')
+            self.assertEqual(len(w.cover(item,root,self.config,self.now)),64)
+            rendered=w.render_articles({'selected':[item]})
+            self.assertIn(item['coverDisclosure'],next(iter(rendered.values()))['content'])
+            self.assertNotIn('This is a local update worth knowing',next(iter(rendered.values()))['content'])
+            for field in ('imageReceiptId','imageEvidence','coverReviewed','sourceImageFallbackReason','coverDisclosure'):
+                broken=dict(item);broken.pop(field)
+                with self.subTest(field=field),self.assertRaises(ValueError):w.cover(broken,root,self.config,self.now)
+            Image.new('RGB',(10,10)).save(path)
+            with self.assertRaisesRegex(ValueError,'1216x704'):w.cover(item,root,self.config,self.now)
+
     def test_event_cover_policy_blocks_source_bypass(self):
         from PIL import Image
         with tempfile.TemporaryDirectory() as directory:

@@ -27,6 +27,7 @@ ALLOWED_KEYS = {
     "category", "tags", "excerpt", "coverImage", "author", "contentKind", "sourceType",
     "contentType", "eventDate", "eventEndDate", "eventTime", "city", "location", "venue",
     "address", "audience", "cost", "sourceName", "sourceUrl", "sourceImageUrl", "verificationUrl",
+    "sourceUrlScope", "sourceEventTitle", "sourceEventStart",
 }
 
 REQUIRED_BASE = {"title", "date", "category", "excerpt", "contentKind", "sourceType", "sourceUrl"}

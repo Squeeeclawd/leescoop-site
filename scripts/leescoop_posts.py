@@ -27,6 +27,7 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.S)
 
 def norm_text(value: str | None) -> str:
     value = value or ""
+    value = value.replace("’", "'").replace("‘", "'")
     value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
     value = re.sub(r"[^a-zA-Z0-9]+", " ", value).strip().lower()
     return re.sub(r"\s+", " ", value)
@@ -102,10 +103,13 @@ def has_expired_deadline(item: dict[str, Any], now: datetime | None = None) -> s
     """Catch obvious stale news like a March deadline discovered in May."""
     now = now or datetime.now().astimezone()
     text = " ".join(str(item.get(k, "")) for k in ["title", "excerpt", "summary"])
-    if not re.search(r"\b(deadline|until|by|before|postmarked by)\b", text, re.I):
-        return None
     month_re = r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
-    for match in re.finditer(month_re + r"\s+(\d{1,2})(?:,\s*(\d{4}))?", text, re.I):
+    # Bind the date to its deadline cue. A distant "by land" or "before
+    # heading out" must not turn every historical date in a news story into
+    # a deadline (e.g. a rescue date or the start of an ongoing closure).
+    cue = r"\b(?:deadline(?:\s+(?:is|on))?|until|by|before|postmarked\s+by)\s*[:\-]?\s*"
+    weekday = r"(?:(?:Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)\s*,?\s*)?"
+    for match in re.finditer(cue + weekday + month_re + r"\.?\s+(\d{1,2})(?:,\s*(\d{4}))?", text, re.I):
         month_name, day_raw, year_raw = match.groups()
         month = datetime.strptime(month_name[:3], "%b").month
         year = int(year_raw) if year_raw else now.year
@@ -166,8 +170,20 @@ def parse_frontmatter(path: Path) -> dict[str, Any]:
     return data
 
 
+def collection_event_identity(item: dict[str, Any]) -> str:
+    if item.get("sourceUrlScope") != "collection":
+        return ""
+    evidence = item.get("eventVerification", {})
+    title = norm_text(str(evidence.get("observedTitle") or item.get("sourceEventTitle") or ""))
+    start = event_start_key(evidence.get("observedStart") or item.get("sourceEventStart") or item.get("eventDate", ""))
+    venue = norm_text(str(item.get("venue", "")))
+    if not all((title, start, venue)):
+        return ""
+    return json.dumps([norm_url(str(item.get("sourceUrl", ""))), title, start, venue], separators=(",", ":"))
+
+
 def existing_index(articles: Path = ARTICLES) -> dict[str, Any]:
-    idx = {"titles": {}, "urls": {}, "slugs": {}, "event_keys": {}, "event_series": {}}
+    idx = {"titles": {}, "urls": {}, "slugs": {}, "event_keys": {}, "event_series": {}, "url_records": {}}
     articles.mkdir(parents=True, exist_ok=True)
     for path in articles.glob("*.md"):
         fm = parse_frontmatter(path)
@@ -179,6 +195,7 @@ def existing_index(articles: Path = ARTICLES) -> dict[str, Any]:
         url_key = norm_url(str(fm.get("sourceUrl", "")))
         if url_key:
             idx["urls"][url_key] = str(path)
+            idx["url_records"].setdefault(url_key, []).append({"path": str(path), "identity": collection_event_identity(fm) if fm.get("contentKind") == "event" else ""})
         if str(fm.get("contentKind", "")) == "event":
             event_date = event_start_key(fm.get("eventDate", ""))
             venue_key = norm_text(str(fm.get("venue", "")))
@@ -213,7 +230,10 @@ def duplicate_reason(kind: str, item: dict[str, Any], idx: dict[str, Any]) -> st
     if title and title in idx["titles"]:
         return f"same title as {idx['titles'][title]}"
     if source_url and source_url in idx["urls"]:
-        return f"same sourceUrl as {idx['urls'][source_url]}"
+        identity = collection_event_identity(item) if kind == "event" else ""
+        prior = idx.get("url_records", {}).get(source_url, [])
+        if not identity or not prior or any(not row["identity"] or row["identity"] == identity for row in prior):
+            return f"same sourceUrl as {idx['urls'][source_url]}"
     if kind == "event":
         event_date = event_start_key(item.get("eventDate", ""))
         venue_key = norm_text(str(item.get("venue", "")))
@@ -270,11 +290,11 @@ def body_from_summary(kind: str, item: dict[str, Any]) -> str:
             f"Use [{name}]({item.get('sourceUrl')}) for current details, tickets, policies, and schedule changes.\n"
         )
     name = str(item.get('sourceName') or 'Source').replace('[', '').replace(']', '')
+    disclosure = str(item.get("coverDisclosure") or "").strip()
     return (
+        (f"*{disclosure}*\n\n" if disclosure else "") +
         "## What happened?\n\n"
         f"{summary}\n\n"
-        "## Why it matters\n\n"
-        "This is a local update worth knowing for residents, visitors, or nearby businesses.\n\n"
         f"## {source_label}\n\n"
         f"Use [{name}]({item.get('sourceUrl')}) for the latest details.\n"
     )
@@ -315,6 +335,14 @@ def frontmatter(kind: str, item: dict[str, Any], slug: str, cover: str) -> str:
             f"audience: {yaml_string(item.get('audience', ''))}",
             f"cost: {yaml_string(item.get('cost', ''))}",
         ])
+        if item.get("sourceUrlScope") == "collection":
+            lines.extend([
+                "sourceUrlScope: collection",
+                f"sourceEventTitle: {yaml_string(item['eventVerification']['observedTitle'])}",
+                # Preserve source precision as text; YAML otherwise coerces a
+                # date-only value to a date object before Astro's schema check.
+                f"sourceEventStart: {json.dumps(item['eventVerification']['observedStart'])}",
+            ])
     else:
         lines.extend([
             f"city: {yaml_string(item.get('city', ''))}",

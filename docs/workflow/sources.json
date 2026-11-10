@@ -1,6 +1,7 @@
 {
   "version": 1,
   "cities": [
+    "Lee County",
     "Fort Myers",
     "Cape Coral",
     "Fort Myers Beach",
@@ -468,7 +469,7 @@
       "mode": "measured_gapfill"
     }
   },
-  "deploymentCheckout": "/home/shmee/.openclaw/workspace/worktrees/leescoop-publishing-runner",
+  "deploymentCheckout": "/home/shmee/.openclaw/workspace/worktrees/leescoop-scheduled-repair-2026-09-22",
   "scope": {
     "ownedPaths": [
       "scripts/",
@@ -491,7 +492,9 @@
     "remote": "origin",
     "branch": "main",
     "canonicalOrigin": "https://leescoop.com",
-    "selectionPolicy": "unlimited-reviewed"
+    "selectionPolicy": "unlimited-reviewed",
+    "publicationMode": "automatic-after-quality-gates",
+    "newsArtPolicy": "source-first-automatic-illustration-fallback"
   },
   "sourceAudit": {
     "checkedAt": "2026-09-18T14:51:27-04:00",

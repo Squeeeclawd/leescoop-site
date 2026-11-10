@@ -1,5 +1,14 @@
 # Executable publishing contract
 
+**Standing automatic-publication instruction, November 10, 2026:** eligible LeeScoop
+posts proceed through this contract without per-post human approval. Source images
+are preferred; reviewed archived artwork and clearly disclosed conceptual
+AI-generated news illustrations are automatic fallbacks. “Parent” means the agent
+responsible for release/evidence, not a person who must approve it. Facts, source
+access protections, duplicate prevention, real completed assets and live checks
+remain required. Repair genuine failures or skip affected items; do not ask for
+permission already granted here.
+
 Run every release from a clean isolated worktree. Use one durable state directory outside all worktrees:
 
 ```bash
@@ -16,7 +25,7 @@ cd "$LEESCOOP_RELEASE"
 ```bash
 mkdir -p "$LEESCOOP_STATE/inbox"
 python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" plan > "$LEESCOOP_STATE/inbox/$LEESCOOP_RUN-plan.json"
-python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" route routine
+python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" route routine --configured
 ```
 
 Automation payload:
@@ -30,7 +39,7 @@ Source reads use `publishing_source_fetch.py` (see `docs/workflow/source_fetch.m
 The reviewer writes `$LEESCOOP_STATE/inbox/$LEESCOOP_RUN-candidates.json` using `prompts/leescoop_candidates.md`, including fresh routine/review job receipts. Then:
 
 ```bash
-python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" route review
+python3 scripts/publishing_workflow.py --state "$LEESCOOP_STATE" route review --configured
 # Complete covers and their evidence BEFORE prepare; prepare hashes the final input and assets.
 # Event image calls must explicitly use model=openai/gpt-image-2.
 # Refresh image route attestation only after a successful exact-model OAuth generation.
@@ -133,14 +142,14 @@ Finalize checks the lease-bound checkpoint hash and exact selected ledger digest
 
 Before prepare, write the completed review report once (including inputPath/inputSha256), then print a JSON object with reportPath, reportSha256 and inputSha256 in a successful tool step. Resolve the actual stored reviewer session ID under `routes.review.sessionKey` in the selected config using supported session listing. The transient `:run:<id>` alias is not the stored key. Run `publishing_review_receipt.py --state <canonical-state> --report <report.json> --session-id <actual-id>` to export a redacted trajectory through the supported CLI and bind the exact successful configured-reviewer response/tool result to those hashes. The helper never invokes a model. Keep the report immutable after binding and use the separate model-receipt file in candidate workflowEvidence. A completed model step is not a terminal automation-run receipt or publication proof; report modes and editorial/source approvals still govern release.
 
-Active-turn trajectory exports may contain only manifest.json, events.jsonl and session-branch.json. The resolver uses the manifest for session identity in that case and still requires the exact successful assistant response provider/model, response ID, tool-result success, and report/input hashes. Terminal metadata.json is optional, not a prerequisite for a completed model step.
+Active-turn trajectory exports may contain only manifest.json, events.jsonl and session-branch.json. The resolver uses the manifest for session identity in that case and still requires the exact successful assistant response provider/model, real response ID or strict native paired-step identity, tool-result success, and report/input hashes. Terminal metadata.json is optional, not a prerequisite for a completed model step.
 
 
 ## Media generation continuation and child-session recovery
 
 Image/music/video generation can outlive the child turn that started it. A media-completion turn may resume with delivery-only tools and no repository edit capability; that is not a failed generation and must not trigger a duplicate request. The parent owns the generated task ID, destination slug, expected output path, and continuation route. Record those fields in the release notes or candidate work item as soon as the task is accepted.
 
-For every media task, bind `taskId -> slug -> outputPath -> model -> requested prompt/asset role` before leaving the turn. If the child exits after a successful async start, resume the same visible child with `sessions_send` when the completion event arrives and provide only the task ID, slug and expected path needed to finish inspection/crop/manifest edits. Do not start another generation unless the task is terminally failed and the parent explicitly authorizes a replacement. A running/queued media receipt is not a usable cover asset; publication remains blocked until the completed artifact is decoded, dimension-checked, hashed and referenced by the checkpoint input.
+For every media task, bind `taskId -> slug -> outputPath -> model -> requested prompt/asset role` before leaving the turn. For synchronous CLI results without task IDs, use `imageReceiptId` bound to the actual completed receipt hash, not an invented task ID. If the child exits after a successful async start, resume that child on completion; do not duplicate a running task. A terminal failure may be retried automatically within the same exact-model/OAuth policy. A running/queued receipt is not a usable asset: decode, inspect, dimension-check and hash the completed image before checkpointing.
 
 Progress reporting uses the existing progress card owned by the parent/session. Do not create ad hoc dashboard widgets for this workflow. Do not recursively delegate a single drafting or cover-finishing deliverable; use one explicitly configured child model per configured route, then verify the actual assistant provider/model/API from session history before using any receipt. Requested model names are audit context only; actual response metadata is the gate.
 
@@ -148,8 +157,50 @@ Progress reporting uses the existing progress card owned by the parent/session. 
 
 `docs/workflow/sources.json` is the default route source of truth; the workflow, review receipt helper and health checker accept `--config /absolute/config.json` before their command options. Pass the same config to all tools when overriding. Model inventory snapshots and prompt filenames are not routing contracts. `prompts/leescoop_daily_gpt54mini.md` is only a retired compatibility pointer; it does not select GPT-5.4-mini.
 
-Parent must test the supported replacement routine/review routes, then refresh each route's exact actual runtime `model` (`provider/model`), optional `api` when observed, optional `requestedModel` for audit only, `auth:"oauth"`, `verifiedAt`, `expiresAt`, secret-free `evidence`, and actual `successfulInferenceReceipt`. Set `routes.review.sessionKey` to the actual supported reviewer session. Never relabel old receipts or extend timestamps without new proof. The helper treats session metadata as identity only; it checks fresh route evidence, exact export session, actual assistant response provider/model/API/response ID, successful tool result, report hash and input hash. Requested aliases never prove the receipt. Candidate `workflowEvidence.routine` and `.review` must name those configured actual models, matching `api` when configured, with real fresh `completedAt` and `receipt` values. Health checks report model agreement only, not inference authenticity or publication.
+Use each actual successful routine/review step to refresh its runtime route as below. A model-policy replacement must match the observed actual runtime `model` (`provider/model`), `api`, optional `requestedModel` for audit only, `auth:"oauth"`, `verifiedAt`, `expiresAt`, secret-free `evidence`, and actual `successfulInferenceReceipt`. Resolve the actual stored session. Never relabel old receipts or extend timestamps without new proof. The helper treats session metadata as identity only; it checks exact export session, actual assistant provider/model/API, real response ID or strict native pair, successful tool result and report/input hashes. Requested aliases never prove the receipt. Candidate `workflowEvidence.routine` and `.review` must name those configured actual models, matching `api` when configured, with real fresh `completedAt` and `receipt` values. Health checks report model agreement only, not inference authenticity or publication.
 
-The image route remains pinned to `openai/gpt-image-2`; parent must separately refresh genuine OAuth evidence, successful generation receipt and the existing exact-model/no-direct-override/live-generation flags. This code repair does not certify any existing route attestation. Commit route updates before preparing a release; immutable input, assets and release HEAD must not change mid-run.
+The image route remains pinned to `openai/gpt-image-2`; the publishing agent refreshes genuine OAuth evidence, successful generation receipt and the exact-model/no-direct-override/live-generation flags. This policy does not itself certify any route. Integrate repository policy changes before content prepare; put per-run proof updates in the shared runtime config, not daily repository commits. Immutable input, assets, route evidence and release HEAD must not change mid-run.
 
 For a pre-change active release, preserve all state: finish using its original checkout/contract, or safely abort before commit intent and rebuild under a new run ID. Do not edit old checkpoints or ledger days to retrofit the new policy. Midnight guards remain release-freshness safeguards at prepare/gate/commit/push, not daily quantity limits. Already-committed recovery remains parent-owned.
+
+## Automatic route renewal from the actual job
+
+Static route expiry is a renewal trigger, not a reason to ask the owner. `route TIER
+--configured` reads the intended model without claiming a successful inference.
+Run the actual discovery/review step on that route. Its immutable report includes
+`model`, actual exported `api`, `inputPath`, `inputSha256`, `completedAt`, plus
+`auth:"oauth"`, fresh `authCheckedAt`, and a secret-free `authEvidence` description
+from observed session/config auth metadata. Print report path/name, report SHA-256
+and input SHA-256 in one successful tool step. The original input/report remains
+immutable; add the resulting receipt to a separate final release envelope.
+
+Use a runtime config under canonical state, copied from the current production
+source config before the run. Apply the same runtime config to every downstream
+receipt/health/release command. Do not mutate a config/checkpoint during an active
+release. The helper rejects renewal while an active lease exists.
+
+```bash
+python3 scripts/publishing_review_receipt.py \
+  --config "$LEESCOOP_CONFIG" --state "$LEESCOOP_STATE" \
+  --tier routine --report "$LEESCOOP_STATE/reports/$LEESCOOP_RUN-routine.json" \
+  --session-key "$LEESCOOP_ROUTINE_KEY" --session-id "$LEESCOOP_ROUTINE_ID" \
+  --refreshed-config "$LEESCOOP_CONFIG"
+# Repeat for --tier review and that step's actual stored session/report.
+# --export PATH can reuse a supported redacted export instead of creating one.
+```
+
+The helper matches configured and actual provider/model/API, exact stored session,
+successful paired tool step, report/input hashes and fresh auth observation. It
+renews only that route for 24 hours from the observed auth check. It accepts a real
+response ID **or** strict native Codex call/result identity (same run, runtime,
+parent entry, mirror identity and nonempty fingerprints); never invent an ID.
+This is successful-step proof, not terminal-job or publication proof. No extra
+test inference or human approval is required. Old-model, failed, stale, relabelled
+or unmatched exports still fail.
+
+Renew the image entry automatically after the first actual successful exact-model
+OAuth generation: preserve completed receipt/hash, raw output, per-call OAuth
+selection log and current no-direct-override check; set liveGenerationTested only
+from that proof. A requested model or healthy config alone never proves generation.
+Use the runtime config for these current observations rather than committing fresh
+timestamps every day. Repository model-policy changes still precede content prepare.
