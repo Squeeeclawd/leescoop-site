@@ -52,6 +52,11 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
             {data.audience && <div><dt>Who it’s for</dt><dd>{data.audience}</dd></div>}
           </dl>
           {data.sourceUrl && <div class="story-source"><a class="story-source-button" href={data.sourceUrl}>{isEvent ? 'Visit event website' : 'Read the source'} <span aria-hidden="true">↗</span></a><p>{data.sourceName ?? 'Original source'}{isEvent && <span>Check the source for current details and availability.</span>}</p></div>}
+          <div class="story-save-actions" data-pagefind-ignore>
+            <button type="button" hidden data-save={article.slug} aria-pressed="false">Save</button>
+            <a href="/planner/">My planner →</a>
+          </div>
+          <p id="action-status" class="story-save-status" role="status"></p>
         </aside>
         <div class="story-content">
           <div class="story-prose"><Content /></div>
@@ -64,3 +69,17 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
   </main>
   <Footer />
 </SubpageLayout>
+
+<script>
+  import '@/lib/discoveryActions';
+  const saveButton = document.querySelector<HTMLButtonElement>('.story-save-actions [data-save]');
+  if (saveButton) saveButton.hidden = false;
+</script>
+<style>
+  .story-save-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+  .story-save-actions button { background: #fffaf1; border: 1px solid #154859; color: #154859; font: inherit; font-weight: 700; border-radius: .4rem; min-height: 44px; padding: .45rem 1rem; cursor: pointer; }
+  .story-save-actions button[aria-pressed="true"] { color: white; background: #154859; }
+  .story-save-actions a { color: #164f61; text-decoration: underline; }
+  .story-save-status { color: #304a52; font-size: .875rem; }
+  .story-save-status:empty { margin: 0; }
+</style>

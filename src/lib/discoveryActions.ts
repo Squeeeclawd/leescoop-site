@@ -1,14 +1,9 @@
-const storageKey = 'leescoop:saved:v1';
-let saved = new Set<string>();
+import { openSavedPlans, SAVED_PLANS_KEY } from './savedPlans';
+
 let savedOnly = false;
 const status = document.getElementById('action-status');
 const announce = (message: string) => { if (status) status.textContent = message; };
-function readSaved() {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    saved = new Set(Array.isArray(value) ? value.filter((x): x is string => typeof x === 'string').slice(0, 1000) : []);
-  } catch { announce('Browser storage unavailable. Saves will last for this visit only.'); }
-}
+const saved = openSavedPlans(announce);
 function renderSaved() {
   document.querySelectorAll<HTMLButtonElement>('[data-save]').forEach(button => {
     const active = saved.has(button.dataset.save!);
@@ -16,20 +11,23 @@ function renderSaved() {
     button.textContent = active ? 'Saved ✓' : 'Save';
   });
   let count = 0;
+  let hasMatches = false;
   document.querySelectorAll<HTMLElement>('.discovery-card').forEach(card => {
     const excluded = savedOnly && !saved.has(card.dataset.slug!);
     card.classList.toggle('not-saved', excluded);
-    if (!card.hidden && !excluded) count++;
+    if (!card.hidden) {
+      hasMatches = true;
+      if (!excluded) count++;
+    }
   });
   const empty = document.getElementById('saved-empty');
-  if (empty) empty.hidden = !savedOnly || count > 0;
+  if (empty) empty.hidden = !savedOnly || count > 0 || !hasMatches;
   const result = document.getElementById('feed-result');
   if (result) result.textContent = savedOnly ? `${count} saved ${count === 1 ? 'item' : 'items'} · this browser` : result.getAttribute('data-base-text') ?? result.textContent;
 }
-readSaved();
 renderSaved();
 document.addEventListener('leescoop:filtered', renderSaved);
-window.addEventListener('storage', event => { if (event.key === storageKey || event.key === null) { readSaved(); renderSaved(); } });
+window.addEventListener('storage', event => { if (event.key === SAVED_PLANS_KEY || event.key === null) { saved.sync(); renderSaved(); } });
 document.getElementById('saved-filter')?.addEventListener('click', event => {
   savedOnly = !savedOnly;
   (event.currentTarget as HTMLElement).setAttribute('aria-pressed', String(savedOnly));
@@ -45,9 +43,8 @@ document.addEventListener('click', async event => {
   const save = event.target.closest<HTMLButtonElement>('[data-save]');
   if (save) {
     const slug = save.dataset.save!;
-    saved.has(slug) ? saved.delete(slug) : saved.add(slug);
-    try { localStorage.setItem(storageKey, JSON.stringify([...saved])); announce(saved.has(slug) ? 'Saved on this browser.' : 'Removed from saved.'); }
-    catch { announce('Storage unavailable or full. Your change is saved for this visit only.'); }
+    const added = saved.toggle(slug);
+    if (saved.persistent) announce(added ? 'Saved on this browser.' : 'Removed from saved.');
     renderSaved();
   }
   const share = event.target.closest<HTMLButtonElement>('[data-share]');

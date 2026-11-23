@@ -1,0 +1,141 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { isPublished } from '@/lib/content';
+import { makePlannerEntry } from '@/lib/planner';
+import '@/styles/discovery.css';
+
+const published = await getCollection('articles', article => isPublished(article));
+const entries = published.map(article => makePlannerEntry(article));
+const sections = [
+  { key: 'upcoming', title: 'Upcoming events' },
+  { key: 'reading', title: 'Saved reading' },
+  { key: 'past', title: 'Past events' }
+] as const;
+---
+<BaseLayout title="My planner | LeeScoop" description="Your saved Lee County events and stories, organized on this browser.">
+  <div class="discovery-shell">
+    <a class="discovery-skip" href="#planner">Skip to planner</a>
+    <Header />
+    <main class="planner wrap" id="planner">
+      <header class="planner-heading">
+        <a href="/">← Back to the field guide</a>
+        <h1>My <em>planner.</em></h1>
+        <p>Your saved outings and stories stay on this browser. No account needed.</p>
+      </header>
+      <noscript><p>Turn on JavaScript to load your saved plans, or <a href="/">browse the field guide</a>.</p></noscript>
+      <p class="storage-warning" data-storage-warning role="status"></p>
+      <div data-empty hidden>
+        <h2>Your planner is empty.</h2>
+        <p>Choose <strong>Save</strong> on an event or story to keep it here.</p>
+        <a class="planner-link" href="/#browse">Explore the field guide →</a>
+      </div>
+      <p data-count role="status" aria-live="polite"></p>
+      {sections.map(({key, title}) => (
+        <section data-section={key} aria-labelledby={key} hidden>
+          <h2 id={key}>{title}</h2>
+          {key === 'upcoming' && <p>Calendar downloads are date reminders. Check with the organizer for times and availability.</p>}
+          <ul></ul>
+        </section>
+      ))}
+      <template id="plan-card">
+        <li class="plan-card">
+          <div><p data-meta></p><h3><a data-title></a></h3></div>
+          <div class="plan-actions">
+            <a data-calendar download>Date reminder</a>
+            <button type="button" data-remove>Remove</button>
+          </div>
+        </li>
+      </template>
+      <script is:inline type="application/json" id="plan-entries" set:html={JSON.stringify(entries).replace(/</g, '\\u003c')} />
+    </main>
+    <Footer />
+  </div>
+</BaseLayout>
+
+<script>
+  import { groupSavedPlans, type PlannerEntry } from '@/lib/planner';
+  import { openSavedPlans, SAVED_PLANS_KEY } from '@/lib/savedPlans';
+
+  const root = document.querySelector<HTMLElement>('#planner')!;
+  const entries: PlannerEntry[] = JSON.parse(root.querySelector('#plan-entries')!.textContent!);
+  const template = root.querySelector<HTMLTemplateElement>('#plan-card')!;
+  const warning = root.querySelector<HTMLElement>('[data-storage-warning]')!;
+  const store = openSavedPlans(message => { warning.textContent = message; });
+
+  function planCard(entry: PlannerEntry, upcoming: boolean) {
+    const row = template.content.cloneNode(true) as DocumentFragment;
+    row.querySelector('[data-meta]')!.textContent = [entry.dateText, entry.place].filter(Boolean).join(' · ');
+    const title = row.querySelector<HTMLAnchorElement>('[data-title]')!;
+    title.textContent = entry.title;
+    title.href = entry.href;
+    const calendar = row.querySelector<HTMLAnchorElement>('[data-calendar]')!;
+    if (upcoming && entry.calendarHref) calendar.href = entry.calendarHref;
+    else calendar.remove();
+    const remove = row.querySelector<HTMLButtonElement>('[data-remove]')!;
+    remove.dataset.remove = entry.slug;
+    remove.setAttribute('aria-label', 'Remove ' + entry.title);
+    return row;
+  }
+
+  function render() {
+    const groups = groupSavedPlans(entries, store.slugs());
+    let count = 0;
+    for (const key of ['upcoming', 'reading', 'past'] as const) {
+      const section = root.querySelector<HTMLElement>('[data-section="' + key + '"]')!;
+      const items = groups[key];
+      section.hidden = !items.length;
+      section.querySelector('ul')!.replaceChildren(...items.map(item => planCard(item, key === 'upcoming')));
+      count += items.length;
+    }
+    root.querySelector<HTMLElement>('[data-empty]')!.hidden = count !== 0;
+    root.querySelector('[data-count]')!.textContent = count ? count + (count === 1 ? ' saved item' : ' saved items') : '';
+    if (store.persistent) warning.textContent = '';
+  }
+
+  root.addEventListener('click', event => {
+    if (!(event.target instanceof Element)) return;
+    const button = event.target.closest<HTMLButtonElement>('button[data-remove]');
+    if (!button?.dataset.remove) return;
+    const index = Array.from(root.querySelectorAll('[data-remove]')).indexOf(button);
+    store.remove(button.dataset.remove);
+    render();
+    const remaining = root.querySelectorAll<HTMLButtonElement>('[data-remove]');
+    (remaining[Math.min(index, remaining.length - 1)] ?? root.querySelector<HTMLAnchorElement>('[data-empty] a'))?.focus();
+  });
+  window.addEventListener('storage', event => {
+    if (event.key === SAVED_PLANS_KEY || event.key === null) { store.sync(); render(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { store.sync(); render(); } });
+  render();
+</script>
+
+<style>
+  .planner { max-width: 1060px; min-height: 65vh; padding-block: clamp(28px, 5vw, 68px); }
+  .planner-heading { border-bottom: 3px double var(--ink); padding-bottom: 22px; }
+  .planner a { color: var(--ink); text-underline-offset: .2em; }
+  .planner-heading > a, .plan-actions { font-size: .9rem; }
+  .planner h1, .planner h2, .planner h3 { color: var(--ink); font-family: var(--display); line-height: 1.06; }
+  .planner h1 { font-weight: 500; font-size: clamp(3rem, 7vw, 6rem); letter-spacing: -.055em; margin: .32em 0 .15em; }
+  .planner h1 em { color: var(--accent); font-weight: inherit; }
+  .planner h2 { font-size: clamp(1.75rem, 3.5vw, 2.7rem); margin: .5em 0; }
+  .planner p { line-height: 1.55; color: var(--muted); }
+  .planner [data-empty], .planner section { margin-top: 2rem; }
+  .planner [data-empty] { background: #e8ece0; padding: clamp(20px, 4vw, 40px); border-left: 3px solid var(--ink); }
+  .planner-link { display: inline-block; margin-top: .6rem; font-weight: 700; }
+  .planner ul { list-style: none; padding: 0; margin: 1rem 0; }
+  .plan-card { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; border-top: 1px solid var(--rule); padding: 1.2rem 0; }
+  .plan-card h3 { font-size: clamp(1.35rem, 2.4vw, 1.9rem); margin: .2em 0; }
+  .plan-card h3 a { text-decoration: none; }
+  .plan-card h3 a:hover { text-decoration: underline; }
+  .plan-card p { font-size: .85rem; margin: 0; }
+  .plan-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .8rem; }
+  .plan-actions button { min-height: 44px; background: transparent; border: 1px solid var(--rule); color: var(--ink); padding: 0 .8rem; font: inherit; cursor: pointer; }
+  .storage-warning:not(:empty) { border-left: 3px solid var(--accent); padding-left: 1rem; }
+  .planner [hidden], .planner p:empty { display: none; }
+  @media (max-width: 640px) {
+    .plan-card { align-items: flex-start; flex-direction: column; gap: .5rem; }
+  }
+</style>

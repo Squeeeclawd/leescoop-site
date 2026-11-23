@@ -19,16 +19,16 @@ const {
         </a>
         <div class="header-actions">
           <nav class="main-nav" aria-label="Primary">
-            <a href="/">Home</a>
+            <a href="/" aria-current={Astro.url.pathname === "/" ? "page" : undefined}>Home</a>
+            <a href="/today/" aria-current={Astro.url.pathname.startsWith("/today") ? "page" : undefined}>Today</a>
+            <a href="/planner/" aria-current={Astro.url.pathname.startsWith("/planner") ? "page" : undefined}>My planner</a>
             {!enableSearchShortcut && (
               <>
-                <a href="/#latest-feed">Latest</a>
-                <a href="/#browse">Browse</a>
                 <a href="/search/">Search</a>
               </>
             )}
             <a href="/archive/">Archive</a>
-            <a class="nav-feature-event" href="/feature-event/">Feature event</a>
+            <a class="nav-feature-event" href="/feature-event/">Feature an event</a>
           </nav>
           <div class="header-account" data-header-account hidden>
             <div class="header-account-authed" data-header-authed hidden>
@@ -54,18 +54,18 @@ const {
           </div>
         </div>
         <details class="mobile-nav-details">
-          <summary aria-label="Open navigation">Menu</summary>
+          <summary aria-label="Navigation menu">Menu</summary>
           <nav class="mobile-nav" aria-label="Mobile primary">
-            <a href="/">Home</a>
+            <a href="/" aria-current={Astro.url.pathname === "/" ? "page" : undefined}>Home</a>
+            <a href="/today/" aria-current={Astro.url.pathname.startsWith("/today") ? "page" : undefined}>Today</a>
+            <a href="/planner/" aria-current={Astro.url.pathname.startsWith("/planner") ? "page" : undefined}>My planner</a>
             {!enableSearchShortcut && (
               <>
-                <a href="/#latest-feed">Latest</a>
-                <a href="/#browse">Browse</a>
                 <a href="/search/">Search</a>
               </>
             )}
             <a href="/archive/">Archive</a>
-            <a class="nav-feature-event" href="/feature-event/">Feature event</a>
+            <a class="nav-feature-event" href="/feature-event/">Feature an event</a>
           </nav>
         </details>
       </div>

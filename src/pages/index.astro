@@ -7,6 +7,11 @@ import Footer from '@/components/Footer.astro';
 import { activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, tagCounts } from '@/lib/content';
 import { homepageDateKey, homepageDisplayDate, homepageTimelineDateLabel, homepageTimelineDateText } from '@/lib/homepageDateLabels';
 
+const todayEdition = Astro.url.pathname.replace(/\/$/, '') === '/today';
+const pageTitle = todayEdition ? 'Today in Lee County — LeeScoop' : 'LeeScoop — The Lee County field guide';
+const pageDescription = todayEdition
+  ? 'Find events happening today in Lee County, Florida, and save a plan for later.'
+  : 'Discover events and source-linked local news in Lee County, Florida, and save your next outing.';
 const allArticles = await getCollection('articles');
 const visible = activeArticles(allArticles);
 const feed = sortArticlesForFeed(visible);
@@ -119,12 +124,22 @@ function tileSearch(article: typeof visible[number]) {
 }
 ---
 
-<BaseLayout title="LeeScoop — Find your next local adventure" description="Good times, close to home. Discover Lee County events and quick, source-linked local news." image="/branding/leescoop-social-art.png" imageWidth={1254} imageHeight={1254}>
+<BaseLayout title={pageTitle} description={pageDescription} image="/branding/leescoop-social-art.png" imageWidth={1254} imageHeight={1254}>
   <div class="discovery-shell">
-  <a class="discovery-skip" href="#latest-feed">Skip to events</a>
+  <a class="discovery-skip" href="#latest-feed">Skip to feed</a>
   <Header enableSearchShortcut={true} />
-  <main class="homepage-main discovery" data-homepage-root>
-    <h1 class="discovery-heading">Good times. <span>Close to home.</span></h1>
+  <main class="homepage-main discovery" data-homepage-root data-initial-window={todayEdition ? 'today' : ''}>
+    <header class="edition-masthead">
+      <div>
+        <p class="edition-dateline">Southwest Florida <span aria-hidden="true">/</span> Events &amp; local news</p>
+        <h1 class="discovery-heading">{todayEdition ? <>Today in <em>Lee County.</em></> : <>The Lee County <em>field guide.</em></>}</h1>
+      </div>
+      <a class="edition-planner" href="/planner/">
+        <span class="edition-bookmark" aria-hidden="true"></span>
+        <span><strong>My planner</strong><small>Your saved outings</small></span>
+        <span class="edition-arrow" aria-hidden="true">↗</span>
+      </a>
+    </header>
     <section class="discovery-filters" id="browse" aria-label="Browse LeeScoop feed" data-filter-tile>
       <div class="discovery-filter-top">
         <div class="discovery-tabs" role="group" aria-label="Feed type">
@@ -135,7 +150,7 @@ function tileSearch(article: typeof visible[number]) {
           <summary>Search &amp; area</summary>
           <div class="discovery-more-panel">
             <form id="filter-search-form" action="/search/" method="get">
-              <label for="home-filter-input">Find a plan</label>
+              <label for="home-filter-input">Plan an outing</label>
               <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Music, markets, venues…" />
             </form>
             <div class="discovery-areas" role="group" aria-label="Areas">
@@ -151,18 +166,32 @@ function tileSearch(article: typeof visible[number]) {
       </div>
     </section>
     <section id="latest-feed" class="discovery-feed" aria-label="Upcoming events and local updates" tabindex="-1">
-      <div class="discovery-feed-status"><p id="feed-result" role="status">Explore Lee County</p><span>Scroll for your next outing ↓</span></div>
+      <div class="discovery-feed-status"><p id="feed-result" role="status">Explore Lee County</p></div>
       <p id="action-status" role="status" class="discovery-action-status"></p>
-      <noscript>JavaScript is off: browse all listings below. Event details and calendar downloads still work.</noscript>
+      <noscript>
+        <style is:inline>
+          .discovery-filters, .discovery-actions button, .discovery-feed-status { display: none; }
+          [data-initial-window="today"] .home-tile-grid { display: none; }
+        </style>
+        {todayEdition
+          ? <p>Turn on JavaScript to see events for today in Lee County time, or <a href="/">browse all dated listings</a>.</p>
+          : <p>Browse all dated listings below. Event details and calendar downloads work without JavaScript.</p>}
+      </noscript>
       <div class="home-tile-grid" id="home-tile-grid">
         {cardFeed.map((article, index) => {
           const cardDate = displayDate(article);
           const news = article.data.contentKind === 'news';
+          const disclosure = article.body.match(/^\*?(AI-generated|Archived) [^\n;]*illustration; not a photograph/im);
+          const imageLabel = disclosure?.[1].toLowerCase() === 'ai-generated'
+            ? 'AI illustration' : disclosure ? 'Archive illustration' : undefined;
           const destination = news ? safeSourceUrl(article.data.sourceUrl) ?? articlePath(article) : articlePath(article);
           return <article class="home-tile discovery-card" data-slug={article.slug} data-category={areaFor(article)} data-kind={news ? 'news' : 'event'} data-display-date={cardDate?.toISOString() ?? ''} data-date-key={homepageDateKey(cardDate)} data-end-date-key={eventEndDateKey(article)} data-active-until={!news ? eventArchiveCutoff(article)?.toISOString() ?? '' : ''} data-search={tileSearch(article)}>
-            {article.data.coverImage && <a class="discovery-image-link" href={destination} tabindex="-1" aria-hidden="true"><img src={article.data.coverImage} alt="" width="1216" height="704" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" /></a>}
+            {article.data.coverImage && <figure class="discovery-media">
+              <a class="discovery-image-link" href={destination} tabindex="-1" aria-hidden="true"><img src={article.data.coverImage} alt="" width="1216" height="704" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" /></a>
+              {imageLabel && <figcaption>{imageLabel}</figcaption>}
+            </figure>}
             <div class="discovery-card-body">
-              <div class="discovery-kicker"><span>{areaFor(article)}</span><span>{news ? 'Local news' : article.data.featured ? 'Scoop pick' : 'Go local'}</span></div>
+              <div class="discovery-kicker"><span>{areaFor(article)}</span>{news ? <span>Local news</span> : article.data.featured && <span>Scoop pick</span>}</div>
               <p class="discovery-date"><time datetime={cardDate?.toISOString()}>{timelineDateLabel(article)} {timelineDateText(article)}</time></p>
               <h2><a href={destination}>{article.data.title}</a></h2>
               {!news && <p class="discovery-place">{article.data.venue ?? article.data.location ?? article.data.city}{article.data.eventTime && ` · ${article.data.eventTime}`}{article.data.cost && ` · ${article.data.cost}`}</p>}
@@ -177,7 +206,7 @@ function tileSearch(article: typeof visible[number]) {
           </article>;
         })}
       </div>
-      <div class="home-empty-state" id="home-empty-state" role="status" hidden>No matches. Try another date, area, or reset your filters.</div>
+      <div class="home-empty-state" id="home-empty-state" role="status" hidden>No listings match this view. <a href="/">Browse all events</a>.</div>
       <p id="saved-empty" role="status" hidden>No saved items in this view. Save a few plans, or reset your filters.</p>
       <p class="discovery-footnote">Saved on this browser, no account needed. Calendar downloads are date reminders, not tickets; confirm times with the organizer.</p>
     </section>
@@ -195,7 +224,9 @@ function tileSearch(article: typeof visible[number]) {
       const emptyState = document.getElementById('home-empty-state');
       const dateButtons = Array.from(document.querySelectorAll('[data-filter-date-window]'));
       const feature = document.querySelector('[data-expirable-feature]');
-      const state = { category: '', kind: 'event', dateWindow: '', query: '' };
+      const initialWindow = document.querySelector('[data-homepage-root]')?.getAttribute('data-initial-window') || '';
+      const editionHeading = initialWindow ? document.querySelector('.discovery-heading') : null;
+      const state = { category: '', kind: 'event', dateWindow: initialWindow, query: '' };
 
       const leeCountyDateKey = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
       const addDays = (date, days) => {
@@ -296,6 +327,9 @@ function tileSearch(article: typeof visible[number]) {
 
       const applyFilters = () => {
         filterNow = new Date();
+        if (editionHeading) {
+          editionHeading.firstChild.textContent = state.dateWindow === 'today' ? 'Today in ' : 'Explore ';
+        }
         if (feature instanceof HTMLElement) feature.hidden = Boolean(isPastActiveWindow(feature));
         const query = state.query.trim().toLowerCase();
         let visibleCount = 0;
@@ -360,7 +394,8 @@ function tileSearch(article: typeof visible[number]) {
           state.query = '';
           searchInput.value = '';
           applyFilters();
-          searchInput.focus();
+          if (searchInput.closest('details')?.open) searchInput.focus();
+          else kindButtons[0]?.focus();
         }
       });
 

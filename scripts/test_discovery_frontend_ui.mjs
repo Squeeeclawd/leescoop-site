@@ -41,7 +41,7 @@ click(ids['filter-clear-all']); assert.deepEqual(shown(), [0,1], 'reset returns 
 const indexMarkup = source;
 const actionsMarkup = fs.readFileSync('src/lib/discoveryActions.ts','utf8');
 for (const required of ['id="saved-filter"','data-save={article.slug}','data-share={articlePath(article)}','/calendar/${article.slug}.ics']) assert.ok(indexMarkup.includes(required), `missing ${required}`);
-for (const required of ['localStorage','navigator.share','navigator.clipboard']) assert.ok(actionsMarkup.includes(required), `missing ${required}`);
+for (const required of ['openSavedPlans','navigator.share','navigator.clipboard']) assert.ok(actionsMarkup.includes(required), `missing ${required}`);
 assert.ok(indexMarkup.includes("parsed.protocol === 'https:' || parsed.protocol === 'http:'"), 'external news destinations must reject unsafe URL schemes');
 assert.ok(fs.readFileSync('src/styles/discovery.css','utf8').includes('prefers-reduced-motion'));
 
@@ -70,8 +70,21 @@ const actionDocument = {
   addEventListener(name, handler) { actionHandlers[name] = handler; },
   createElement() { return new ActionNode(); }
 };
-const actionSource = ts.transpileModule(actionsMarkup.replace(/\nexport \{\};?\s*$/, ''), {compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None}}).outputText;
-vm.runInNewContext(actionSource, {document: actionDocument, window: {addEventListener(name, handler) { storageHandlers[name] = handler; }}, localStorage: {getItem() { return stored; }, setItem(_key, value) { stored = value; }}, navigator: {}, location: {origin: 'https://leescoop.com'}, Element: ActionNode, URL, Set, JSON});
+const uiContext = vm.createContext({
+  document: actionDocument,
+  window: {addEventListener(name, handler) { storageHandlers[name] = handler; }, dispatchEvent() {}},
+  localStorage: {getItem() { return stored; }, setItem(_key, value) { stored = value; }},
+  navigator: {}, location: {origin: 'https://leescoop.com'}, Element: ActionNode, Event, URL, Set, JSON
+});
+function loadUiModule(source, imports = {}) {
+  const compiled = ts.transpileModule(source, {compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS}}).outputText;
+  const run = vm.runInContext(`(function (exports, require) { ${compiled} })`, uiContext);
+  const exports = {};
+  run(exports, name => imports[name]);
+  return exports;
+}
+const savedPlans = loadUiModule(fs.readFileSync('src/lib/savedPlans.ts', 'utf8'));
+loadUiModule(actionsMarkup, {'./savedPlans': savedPlans});
 assert.equal(actionButtons[0].attrs['aria-pressed'], 'true', 'valid saved slugs restore without login');
 assert.equal(actionButtons[1].attrs['aria-pressed'], 'false', 'non-string storage entries are ignored');
 await actionHandlers.click({target: actionButtons[1]});
@@ -83,6 +96,12 @@ assert.equal(actionCards[1]['not-saved'], false);
 assert.equal(savedResult.textContent, '1 saved item · this browser', 'Saved count must reflect active filters');
 savedFilter.listeners.click({currentTarget: savedFilter});
 assert.equal(savedResult.textContent, '1 events · Lee County time', 'leaving Saved restores the active-filter count');
+stored = '[]'; storageHandlers.storage({key: 'leescoop:saved:v1'});
+savedFilter.listeners.click({currentTarget: savedFilter});
+assert.equal(savedEmpty.hidden, false, 'matching cards exist but none are saved');
+actionCards[0].hidden = true;
+actionHandlers['leescoop:filtered']();
+assert.equal(savedEmpty.hidden, true, 'no base matches: use the ordinary empty state only');
 stored = '{'; storageHandlers.storage({key: 'leescoop:saved:v1'});
 assert.match(actionStatus.textContent, /storage unavailable/i, 'corrupt or unavailable storage fails softly');
 
