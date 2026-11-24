@@ -1,0 +1,167 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import CountyAtlas from '@/components/CountyAtlas.astro';
+import { activeArticles, eventArchiveCutoff, articlePath } from '@/lib/content';
+import { communities, areaId } from '@/lib/areaAtlas';
+import { makePlannerEntry } from '@/lib/planner';
+import '@/styles/discovery.css';
+import '@/styles/atlas.css';
+
+const events = activeArticles(await getCollection('articles', a => a.data.contentKind === 'event'));
+const areas = communities.map(({name}) => ({
+  name, events: events.filter(a => (a.data.city || a.data.category) === name)
+})).sort((a, b) => a.name.localeCompare(b.name));
+const unmapped = events.filter(a => !communities.some(c => c.name === (a.data.city || a.data.category)));
+const counts = Object.fromEntries(areas.map(area => [area.name, area.events.length]));
+const defaultArea = areas.reduce((best, area) => area.events.length > best.events.length ? area : best).name;
+---
+<BaseLayout title="Lee County event map | LeeScoop" description="Compare upcoming events across Lee County communities on a flat map or in 3D.">
+  <div class="discovery-shell">
+    <a class="discovery-skip" href="#atlas">Skip to event map</a>
+    <Header />
+    <main class="atlas wrap" id="atlas" data-default-area={defaultArea}>
+      <header class="atlas-heading"><h1>The <em>event map.</em></h1>
+        <p>Choose a community to see what’s coming up.</p>
+      </header>
+      <div class="atlas-layout">
+        <div class="atlas-map-frame">
+          <div class="atlas-toolbar"><strong>Lee County, Florida</strong>
+            <div data-view-controls hidden role="group" aria-label="Map view">
+              <button type="button" data-atlas-view="flat" aria-pressed="true">Flat</button>
+              <button type="button" data-atlas-view="3d" aria-pressed="false">3D</button>
+            </div>
+          </div>
+          <CountyAtlas counts={counts} />
+          <p class="atlas-caption"><span data-legend>Dots mark communities, not venues.</span> <span data-scale hidden></span> Schematic · not for navigation.</p>
+        </div>
+        <aside class="atlas-inspector" aria-label="Events by area">
+          <div class="atlas-select" hidden>
+            <label for="atlas-area">Explore an area</label>
+            <select id="atlas-area">{areas.map(({name,events}) => <option value={name} selected={name===defaultArea}>{name} ({events.length})</option>)}</select>
+          </div>
+          <div class="atlas-panels">
+            {areas.map(({name,events}) => <section id={'area-'+areaId(name)} data-area-panel={name} aria-label={name}>
+              <h2>{name}</h2>
+              <p class="atlas-count"><strong>{events.length}</strong> <span>{events.length===1?'upcoming event':'upcoming events'}</span></p>
+              <ul>{events.map((article,i) => <li data-map-event data-until={eventArchiveCutoff(article)?.getTime()} hidden={i>=3}>
+                <a href={articlePath(article)}>{article.data.title}</a>
+                <span>{makePlannerEntry(article).dateText}</span>
+              </li>)}</ul>
+              <a class="atlas-all" href={'/?'+new URLSearchParams({area:name})} hidden={!events.length}>See all {name} events <span aria-hidden="true">→</span></a>
+              <p class="atlas-none" hidden={!!events.length}>Nothing on the calendar here yet. <a href="/">Browse all events</a>.</p>
+            </section>)}
+          </div>
+          <p class="sr-only" data-map-status role="status"></p>
+        </aside>
+      </div>
+      {unmapped.length > 0 && <section class="atlas-other" aria-labelledby="atlas-other-title">
+        <h2 id="atlas-other-title">More around Lee County</h2>
+        <ul>{unmapped.map(article => <li data-unplaced data-until={eventArchiveCutoff(article)?.getTime()}>
+          <a href={articlePath(article)}>{article.data.title}</a><span>{makePlannerEntry(article).dateText}</span>
+        </li>)}</ul>
+      </section>}
+    </main>
+    <Footer />
+  </div>
+</BaseLayout>
+<script>
+  import { columnShape } from '@/lib/areaAtlas';
+  const root = document.querySelector<HTMLElement>('#atlas')!;
+  const markers = Array.from(root.querySelectorAll<SVGAElement>('.atlas-marker'));
+  const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-area-panel]'));
+  const select = root.querySelector<HTMLSelectElement>('#atlas-area')!;
+  const views = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-atlas-view]'));
+  const legend = root.querySelector<HTMLElement>('[data-legend]')!;
+  const status = root.querySelector<HTMLElement>('[data-map-status]')!;
+  let selected = '';
+  let view = 'flat';
+
+  function choose(area: string, announce = false) {
+    const panel = panels.find(node => node.dataset.areaPanel === area);
+    if (!panel) return;
+    selected = area;
+    select.value = area;
+    for (const node of panels) node.hidden = node !== panel;
+    for (const marker of markers) {
+      if (marker.dataset.area === area) marker.setAttribute('aria-current','true');
+      else marker.removeAttribute('aria-current');
+    }
+    if (announce) status.textContent = area + ': ' + panel.querySelector('.atlas-count')!.textContent;
+  }
+  function changeView(next: string) {
+    view = next === '3d' ? '3d' : 'flat';
+    root.dataset.view = view;
+    root.querySelector<HTMLElement>('[data-scale]')!.hidden = view !== '3d';
+    for (const button of views) button.setAttribute('aria-pressed', String(view === button.dataset.atlasView));
+    legend.textContent = view === '3d' ? 'Column height shows upcoming event count.' : 'Dots mark communities, not venues.';
+  }
+  function saveLink() {
+    const url = new URL(location.href);
+    url.hash = '';
+    url.searchParams.set('area', selected);
+    if (view === '3d') url.searchParams.set('view','3d'); else url.searchParams.delete('view');
+    try { history.replaceState(history.state, '', url); } catch { /* Map interaction still works. */ }
+  }
+  function restore() {
+    const params = new URLSearchParams(location.search);
+    const fromFragment = panels.find(p => '#' + p.id === location.hash)?.dataset.areaPanel;
+    const requested = fromFragment || params.get('area');
+    choose(panels.some(p=>p.dataset.areaPanel===requested) ? requested! : root.dataset.defaultArea!);
+    changeView(params.get('view') || 'flat');
+  }
+  function refresh() {
+    const now = Date.now();
+    const other = root.querySelector<HTMLElement>('.atlas-other');
+    if (other) {
+      const rows = Array.from(other.querySelectorAll<HTMLElement>('[data-unplaced]'));
+      for (const row of rows) row.hidden = !!row.dataset.until && Number(row.dataset.until) < now;
+      other.hidden = rows.every(row => row.hidden);
+    }
+    const counts = new Map<string, number>();
+    for (const panel of panels) {
+      const name = panel.dataset.areaPanel!;
+      let count = 0;
+      for (const item of panel.querySelectorAll<HTMLElement>('[data-map-event]')) {
+        const live = !item.dataset.until || Number(item.dataset.until) >= now;
+        item.hidden = !live || count >= 3;
+        if (live) count++;
+      }
+      counts.set(name,count);
+      panel.querySelector('strong')!.textContent = String(count);
+      panel.querySelector('.atlas-count span')!.textContent = count===1?'upcoming event':'upcoming events';
+      panel.querySelector<HTMLElement>('.atlas-all')!.hidden = !count;
+      panel.querySelector<HTMLElement>('.atlas-none')!.hidden = !!count;
+      const option = Array.from(select.options).find(o => o.value === name)!;
+      option.textContent = name + ' (' + count + ')';
+    }
+    const max = Math.max(0,...counts.values());
+    root.querySelector<HTMLElement>('[data-scale]')!.textContent = max ? 'Tallest: ' + max + (max===1?' event.':' events.') : '';
+    for (const marker of markers) {
+      const name = marker.dataset.area!;
+      const count = counts.get(name) ?? 0;
+      marker.dataset.empty = String(!count);
+      marker.setAttribute('aria-label', name + ': ' + count + (count===1?' event':' events'));
+      marker.querySelector('.atlas-dot')!.setAttribute('r',count?'6.5':'4');
+      const shape = columnShape(count,max);
+      for (const [face,path] of Object.entries(shape)) marker.querySelector('[data-face="'+face+'"]')!.setAttribute('d',path);
+    }
+  }
+  for (const marker of markers) marker.addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button!==0) return;
+    event.preventDefault();
+    choose(marker.dataset.area!, true); saveLink();
+    if (window.matchMedia('(max-width: 720px)').matches) root.querySelector<HTMLElement>('.atlas-inspector')!.scrollIntoView({block:'nearest'});
+  });
+  select.addEventListener('change', () => {choose(select.value, true);saveLink();});
+  for (const button of views) button.addEventListener('click', () => {changeView(button.dataset.atlasView!);saveLink();});
+  refresh(); restore();
+  root.querySelector<HTMLElement>('[data-view-controls]')!.hidden = false;
+  root.querySelector<HTMLElement>('.atlas-select')!.hidden = false;
+  window.addEventListener('popstate', restore);
+  window.addEventListener('pageshow', refresh);
+  document.addEventListener('visibilitychange', () => {if (!document.hidden) refresh();});
+  window.setInterval(refresh, 60_000);
+</script>

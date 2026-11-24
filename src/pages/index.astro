@@ -156,6 +156,7 @@ function tileSearch(article: typeof visible[number]) {
             <div class="discovery-areas" role="group" aria-label="Areas">
               {categoryStats.map(item => <button type="button" data-filter-category={item.category} data-filter-pill={item.category} aria-pressed="false">{item.category} <span data-count-for={item.category}>{item.count}</span></button>)}
             </div>
+            <a class="discovery-map-link" href="/map/">Browse areas on the map →</a>
             <p>Dates are in Lee County time. Runs may have select performances; check the organizer.</p>
           </div>
         </details>

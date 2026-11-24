@@ -155,6 +155,7 @@
   border-radius: 6px;
   box-shadow: 0 12px 30px #14363f24;
 }
+.discovery-map-link { display: inline-block; margin-top: 12px; padding-block: 6px; color: var(--ink); text-decoration: underline; text-underline-offset: .2em; }
 .discovery-more-panel label { display: block; margin: 0 0 7px; font-weight: 750; }
 .discovery input { width: 100%; padding: 11px 12px; color: var(--ink); background: white; border: 1px solid #758880; border-radius: 3px; font: inherit; }
 .discovery-areas { margin-top: 14px; }

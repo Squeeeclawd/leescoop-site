@@ -12,7 +12,7 @@ const { tags = [] } = Astro.props;
     <div>
       <p class="section-eyebrow">Coverage areas</p>
       <div class="footer-tag-list" aria-label="Lee County coverage areas">
-        {site.categories.map((category) => <span class="footer-tag">{category}</span>)}
+        {site.categories.map((category) => <a class="footer-tag" href={'/map/?' + new URLSearchParams({ area: category })}>{category}</a>)}
       </div>
       {tags.length > 0 && (
         <>

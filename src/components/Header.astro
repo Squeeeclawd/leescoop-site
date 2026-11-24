@@ -21,6 +21,7 @@ const {
           <nav class="main-nav" aria-label="Primary">
             <a href="/" aria-current={Astro.url.pathname === "/" ? "page" : undefined}>Home</a>
             <a href="/today/" aria-current={Astro.url.pathname.startsWith("/today") ? "page" : undefined}>Today</a>
+            <a href="/map/" aria-current={Astro.url.pathname.startsWith("/map/") ? "page" : undefined}>Map</a>
             <a href="/planner/" aria-current={Astro.url.pathname.startsWith("/planner") ? "page" : undefined}>My planner</a>
             {!enableSearchShortcut && (
               <>
@@ -58,6 +59,7 @@ const {
           <nav class="mobile-nav" aria-label="Mobile primary">
             <a href="/" aria-current={Astro.url.pathname === "/" ? "page" : undefined}>Home</a>
             <a href="/today/" aria-current={Astro.url.pathname.startsWith("/today") ? "page" : undefined}>Today</a>
+            <a href="/map/" aria-current={Astro.url.pathname.startsWith("/map/") ? "page" : undefined}>Map</a>
             <a href="/planner/" aria-current={Astro.url.pathname.startsWith("/planner") ? "page" : undefined}>My planner</a>
             {!enableSearchShortcut && (
               <>

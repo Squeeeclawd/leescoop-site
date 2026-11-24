@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import SubpageLayout from '@/layouts/SubpageLayout.astro';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import { archiveDate, archivePageSize, archivePath, archiveResults, groupArchive, type ArchiveView } from '@/lib/archive';
+import { articlePath, LEE_COUNTY_TIME_ZONE } from '@/lib/content';
+import '@/styles/archive.css';
+
+export async function getStaticPaths() {
+  const months = groupArchive(await getCollection('articles'));
+  return months.flatMap(month => {
+    const { key, label, events, news } = month;
+    const views: ArchiveView[] = ['all', 'events', 'news'];
+    return views.flatMap(view => {
+      const results = archiveResults(month.articles, view);
+      const pages = Math.ceil(results.length / archivePageSize);
+      return Array.from({ length: pages }, (_, index) => {
+        const page = index + 1;
+        const start = index * archivePageSize;
+        return {
+          params: { entry: archivePath(key, view, page).slice('/archive/'.length, -1) },
+          props: { key, label, events, news, view, page, pages, total: results.length, items: results.slice(start, start + archivePageSize) }
+        };
+      });
+    });
+  });
+}
+
+const { key, label, events, news, view, page, pages, total, items } = Astro.props;
+const viewLabel = view === 'events' ? 'Events' : view === 'news' ? 'Local news' : 'All listings';
+const format = new Intl.DateTimeFormat('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric' });
+const sections = [
+  { key: 'all' as const, label: 'All', count: events + news },
+  { key: 'events' as const, label: 'Events', count: events },
+  { key: 'news' as const, label: 'Local news', count: news }
+].filter(section => section.count);
+---
+<SubpageLayout title={label + ' · ' + viewLabel + (page > 1 ? ' · Page ' + page : '') + ' | LeeScoop Archive'}>
+  <Header />
+  <main class="wrap page-shell archive-shell">
+    <header class="archive-heading">
+      <a class="archive-back" href="/archive/">← All months</a>
+      <h1>{label}</h1>
+      <p>{key === 'undated' ? 'Events with no confirmed start date.' : 'Events are filed by start date; news by publication date, in Lee County time.'}</p>
+    </header>
+    <nav class="archive-switch" aria-label="Listing type">
+      {sections.map(section => <a href={archivePath(key, section.key)} aria-current={section.key === view ? 'page' : undefined}>{section.label} <span>{section.count}</span></a>)}
+    </nav>
+    <div class="archive-results-summary">
+      <p>{(page - 1) * archivePageSize + 1}–{Math.min(page * archivePageSize, total)} of {total}</p>
+      {key !== 'undated' && <p>{view === 'events' ? 'Earliest first' : 'Latest first'}</p>}
+    </div>
+    <ol class="archive-results" start={(page - 1) * archivePageSize + 1}>
+      {items.map(article => {
+        const date = archiveDate(article);
+        return <li>
+          {date ? <time datetime={date.toISOString()}>{format.format(date)}</time> : <span>Date TBA</span>}
+          <div>
+            <p class="archive-meta">{article.data.contentKind === 'event' ? 'Event' : 'Local news'}{article.data.city && ' · ' + article.data.city}</p>
+            <h2><a href={articlePath(article)}>{article.data.title}</a></h2>
+          </div>
+        </li>;
+      })}
+    </ol>
+    {pages > 1 && <nav class="archive-pager" aria-label="Archive pages">
+      {page > 1 && <a rel="prev" href={archivePath(key, view, page - 1)}>← Previous</a>}
+      <span>Page {page} of {pages}</span>
+      {page < pages && <a rel="next" href={archivePath(key, view, page + 1)}>Next →</a>}
+    </nav>}
+  </main>
+  <Footer />
+</SubpageLayout>

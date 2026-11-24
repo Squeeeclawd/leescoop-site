@@ -3,28 +3,38 @@ import { getCollection } from 'astro:content';
 import SubpageLayout from '@/layouts/SubpageLayout.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
-import ArticleCard from '@/components/ArticleCard.astro';
-import { visibleArticles } from '@/lib/content';
+import { archivePath, groupArchive } from '@/lib/archive';
+import { leeCountyDateKey } from '@/lib/content';
+import '@/styles/archive.css';
 
-const articles = visibleArticles(await getCollection('articles'));
+const months = groupArchive(await getCollection('articles'));
+const currentMonth = leeCountyDateKey().slice(0, 7);
+const years = [...new Set(months.map(month => month.key.split('-')[0]))];
+const thisMonth = months.find(month => month.key === currentMonth);
 ---
-<SubpageLayout title="Archive | LeeScoop">
+<SubpageLayout title="Local archive by month | LeeScoop" description="Browse Lee County outings by event date and local news by publication month.">
   <Header />
-  <main class="wrap page-shell">
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">Archive</p>
-        <h1>All LeeScoop updates</h1>
-        <p class="page-description">Explore the full collection of local events, neighborhood news, and useful updates.</p>
-      </div>
-    </div>
-    {articles.length > 0 ? (
-      <div class="card-grid three">
-        {articles.map((article) => <ArticleCard article={article} />)}
-      </div>
-    ) : (
-      <div class="panel-glow home-empty-state">No updates have been published yet.</div>
-    )}
+  <main class="wrap page-shell archive-shell">
+    <header class="archive-heading">
+      <h1>The local archive</h1>
+      <p>Browse Lee County events by their start date and local news by the date it was published.</p>
+      {thisMonth && <a class="archive-current" href={archivePath(currentMonth)}>Browse {thisMonth.label} →</a>}
+    </header>
+    {!months.length && <p>No listings have been published yet.</p>}
+    {years.map(year => (
+      <section class="archive-year">
+        <h2>{year === 'undated' ? 'Without a date' : year}</h2>
+        <ul class="archive-months">
+          {months.filter(month => month.key.startsWith(year)).map(month => <li>
+            <a class="archive-month-link" href={archivePath(month.key)}>{month.label}</a>
+            <div class="archive-month-kinds">
+              {month.events > 0 && <a href={archivePath(month.key, 'events')} aria-label={month.label + ', ' + month.events + ' events'}>{month.events} {month.events === 1 ? 'event' : 'events'}</a>}
+              {month.news > 0 && <a href={archivePath(month.key, 'news')} aria-label={month.label + ', ' + month.news + ' news stories'}>{month.news} {month.news === 1 ? 'story' : 'stories'}</a>}
+            </div>
+          </li>)}
+        </ul>
+      </section>
+    ))}
   </main>
   <Footer />
 </SubpageLayout>
