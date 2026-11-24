@@ -2,8 +2,8 @@
 title: "Cape Coral’s Holiday Nights adds skating, movies and a Saturday drone show"
 date: 2026-10-06T13:24:16.482905+00:00
 draft: false
-featured: false
-pinned: false
+featured: true
+pinned: true
 ticker: false
 category: family_learning
 tags:
