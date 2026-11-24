@@ -8,7 +8,7 @@ import { activeArticles, articlePath, eventArchiveCutoff, sortArticlesForFeed, t
 import { homepageDateKey, homepageDisplayDate, homepageTimelineDateLabel, homepageTimelineDateText } from '@/lib/homepageDateLabels';
 
 const todayEdition = Astro.url.pathname.replace(/\/$/, '') === '/today';
-const pageTitle = todayEdition ? 'Today in Lee County — LeeScoop' : 'LeeScoop — The Lee County field guide';
+const pageTitle = todayEdition ? 'Today in Lee County — LeeScoop' : 'Lee County events and local news | LeeScoop';
 const pageDescription = todayEdition
   ? 'Find events happening today in Lee County, Florida, and save a plan for later.'
   : 'Discover events and source-linked local news in Lee County, Florida, and save your next outing.';
@@ -132,7 +132,7 @@ function tileSearch(article: typeof visible[number]) {
     <header class="edition-masthead">
       <div>
         <p class="edition-dateline">Southwest Florida <span aria-hidden="true">/</span> Events &amp; local news</p>
-        <h1 class="discovery-heading">{todayEdition ? <>Today in <em>Lee County.</em></> : <>The Lee County <em>field guide.</em></>}</h1>
+        <h1 class="discovery-heading">{todayEdition ? <>Today in <em>Lee County.</em></> : <>What’s on in <em>Lee County?</em></>}</h1>
       </div>
       <a class="edition-planner" href="/planner/">
         <span class="edition-bookmark" aria-hidden="true"></span>
@@ -150,7 +150,7 @@ function tileSearch(article: typeof visible[number]) {
           <summary>Search &amp; area</summary>
           <div class="discovery-more-panel">
             <form id="filter-search-form" action="/search/" method="get">
-              <label for="home-filter-input">Plan an outing</label>
+              <label for="home-filter-input">Filter by keyword</label>
               <input id="home-filter-input" name="q" type="search" autocomplete="off" placeholder="Music, markets, venues…" />
             </form>
             <div class="discovery-areas" role="group" aria-label="Areas">
@@ -166,7 +166,13 @@ function tileSearch(article: typeof visible[number]) {
       </div>
     </section>
     <section id="latest-feed" class="discovery-feed" aria-label="Upcoming events and local updates" tabindex="-1">
-      <div class="discovery-feed-status"><p id="feed-result" role="status">Explore Lee County</p></div>
+      <div class="discovery-feed-status">
+        <p id="feed-result" role="status">Explore Lee County</p>
+        <div class="active-refinements" role="group" aria-label="Active filters" hidden>
+          <button type="button" data-clear-refinement="category" hidden><span></span><b aria-hidden="true">×</b></button>
+          <button type="button" data-clear-refinement="query" hidden><span></span><b aria-hidden="true">×</b></button>
+        </div>
+      </div>
       <p id="action-status" role="status" class="discovery-action-status"></p>
       <noscript>
         <style is:inline>
@@ -222,37 +228,63 @@ function tileSearch(article: typeof visible[number]) {
       const searchForm = document.getElementById('filter-search-form');
       const clearAll = document.getElementById('filter-clear-all');
       const emptyState = document.getElementById('home-empty-state');
+      const refinements = document.querySelector('.active-refinements');
+      const refinementButtons = Array.from(document.querySelectorAll('[data-clear-refinement]'));
       const dateButtons = Array.from(document.querySelectorAll('[data-filter-date-window]'));
       const feature = document.querySelector('[data-expirable-feature]');
       const initialWindow = document.querySelector('[data-homepage-root]')?.getAttribute('data-initial-window') || '';
       const editionHeading = initialWindow ? document.querySelector('.discovery-heading') : null;
       const state = { category: '', kind: 'event', dateWindow: initialWindow, query: '' };
 
-      const leeCountyDateKey = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
-      const addDays = (date, days) => {
-        // Add Lee County civil days independently of the visitor's timezone/DST.
-        const copy = new Date(`${leeCountyDateKey(date)}T12:00:00Z`);
-        copy.setUTCDate(copy.getUTCDate() + days);
-        return copy;
-      };
-      let filterNow = new Date();
-      const dateWindowRange = (dateWindow) => {
-        const now = filterNow;
-        if (dateWindow === 'today') {
-          const key = leeCountyDateKey(now);
-          return { start: key, end: key };
-        }
-        if (dateWindow === 'next14') {
-          return { start: leeCountyDateKey(now), end: leeCountyDateKey(addDays(now, 13)) };
-        }
-        if (dateWindow !== 'weekend') return undefined;
+      // Public filters travel with the link; saved plans stay on this browser.
+      function restoreView() {
+        const params = new URL(window.location.href).searchParams;
+        const area = params.get('area');
+        state.category = filterPills.some(pill => pill.getAttribute('data-filter-category') === area) ? area : '';
+        state.kind = params.get('kind') === 'news' ? 'news' : 'event';
+        const when = params.get('when');
+        state.dateWindow = dateButtons.some(button => button.getAttribute('data-filter-date-window') === when) ? when : initialWindow;
+        if (state.kind === 'news' || when === 'all') state.dateWindow = '';
+        state.query = params.get('q') || '';
+        searchInput.value = state.query;
+        applyFilters();
+      }
 
-        const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-        const weekday = weekdayMap[now.toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'short' })] ?? now.getDay();
-        const daysUntilSaturday = weekday === 0 ? -1 : (6 - weekday);
-        const saturday = addDays(now, daysUntilSaturday);
-        return { start: leeCountyDateKey(saturday), end: leeCountyDateKey(addDays(saturday, 1)) };
-      };
+      function updateView() {
+        const url = new URL(window.location.href);
+        const when = state.kind === 'news' || state.dateWindow === initialWindow ? '' : state.dateWindow || 'all';
+        const filters = { area: state.category, kind: state.kind === 'news' ? 'news' : '', when, q: state.query.trim() };
+        for (const [key, value] of Object.entries(filters)) {
+          if (value) url.searchParams.set(key, value);
+          else url.searchParams.delete(key);
+        }
+        applyFilters();
+        if (url.href !== window.location.href) {
+          // Restricted embeds and browsers that throttle history writes must still filter.
+          try { window.history.replaceState(window.history.state, '', url.href); } catch {}
+        }
+      }
+
+      const localDay = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+      });
+      function dateWindowsAt(now) {
+        const today = localDay.format(now);
+        // Offset a civil date, not an elapsed 24-hour interval across a DST change.
+        const midnight = new Date(today + 'T00:00:00Z');
+        const offset = days => new Date(Date.UTC(
+          midnight.getUTCFullYear(), midnight.getUTCMonth(), midnight.getUTCDate() + days
+        )).toISOString().slice(0, 10);
+        const weekday = midnight.getUTCDay();
+        const saturday = weekday === 0 ? -1 : 6 - weekday;
+        return {
+          today: { start: today, end: today },
+          weekend: { start: offset(saturday), end: offset(saturday + 1) },
+          next14: { start: today, end: offset(13) }
+        };
+      }
+      let filterNow;
+      let dateWindows;
       const isPastActiveWindow = (tile) => {
         if (tile.getAttribute('data-kind') !== 'event') return false;
         const activeUntil = tile.getAttribute('data-active-until');
@@ -263,7 +295,7 @@ function tileSearch(article: typeof visible[number]) {
         if (tile.getAttribute('data-kind') !== 'event') return false;
         const startKey = tile.getAttribute('data-date-key') || '';
         const endKey = tile.getAttribute('data-end-date-key') || startKey;
-        const range = dateWindowRange(dateWindow);
+        const range = dateWindows[dateWindow];
         if (!startKey || !endKey || !range) return false;
         return startKey <= range.end && endKey >= range.start;
       };
@@ -327,6 +359,7 @@ function tileSearch(article: typeof visible[number]) {
 
       const applyFilters = () => {
         filterNow = new Date();
+        dateWindows = dateWindowsAt(filterNow);
         if (editionHeading) {
           editionHeading.firstChild.textContent = state.dateWindow === 'today' ? 'Today in ' : 'Explore ';
         }
@@ -347,13 +380,22 @@ function tileSearch(article: typeof visible[number]) {
         });
         const result = document.getElementById('feed-result');
         if (result) {
-          const message = `${visibleCount} ${state.kind === 'news' ? 'local updates' : 'events'} · Lee County time`;
+          const noun = state.kind === 'news' ? 'local update' : 'event';
+          const message = `${visibleCount} ${noun}${visibleCount === 1 ? '' : 's'} · Lee County time`;
           result.textContent = message;
           result.setAttribute('data-base-text', message);
         }
         document.dispatchEvent(new Event('leescoop:filtered'));
         updateCounts();
         updateDateCounts();
+        if (refinements) refinements.hidden = !(state.category || state.query.trim());
+        for (const button of refinementButtons) {
+          const isArea = button.getAttribute('data-clear-refinement') === 'category';
+          const value = isArea ? state.category : state.query.trim();
+          button.hidden = !value;
+          button.querySelector('span').textContent = isArea ? value : `“${value}”`;
+          button.setAttribute('aria-label', `Remove ${isArea ? 'area' : 'keyword'} filter: ${value}`);
+        }
         clearAll.hidden = !(state.category || state.kind !== 'event' || state.dateWindow || state.query.trim());
         emptyState.hidden = visibleCount > 0;
       };
@@ -361,12 +403,21 @@ function tileSearch(article: typeof visible[number]) {
       document.addEventListener('click', (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
+        const refinement = target.closest('[data-clear-refinement]');
+        if (refinement) {
+          if (refinement.getAttribute('data-clear-refinement') === 'category') state.category = '';
+          else state.query = searchInput.value = '';
+          updateView();
+          const nextControl = refinementButtons.find(button => !button.hidden) || document.querySelector('.discovery-more summary');
+          nextControl?.focus();
+          return;
+        }
         const filterButton = target.closest('[data-filter-category]');
         if (filterButton instanceof HTMLElement) {
           event.preventDefault();
           const category = filterButton.getAttribute('data-filter-category') || '';
           state.category = state.category === category ? '' : category;
-          applyFilters();
+          updateView();
           return;
         }
         const kindButton = target.closest('[data-filter-kind]');
@@ -375,7 +426,7 @@ function tileSearch(article: typeof visible[number]) {
           const kind = kindButton.getAttribute('data-filter-kind') || '';
           state.kind = kind;
           if (state.kind === 'news') state.dateWindow = '';
-          applyFilters();
+          updateView();
           return;
         }
         const dateButton = target.closest('[data-filter-date-window]');
@@ -384,7 +435,7 @@ function tileSearch(article: typeof visible[number]) {
           const dateWindow = dateButton.getAttribute('data-filter-date-window') || '';
           state.dateWindow = state.dateWindow === dateWindow ? '' : dateWindow;
           if (state.dateWindow) state.kind = 'event';
-          applyFilters();
+          updateView();
           return;
         }
         if (target.closest('#filter-clear-all') === clearAll) {
@@ -393,7 +444,7 @@ function tileSearch(article: typeof visible[number]) {
           state.dateWindow = '';
           state.query = '';
           searchInput.value = '';
-          applyFilters();
+          updateView();
           if (searchInput.closest('details')?.open) searchInput.focus();
           else kindButtons[0]?.focus();
         }
@@ -401,16 +452,17 @@ function tileSearch(article: typeof visible[number]) {
 
       searchInput.addEventListener('input', () => {
         state.query = searchInput.value;
-        applyFilters();
+        updateView();
       });
 
       searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
         state.query = searchInput.value;
-        applyFilters();
+        updateView();
       });
 
-      applyFilters();
+      restoreView();
+      window.addEventListener('popstate', restoreView);
       // Keep date counts and expiry accurate for tabs left open across midnight.
       window.setInterval(applyFilters, 60_000);
       document.addEventListener('visibilitychange', () => { if (!document.hidden) applyFilters(); });

@@ -1,7 +1,7 @@
 export const site = {
   name: 'LeeScoop',
   tagline: 'Your scoop on Lee County.',
-  description: 'No ads. No promotion. Just what’s happening in your area.',
+  description: 'Find things to do and local news from across Lee County, Florida.',
   domain: 'https://leescoop.com',
   contactEmail: 'squeeeclawd@gmail.com',
   categories: [

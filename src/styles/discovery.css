@@ -161,6 +161,10 @@
 .discovery-more-panel p, .discovery-footnote { color: var(--muted); font-size: .82rem; line-height: 1.5; }
 .discovery-feed { scroll-margin-top: 20px; }
 .discovery-feed-status { padding: 14px 0; color: var(--muted); font-size: .8rem; font-weight: 650; }
+.discovery-feed-status, .active-refinements { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.active-refinements { min-width: 0; max-width: 100%; gap: 6px; }
+.discovery .active-refinements button { border-radius: 999px; background: #e7ece0; min-width: 0; max-width: 100%; }
+.discovery .active-refinements span { text-align: left; overflow-wrap: anywhere; }
 .discovery-feed-status p { margin: 0; }
 .discovery .home-tile-grid {
   display: grid;

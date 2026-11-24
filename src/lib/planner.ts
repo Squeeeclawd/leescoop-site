@@ -1,4 +1,5 @@
 import { articlePath, eventArchiveCutoff, LEE_COUNTY_TIME_ZONE, siteNow, type Article } from './content.ts';
+import { eventMapUrl } from './eventMap.ts';
 
 const plannerDate = new Intl.DateTimeFormat('en-US', {
   timeZone: LEE_COUNTY_TIME_ZONE, year: 'numeric', month: 'short', day: 'numeric'
@@ -12,7 +13,11 @@ export function makePlannerEntry(article: Article, now = siteNow()) {
   const dateText = start && end && end > start
     ? plannerDate.formatRange(start, end)
     : start ? plannerDate.format(start) : 'Date TBA';
+  const upcoming = event && (!end || end >= now);
+  const mapHref = upcoming ? eventMapUrl(data.address, data.city) : null;
   return {
+    ...(upcoming && data.eventTime && { schedule: data.eventTime }),
+    ...(mapHref && { mapHref, address: data.address }),
     slug, title: data.title, href: articlePath(article), kind: data.contentKind,
     dateText, place: data.venue || data.location || data.city || data.category,
     startsAt: start?.getTime() ?? null, endsAt: end?.getTime() ?? null,

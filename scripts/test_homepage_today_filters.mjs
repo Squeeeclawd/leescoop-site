@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { discoveryTestWindow } from './discovery_test_window.mjs';
 
 const source = fs.readFileSync('src/pages/index.astro', 'utf8');
 const script = source.match(/<script is:inline>([\s\S]*?)<\/script>/)[1];
@@ -62,7 +63,8 @@ const document = {
   getElementById(id) { return ids[id]; },
   addEventListener(key, fn) { handlers[key] = fn; }
 };
-vm.runInNewContext(script, {Event: class {}, document, window: {setInterval() {}}, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
+const filterWindow = discoveryTestWindow(handlers);
+vm.runInNewContext(script, {Event: class {}, document, window: filterWindow, URL, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
 
 const click = element => handlers.click({target: element, preventDefault() {}});
 const shown = () => tiles.flatMap((tile, index) => tile.hidden ? [] : [index]);

@@ -5,13 +5,18 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import ShareButton from '@/components/ShareButton.astro';
 import Comments from '@/components/Comments.astro';
-import { LEE_COUNTY_TIME_ZONE, leeCountyDateKey } from '@/lib/content';
+import { makePlannerEntry } from '@/lib/planner';
+import { LEE_COUNTY_TIME_ZONE, leeCountyDateKey, siteNow } from '@/lib/content';
 
 interface Props { article: CollectionEntry<'articles'>; }
 const { article } = Astro.props;
 const { Content } = await render(article);
 const data = article.data;
 const isEvent = data.contentKind === 'event';
+const now = siteNow();
+const event = isEvent ? makePlannerEntry(article, now) : null;
+const pastEvent = event?.endsAt != null && event.endsAt < now.getTime();
+const kicker = isEvent ? data.city : data.category;
 const displayDate = isEvent ? data.eventDate : data.date;
 const formatDate = (value?: Date) => value?.toLocaleDateString('en-US', {
   timeZone: LEE_COUNTY_TIME_ZONE, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
@@ -31,28 +36,43 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
       <a href={isEvent ? '/#browse' : '/archive/'}>{isEvent ? 'Local events' : 'Local updates'}</a>
       {data.city && <><span aria-hidden="true">/</span><span>{data.city}</span></>}
     </nav>
-    <article class="story" data-pagefind-body>
+    <article class="story" data-pagefind-body data-event-ends={event?.endsAt ?? undefined}>
       <header class:list={['story-hero', { 'story-hero-no-image': !data.coverImage }]}>
         {data.coverImage && <div class="story-art"><img src={data.coverImage} alt={`${data.title} cover image`} loading="eager" fetchpriority="high" decoding="async" width="1216" height="704" /></div>}
         <div class="story-heading">
-          <div class="story-kicker"><span>{data.category}</span><span class="story-kind">{isEvent ? 'Local event' : 'Local news'}</span></div>
+          <div class="story-kicker">
+            {kicker && <span>{kicker}</span>}
+            <span class="story-kind">{isEvent ? (pastEvent ? 'Past event' : 'Local event') : 'Local news'}</span>
+          </div>
           <h1>{data.title}</h1>
           <p class="story-deck">{data.excerpt}</p>
-          <div class="story-byline"><span>By {data.author}</span><time datetime={data.date.toISOString()}>{data.date.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' })}</time></div>
+          <div class="story-byline">
+            {event && <strong class="event-dateline">{event.dateText}</strong>}
+            <span>By {data.author}</span>
+            {!isEvent && <time datetime={data.date.toISOString()}>{data.date.toLocaleDateString('en-US', { timeZone: LEE_COUNTY_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' })}</time>}
+          </div>
         </div>
       </header>
       <div class="story-grid">
         <aside class="story-facts" aria-labelledby="story-facts-heading">
-          <p class="eyebrow">{isEvent ? 'Plan your visit' : 'The essentials'}</p>
+          <p class="eyebrow">{isEvent ? 'Event details' : 'The essentials'}</p>
           <h2 id="story-facts-heading">At a glance</h2>
           <dl>
             <div><dt>{isEvent ? 'When' : 'Published'}</dt><dd>{startDate}{endDate && <> – {endDate}</>}{isEvent && eventTime && <span class="fact-detail">{eventTime}</span>}</dd></div>
-            {(data.venue || data.location || data.city) && <div><dt>Where</dt><dd>{data.venue ?? data.location ?? data.city}{data.address && <span class="fact-detail">{data.address}</span>}</dd></div>}
+            {(data.venue || data.location || data.city || data.address) && <div>
+              <dt>Where</dt>
+              <dd>
+                {data.venue || data.location || data.city}
+                {data.address && <span class="fact-detail">{data.address}</span>}
+                {event?.mapHref && <a class="event-map" href={event.mapHref}>View address on map <span aria-hidden="true">↗</span></a>}
+              </dd>
+            </div>}
             {data.cost && <div><dt>Cost</dt><dd>{data.cost}</dd></div>}
             {data.audience && <div><dt>Who it’s for</dt><dd>{data.audience}</dd></div>}
           </dl>
           {data.sourceUrl && <div class="story-source"><a class="story-source-button" href={data.sourceUrl}>{isEvent ? 'Visit event website' : 'Read the source'} <span aria-hidden="true">↗</span></a><p>{data.sourceName ?? 'Original source'}{isEvent && <span>Check the source for current details and availability.</span>}</p></div>}
           <div class="story-save-actions" data-pagefind-ignore>
+            {event?.calendarHref && <a data-reminder download href={event.calendarHref}>Download all-day date reminder</a>}
             <button type="button" hidden data-save={article.slug} aria-pressed="false">Save</button>
             <a href="/planner/">My planner →</a>
           </div>
@@ -74,8 +94,23 @@ const shareUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://leescoop.com
   import '@/lib/discoveryActions';
   const saveButton = document.querySelector<HTMLButtonElement>('.story-save-actions [data-save]');
   if (saveButton) saveButton.hidden = false;
+
+  // A static page can outlive its event between deployments.
+  const story = document.querySelector<HTMLElement>('.story[data-event-ends]');
+  const refreshEventStatus = () => {
+    if (!story || Date.now() <= Number(story.dataset.eventEnds)) return;
+    const kind = story.querySelector('.story-kind');
+    if (kind) kind.textContent = 'Past event';
+    story.querySelector('[data-reminder]')?.remove();
+    story.querySelector('.event-map')?.remove();
+  };
+  refreshEventStatus();
+  window.addEventListener('pageshow', refreshEventStatus);
+  document.addEventListener('visibilitychange', refreshEventStatus);
 </script>
 <style>
+  .event-map { display: inline-block; padding-block: .35rem; color: #164f61; text-decoration: underline; text-underline-offset: .16em; }
+  .event-dateline { color: #154859; font-size: .93rem; }
   .story-save-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
   .story-save-actions button { background: #fffaf1; border: 1px solid #154859; color: #154859; font: inherit; font-weight: 700; border-radius: .4rem; min-height: 44px; padding: .45rem 1rem; cursor: pointer; }
   .story-save-actions button[aria-pressed="true"] { color: white; background: #154859; }

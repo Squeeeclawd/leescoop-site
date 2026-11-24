@@ -24,16 +24,14 @@ Pick events that make people say:
 - “I didn’t know that was coming”
 - “we should go to that”
 
-Prefer:
-- major touring acts
-- big festivals
-- citywide happenings
-- visually striking or unusual experiences
-- obvious weekend anchors
+Choose the lead by asking:
+- What can a Lee County reader actually do, and how soon?
+- Can we tell them where to go and what to expect, without guessing?
+- Does this add a different option from the venues and activities we just featured?
 
 The daily feed is event-first. Discover across Lee County without city quotas; prioritize useful near-term options. Keep selected event picks varied by source, venue, date, audience, and event type; LeeScoop should not read like an RSS feed for Hertz Arena and Barbara B. Mann.
 
-Avoid using too many slots on tiny filler events if stronger events exist.
+Size is not a quality requirement. A neighborhood walk, library workshop, or recurring market can lead when the local connection and practical details make it a stronger choice for readers. A large crowd or striking cover alone does not make an event the best homepage lead.
 
 ## Headline style
 Headlines should be:
@@ -68,14 +66,14 @@ Use coastal LeeScoop-style cover art only through verified Codex OAuth (openai/g
 If a pick feels like one of these, reject it unless the day is dead quiet:
 - generic civic process update
 - mild feature with no real stakes
-- small recurring event with no headline pull
+- a repeat listing that adds no distinct outing or useful new information
 - anything that reads like filler content
 
 ## Best way for Anthony to steer taste
 Anthony can improve the system fastest by giving:
 1. 3 headlines he loves
 2. 3 headlines he thinks are boring
-3. 3 event examples that feel “big enough”
+3. 3 outings he would make time for
 4. 3 event examples that feel like filler
 
 That is enough to keep tuning selection and rewrite behavior.

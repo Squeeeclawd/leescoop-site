@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { discoveryTestWindow } from './discovery_test_window.mjs';
 import { calendarReminder } from '../src/lib/calendar.ts';
 import ts from 'typescript';
 
@@ -27,9 +28,12 @@ const tiles = [
 const dates = ['today','weekend','next14'].map(x => new Element({'data-filter-date-window':x}));
 const kinds = ['event','news'].map(x => new Element({'data-filter-kind':x}));
 const ids = Object.fromEntries(['home-filter-input','filter-search-form','filter-clear-all','home-empty-state','feed-result'].map(x => [x,new Element({id:x})]));
+const area = new Element({'data-filter-category':'Cape Coral','data-filter-pill':'Cape Coral'});
+const chips = ['category','query'].map(key => new Element({'data-clear-refinement':key}));
 const handlers = {};
-const document = {hidden:false, dispatchEvent() {}, querySelectorAll(sel) { return ({'.home-tile':tiles,'[data-filter-date-window]':dates,'[data-filter-kind]':kinds,'[data-filter-pill]':[]})[sel] ?? []; }, querySelector(){ return null; }, getElementById(id){ return ids[id]; }, addEventListener(k,f){ handlers[k]=f; }};
-vm.runInNewContext(script, {Event: class {}, document, window: {setInterval(){}}, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
+const document = {hidden:false, dispatchEvent() {}, querySelectorAll(sel) { return ({'.home-tile':tiles,'[data-filter-date-window]':dates,'[data-filter-kind]':kinds,'[data-filter-pill]':[area],'[data-clear-refinement]':chips})[sel] ?? []; }, querySelector(){ return null; }, getElementById(id){ return ids[id]; }, addEventListener(k,f){ handlers[k]=f; }};
+const filterWindow = discoveryTestWindow(handlers);
+vm.runInNewContext(script, {Event: class {}, document, window: filterWindow, URL, Date: Clock, Intl, HTMLElement: Element, HTMLInputElement: Element, HTMLFormElement: Element, HTMLButtonElement: Element});
 const shown = () => tiles.flatMap((t,i)=>t.hidden?[]:[i]);
 const click = el => handlers.click({target: el, preventDefault(){}});
 assert.deepEqual(shown(), [0,1], 'homepage opens events-first, not a mixed Yahoo-style portal');
@@ -38,6 +42,25 @@ click(kinds[1]); assert.deepEqual(shown(), [2], 'news tab shows brief source-lin
 click(dates[0]); assert.deepEqual(shown(), [0], 'date chip returns to event discovery and Today');
 ids['home-filter-input'].value = 'market'; ids['home-filter-input'].listeners.input(); assert.deepEqual(shown(), [], 'search combines with current Today filter naturally');
 click(ids['filter-clear-all']); assert.deepEqual(shown(), [0,1], 'reset returns to event-first discovery');
+filterWindow.location.href = 'https://leescoop.com/?when=weekend&q=market&ref=newsletter#browse';
+handlers.popstate();
+assert.deepEqual(shown(), [1], 'a shared weekend search restores the matching listing');
+assert.equal(ids['home-filter-input'].value, 'market');
+click(ids['filter-clear-all']);
+assert.equal(filterWindow.location.href, 'https://leescoop.com/?ref=newsletter#browse', 'reset removes only owned parameters');
+filterWindow.location.href = 'https://leescoop.com/?area=Cape+Coral&q=market&when=weekend';
+handlers.popstate();
+assert.equal(chips[0].attrs['aria-label'], 'Remove area filter: Cape Coral');
+assert.equal(chips[1].count.textContent, '“market”');
+click(chips[0]);
+assert.ok(chips[0].hidden && !chips[1].hidden && chips[1].focused);
+assert.equal(filterWindow.location.href, 'https://leescoop.com/?q=market&when=weekend');
+click(chips[1]);
+assert.equal(ids['home-filter-input'].value, '');
+assert.deepEqual(shown(), [1], 'removing refinements preserves the weekend filter');
+filterWindow.history.replaceState = () => { throw new Error('History API unavailable'); };
+click(ids['filter-clear-all']);
+assert.deepEqual(shown(), [0,1], 'restricted history permissions do not prevent filtering');
 const indexMarkup = source;
 const actionsMarkup = fs.readFileSync('src/lib/discoveryActions.ts','utf8');
 for (const required of ['id="saved-filter"','data-save={article.slug}','data-share={articlePath(article)}','/calendar/${article.slug}.ics']) assert.ok(indexMarkup.includes(required), `missing ${required}`);

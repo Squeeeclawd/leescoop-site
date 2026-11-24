@@ -14,6 +14,18 @@ const entries = [
   event('date-tba'),
   makePlannerEntry({slug:'news', data:{title:'News', contentKind:'news', date:now}}, now)
 ];
+const atCityHall = makePlannerEntry({
+  slug: 'city-hall', data: {
+    title: 'An evening at City Hall', contentKind: 'event', city: 'Cape Coral',
+    eventDate: new Date('2026-11-28T17:00:00-05:00'), eventTime: '5 p.m. to 8 p.m.',
+    address: '1015 Cultural Park Blvd., Cape Coral'
+  }
+}, now);
+assert.equal(atCityHall.schedule, '5 p.m. to 8 p.m.');
+assert.equal(atCityHall.address, '1015 Cultural Park Blvd., Cape Coral');
+assert.ok(new URL(atCityHall.mapHref).searchParams.get('query').includes('1015 Cultural Park'));
+assert.equal(entries[0].mapHref, undefined);
+assert.equal(entries[4].schedule, undefined);
 const saved = entries.map(entry => entry.slug);
 const groups = groupSavedPlans(entries, [...saved, 'no-longer-published'], now);
 assert.deepEqual(groups.upcoming.map(entry => entry.slug), ['ongoing', 'later', 'date-tba']);
@@ -60,6 +72,12 @@ storage = '["added-in-another-tab","local-only","another"]';
 list.remove('another-tab'); // A stale Remove button must never restore the slug.
 assert.equal(list.has('another-tab'), false);
 assert.equal(notifications, 4);
+list.add('another-tab');
+assert.equal(list.has('another-tab'), true);
+// Undo must remain an add even if another tab restored the same slug first.
+storage = JSON.stringify([...JSON.parse(storage), 'restored-elsewhere']);
+list.add('another-tab');
+assert.deepEqual(JSON.parse(storage), ['added-in-another-tab','local-only','another','another-tab','restored-elsewhere']);
 assert.equal(list.persistent, true);
 storage = '{';
 list.sync();

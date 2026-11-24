@@ -48,6 +48,7 @@ export function openSavedPlans(onStorageError?: (message: string) => void) {
     has: (slug: string) => saved.has(slug),
     get persistent() { return persistent; },
     toggle: (slug: string) => change(slug),
+    add: (slug: string) => change(slug, true),
     remove: (slug: string) => change(slug, false)
   };
 }

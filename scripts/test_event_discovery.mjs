@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { discoveryTestWindow } from './discovery_test_window.mjs';
 const source = fs.readFileSync('src/pages/index.astro', 'utf8');
 const script = source.match(/<script is:inline>([\s\S]*?)<\/script>/)[1];
 class Element {
@@ -31,7 +32,7 @@ const ids = Object.fromEntries(['home-filter-input','filter-search-form','filter
 const handlers = {};
 let refresh;
 const document = {hidden:false, dispatchEvent() {}, querySelectorAll(s) { return ({'.home-tile':tiles,'[data-filter-date-window]':dates,'[data-filter-kind]':kinds})[s] ?? []; }, querySelector() {return null;}, getElementById(s) {return ids[s];}, addEventListener(k,f) {handlers[k]=f;} };
-vm.runInNewContext(script, {Event: class {}, document,window:{setInterval(f){refresh=f;}},Date:Clock,Intl,HTMLElement:Element,HTMLInputElement:Element,HTMLFormElement:Element,HTMLButtonElement:Element});
+vm.runInNewContext(script, {Event: class {}, document,window:discoveryTestWindow(handlers, f => {refresh=f;}),URL,Date:Clock,Intl,HTMLElement:Element,HTMLInputElement:Element,HTMLFormElement:Element,HTMLButtonElement:Element});
 const click = e => handlers.click({target:e,preventDefault(){}});
 const shown = () => tiles.flatMap((t,i)=>t.hidden?[]:[i]);
 assert.deepEqual(shown(),[0,1,2,3,4]);
@@ -50,8 +51,8 @@ now='2026-09-14T04:00:00Z'; refresh(); assert.deepEqual(shown(),[]);
 const css = fs.readFileSync('src/styles/global.css','utf8');
 for (const selector of ['.home-tile[hidden]','[data-expirable-feature][hidden]','[data-filter-category][hidden]','#filter-clear-all[hidden]','#home-empty-state[hidden]']) assert.ok(css.includes(selector));
 console.log('PASS: actual inline-script filtering, counts, news switch, expiry refresh, Sunday, midnight, search/reset and hidden CSS');
-const helpers = script.slice(script.indexOf('      const leeCountyDateKey ='), script.indexOf('      const isPastActiveWindow ='));
-const range = (clock, key) => vm.runInNewContext(`${helpers}\nfilterNow = new Date('${clock}'); JSON.stringify(dateWindowRange('${key}'));`, {Date,Intl});
+const helpers = script.slice(script.indexOf('      const localDay ='), script.indexOf('      const isPastActiveWindow ='));
+const range = (clock, key) => vm.runInNewContext(`${helpers}\nJSON.stringify(dateWindowsAt(new Date('${clock}'))['${key}']);`, {Date,Intl});
 assert.equal(range('2026-09-11T02:00:00Z','today'), JSON.stringify({start:'2026-09-10',end:'2026-09-10'}));
 assert.equal(range('2026-09-13T16:00:00Z','weekend'), JSON.stringify({start:'2026-09-12',end:'2026-09-13'}));
 assert.equal(range('2026-09-14T04:00:00Z','weekend'), JSON.stringify({start:'2026-09-19',end:'2026-09-20'}));

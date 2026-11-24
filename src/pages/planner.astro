@@ -21,28 +21,40 @@ const sections = [
     <Header />
     <main class="planner wrap" id="planner">
       <header class="planner-heading">
-        <a href="/">← Back to the field guide</a>
+        <a href="/">← Back to events &amp; local news</a>
         <h1>My <em>planner.</em></h1>
         <p>Your saved outings and stories stay on this browser. No account needed.</p>
       </header>
-      <noscript><p>Turn on JavaScript to load your saved plans, or <a href="/">browse the field guide</a>.</p></noscript>
+      <noscript><p>Turn on JavaScript to load your saved plans, or <a href="/">browse events</a>.</p></noscript>
       <p class="storage-warning" data-storage-warning role="status"></p>
+      <div class="plan-notice" data-notice hidden>
+        <span data-message role="status" aria-live="polite"></span>
+        <button type="button" data-undo>Undo</button>
+      </div>
       <div data-empty hidden>
         <h2>Your planner is empty.</h2>
         <p>Choose <strong>Save</strong> on an event or story to keep it here.</p>
-        <a class="planner-link" href="/#browse">Explore the field guide →</a>
+        <a class="planner-link" href="/#browse">Browse events →</a>
       </div>
       <p data-count role="status" aria-live="polite"></p>
       {sections.map(({key, title}) => (
         <section data-section={key} aria-labelledby={key} hidden>
-          <h2 id={key}>{title}</h2>
-          {key === 'upcoming' && <p>Calendar downloads are date reminders. Check with the organizer for times and availability.</p>}
+          <div class="plan-section-heading">
+            <h2 id={key}>{title}</h2>
+            {key === 'upcoming' && <button type="button" class="plan-print" data-print>Print itinerary</button>}
+          </div>
+          {key === 'upcoming' && <p><span class="calendar-help">Calendar downloads are date reminders. </span>Check with the organizer for times and availability.</p>}
           <ul></ul>
         </section>
       ))}
       <template id="plan-card">
         <li class="plan-card">
-          <div><p data-meta></p><h3><a data-title></a></h3></div>
+          <div class="plan-details">
+            <p data-meta></p>
+            <h3><a data-title></a></h3>
+            <p data-schedule></p>
+            <a data-map></a>
+          </div>
           <div class="plan-actions">
             <a data-calendar download>Date reminder</a>
             <button type="button" data-remove>Remove</button>
@@ -65,12 +77,25 @@ const sections = [
   const warning = root.querySelector<HTMLElement>('[data-storage-warning]')!;
   const store = openSavedPlans(message => { warning.textContent = message; });
 
+  let lastRemoved: PlannerEntry | undefined;
+  const notice = root.querySelector<HTMLElement>('[data-notice]')!;
+  const undo = notice.querySelector<HTMLButtonElement>('[data-undo]')!;
+
+  root.querySelector('[data-print]')!.addEventListener('click', () => window.print());
+
   function planCard(entry: PlannerEntry, upcoming: boolean) {
     const row = template.content.cloneNode(true) as DocumentFragment;
     row.querySelector('[data-meta]')!.textContent = [entry.dateText, entry.place].filter(Boolean).join(' · ');
     const title = row.querySelector<HTMLAnchorElement>('[data-title]')!;
     title.textContent = entry.title;
     title.href = entry.href;
+    if (upcoming) row.querySelector('[data-schedule]')!.textContent = entry.schedule ?? '';
+    const map = row.querySelector<HTMLAnchorElement>('[data-map]')!;
+    if (upcoming && entry.mapHref && entry.address) {
+      map.href = entry.mapHref;
+      map.textContent = entry.address;
+      map.setAttribute('aria-label', 'View ' + entry.address + ' on Google Maps');
+    } else map.remove();
     const calendar = row.querySelector<HTMLAnchorElement>('[data-calendar]')!;
     if (upcoming && entry.calendarHref) calendar.href = entry.calendarHref;
     else calendar.remove();
@@ -82,6 +107,7 @@ const sections = [
 
   function render() {
     const groups = groupSavedPlans(entries, store.slugs());
+    root.toggleAttribute('data-has-itinerary', groups.upcoming.length > 0);
     let count = 0;
     for (const key of ['upcoming', 'reading', 'past'] as const) {
       const section = root.querySelector<HTMLElement>('[data-section="' + key + '"]')!;
@@ -92,6 +118,9 @@ const sections = [
     }
     root.querySelector<HTMLElement>('[data-empty]')!.hidden = count !== 0;
     root.querySelector('[data-count]')!.textContent = count ? count + (count === 1 ? ' saved item' : ' saved items') : '';
+    if (lastRemoved && store.has(lastRemoved.slug)) lastRemoved = undefined;
+    notice.hidden = !lastRemoved;
+    notice.querySelector('[data-message]')!.textContent = lastRemoved ? 'Removed “' + lastRemoved.title + '”.' : '';
     if (store.persistent) warning.textContent = '';
   }
 
@@ -99,11 +128,19 @@ const sections = [
     if (!(event.target instanceof Element)) return;
     const button = event.target.closest<HTMLButtonElement>('button[data-remove]');
     if (!button?.dataset.remove) return;
-    const index = Array.from(root.querySelectorAll('[data-remove]')).indexOf(button);
+    lastRemoved = entries.find(entry => entry.slug === button.dataset.remove);
     store.remove(button.dataset.remove);
     render();
-    const remaining = root.querySelectorAll<HTMLButtonElement>('[data-remove]');
-    (remaining[Math.min(index, remaining.length - 1)] ?? root.querySelector<HTMLAnchorElement>('[data-empty] a'))?.focus();
+    undo.focus();
+  });
+  undo.addEventListener('click', () => {
+    if (!lastRemoved) return;
+    const slug = lastRemoved.slug;
+    store.add(slug);
+    render();
+    Array.from(root.querySelectorAll<HTMLButtonElement>('[data-remove]'))
+      .find(button => button.dataset.remove === slug)?.closest('.plan-card')
+      ?.querySelector<HTMLAnchorElement>('[data-title]')?.focus();
   });
   window.addEventListener('storage', event => {
     if (event.key === SAVED_PLANS_KEY || event.key === null) { store.sync(); render(); }
@@ -127,14 +164,34 @@ const sections = [
   .planner-link { display: inline-block; margin-top: .6rem; font-weight: 700; }
   .planner ul { list-style: none; padding: 0; margin: 1rem 0; }
   .plan-card { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; border-top: 1px solid var(--rule); padding: 1.2rem 0; }
+  .plan-details { min-width: 0; overflow-wrap: anywhere; }
+  .plan-details [data-map] { display: inline-block; padding-block: .25rem; font-size: .9rem; }
   .plan-card h3 { font-size: clamp(1.35rem, 2.4vw, 1.9rem); margin: .2em 0; }
   .plan-card h3 a { text-decoration: none; }
   .plan-card h3 a:hover { text-decoration: underline; }
   .plan-card p { font-size: .85rem; margin: 0; }
   .plan-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .8rem; }
-  .plan-actions button { min-height: 44px; background: transparent; border: 1px solid var(--rule); color: var(--ink); padding: 0 .8rem; font: inherit; cursor: pointer; }
+  .plan-section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; }
+  .plan-actions button, .plan-notice button, .plan-print { min-height: 44px; background: transparent; border: 1px solid var(--rule); color: var(--ink); padding: 0 .8rem; font: inherit; cursor: pointer; }
+  .plan-notice { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-block: 1rem; padding: .5rem 1rem; background: #e8ece0; border-left: 3px solid var(--ink); }
+  .plan-notice span { overflow-wrap: anywhere; }
   .storage-warning:not(:empty) { border-left: 3px solid var(--accent); padding-left: 1rem; }
   .planner [hidden], .planner p:empty { display: none; }
+  @media print {
+    .discovery-shell :global(.site-header), .discovery-shell :global(.site-footer), .discovery-skip,
+    .planner-heading > a, .planner-heading > p, .plan-actions, .plan-print, .plan-notice, .calendar-help,
+    [data-count], [data-storage-warning], .planner[data-has-itinerary] section:not([data-section="upcoming"]) {
+      display: none;
+    }
+    .discovery-shell { min-height: 0; background: white; --ink: #111; --muted: #333; --accent: #111; }
+    .discovery-shell .planner { width: 100%; min-height: 0; padding: 0; }
+    .planner-heading { padding: 0 0 .4rem; }
+    .planner h1 { font-size: 28pt; }
+    .planner h2 { font-size: 18pt; }
+    .plan-card { display: block; break-inside: avoid; }
+    .plan-card h3 { font-size: 14pt; }
+    .plan-details [data-map] { color: #111; text-decoration: none; }
+  }
   @media (max-width: 640px) {
     .plan-card { align-items: flex-start; flex-direction: column; gap: .5rem; }
   }
